@@ -1,0 +1,65 @@
+{
+  "name": "attic-cli",
+  "version": "0.0.0",
+  "author": "Zachary Boyd <zachary@zacharyboyd.nyc>",
+  "bin": {
+    "attic-cli": "./bin/run"
+  },
+  "bugs": "https://github.com/znetstar/attic/issues",
+  "dependencies": {
+    "@oclif/command": "^1.8.0",
+    "@oclif/config": "^1.17.0",
+    "@oclif/plugin-help": "^3.2.0",
+    "@types/cliff": "^0.1.5",
+    "@types/fs-extra": "^9.0.1",
+    "@types/lodash": "^4.14.160",
+    "@types/nconf": "^0.10.0",
+    "@types/yargs": "^15.0.5",
+    "cliff": "^0.1.10",
+    "dotenv": "^8.2.0",
+    "fs-extra": "^9.0.1",
+    "lodash": "^4.17.20",
+    "mongo-dot-notation": "^2.0.0",
+    "multi-rpc": "^1.5.7",
+    "nconf": "^0.10.0",
+    "tslib": "^1.13.0",
+    "yargs": "^15.4.1"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.22.2",
+    "@types/node": "^10.17.28",
+    "globby": "^10.0.2",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/znetstar/attic",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "Apache-2.0",
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "attic-cli",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "repository": "znetstar/attic",
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "test": "echo NO TESTS",
+    "version": "oclif-dev readme && git add README.md"
+  },
+  "types": "lib/index.d.ts"
+}

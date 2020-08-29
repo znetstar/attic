@@ -1,0 +1,23 @@
+{
+  "name": "attic-common",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "grunt default",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "docdash": "^1.2.0",
+    "grunt": "^1.2.1",
+    "grunt-contrib-clean": "^2.0.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-jsdoc": "^2.4.1",
+    "grunt-ts": "^6.0.0-beta.22",
+    "grunt-typedoc": "^0.2.4",
+    "typedoc": "^0.18.0",
+    "typescript": "^3.9.7"
+  },
+  "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
+  "license": "LGPL-3.0"
+}
