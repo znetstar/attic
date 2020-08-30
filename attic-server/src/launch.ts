@@ -15,8 +15,8 @@ else if (Config.port) {
 
 if (Config.enableWebResolver && !Config.webResolverShareRpcServer) {
     if (Config.webResolverUnixSocket) {
-        RPCHTTPServer.listen(Config.webResolverUnixSocket);
+        WebHTTPServer.listen(Config.webResolverUnixSocket);
     } else if (Config.webResolverPort) {
-        RPCHTTPServer.listen(Config.webResolverPort, Config.webResolverHost);
+        WebHTTPServer.listen(Config.webResolverPort, Config.webResolverHost);
     }
 }

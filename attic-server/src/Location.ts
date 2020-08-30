@@ -1,5 +1,5 @@
 import { Mongoose, Schema, Document } from 'mongoose';
-import * as MUUID from 'uuid-mongodb';
+import { ObjectId } from 'mongodb';
 import * as url  from 'url';
 import Config from './Config';
 import mongoose from './Database';
@@ -12,28 +12,23 @@ import Resolver, {ResolverSchema} from "./Resolver";
 import { nanoid } from 'nanoid';
 import * as _ from 'lodash';
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
-import {parseUUIDQueryMiddleware} from "./misc";
+import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema} from "./Entity";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export interface ILocationModel {
-    id?: MUUID.MUUID;
-    _id?: MUUID.MUUID;
-    auth?: ICredentials|MUUID.MUUID,
+    id?: ObjectId;
+    _id?: ObjectId;
+    auth?: ICredentials|ObjectId,
     getHref?(): string;
     setHref?(value: string|url.UrlWithStringQuery): void;
     toString?(): string;
     getDriver?(): Constructible<IDriver>;
-    entity?: IEntity|MUUID.MUUID;
+    entity?: IEntity|ObjectId;
 }
 
 export type ILocation = ILocationModel&ILocationBase;
 export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
-    _id: {
-        type: 'object',
-        value: { type: 'Buffer' },
-        default: () => MUUID.v1(),
-    },
     href: {
         type: String,
         required: true
@@ -63,13 +58,11 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
         required: false
     },
     auth: {
-        type: 'object',
-        value: { type: 'Buffer' },
+        type: Schema.Types.ObjectId,
         ref: 'Credentials'
     },
     entity: {
-        type: 'object',
-        value: { type: 'Buffer' },
+        type: Schema.Types.ObjectId,
         ref: 'Entity'
     },
     search:  {
@@ -111,13 +104,6 @@ LocationSchema.methods.getDriver = function () {
     return drivers.get(this.driver);
 }
 
-LocationSchema.virtual('id')
-    .get(function() {
-        return MUUID.from(this._id).toString();
-    })
-    .set(function(val: string|MUUID.MUUID) {
-        this._id = MUUID.from(val);
-    });
 
 LocationSchema.methods.getHref = LocationSchema.methods.toString = function () {
     return url.format(this.toJSON());
@@ -134,14 +120,18 @@ LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): 
     }
 }
 
-LocationSchema.pre(['save', 'init'] as any, function () {
+LocationSchema.pre(['save', 'init', 'create'] as any, function () {
     let self: ILocation&Document = <ILocation&Document>(this as any);
     // self.href = self.getHref();
     if (self.href)
         self.setHref(self.href);
+    // moveAndConvertValue(self, 'entity', 'entity', (x: any) => new ObjectId(x));
 });
 
-LocationSchema.pre([ 'find', 'findOne' ] as any, parseUUIDQueryMiddleware);
+LocationSchema.pre([ 'find', 'findOne' ] as any, function () {
+    let self: any = this;
+    // moveAndConvertValue(self, 'entity', 'entity', (x: any) => new ObjectId(x));
+});
 
 RPCServer.methods.findLocation = async (query: any) => {
     let location = await Location.findOne(query).exec();
@@ -169,8 +159,10 @@ RPCServer.methods.findLocations = async (query: BasicFindOptions) => {
 }
 
 RPCServer.methods.createLocation = async (fields: any) => {
-
-    let location = await Location.create(fields);
+    if (fields.entity)
+        fields.entity = new ObjectId(fields.entity);
+    let location = new Location(fields);
+    location.save();
 
     return location.id;
 }
@@ -187,7 +179,7 @@ RPCServer.methods.deleteLocations = async (query: BasicFindQueryOptions) => {
 }
 
 RPCServer.methods.updateLocation = async (id: string, fields: any) => {
-    let doc = await Location.findOne({ _id: MUUID.from(id) });
+    let doc = await Location.findOne({ _id: new ObjectId(id) });
 
     _.extend(doc, fields);
     await doc.save();

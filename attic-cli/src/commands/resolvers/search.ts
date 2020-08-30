@@ -1,11 +1,11 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from '../../RPC';
+import RPCProxy from 'attic-cli-common/src/RPC';
 import Config from '../../Config';
 import Find from "../../Common/Find";
 import {BasicFindOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
 import * as cliff from "cliff";
 import * as _ from 'lodash';
-import {formatOutput, OutputFormat} from "../../Common/misc";
+import {formatOutput, OutputFormat} from "attic-cli-common/src/misc";
 import Search from "../../Common/Search";
 import {ensureMountPoint} from "attic-common/lib";
 

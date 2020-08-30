@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {Document} from "mongoose";
-import * as MUUID from 'uuid-mongodb';
+import { ObjectId } from 'mongodb';
 
 export function moveAndConvertValue(obj: any, startPath: string, endPath: string, convert?: any) {
     convert = convert || ((x: any): any => x);
@@ -18,6 +18,6 @@ export function parseUUIDQueryMiddleware() {
        obj,
        `_conditions.id`,
        `_conditions._id`,
-       (input: string) => MUUID.from(input)
+       (input: string) => new ObjectId(input)
    );
 }

@@ -1,7 +1,7 @@
 import Location, {ILocation, LocationSchema} from "./Location";
 import { Document, Schema } from 'mongoose';
-import Constructible from "./Constructible";;
-import * as MUUID from 'uuid-mongodb';
+import Constructible from "./Constructible";
+import { ObjectId } from 'mongodb';
 import mongoose from "./Database";
 import { IResolver as IResolverBase } from 'attic-common/lib';
 import Entity,{EntitySchema, IEntity} from "./Entity";
@@ -16,8 +16,8 @@ import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {createCacheItem, resolveFromCache} from "./CacheItem";
 
 export interface IResolverModel {
-    id: MUUID.MUUID;
-    _id: MUUID.MUUID;
+    id: ObjectId;
+    _id: ObjectId;
     type: String;
     mountPoints: ILocation[];
     resolve(location: ILocation): Promise<ILocation>;
@@ -26,11 +26,6 @@ export interface IResolverModel {
 export type IResolver = IResolverModel&IResolverBase;
 
 export const ResolverSchema = <Schema<IResolver>>(new (mongoose.Schema)({
-    _id: {
-        type: 'object',
-        value: { type: 'Buffer' },
-        default: () => MUUID.v1(),
-    },
     mountPoint: {
         type: {
             regex: {
@@ -101,17 +96,9 @@ ResolverSchema.index({
     name: 'resolver_search'
 });
 
-ResolverSchema.virtual('id')
-    .get(function() {
-        return MUUID.from(this._id).toString();
-    })
-    .set(function(val: string|MUUID.MUUID) {
-        this._id = MUUID.from(val);
-    });
 
 
 ResolverSchema.pre(([ 'find', 'findOne' ] as  any),  function () {
-    parseUUIDQueryMiddleware.call(this as any);
     let self = this as any;
 
     moveAndConvertValue(self, '_conditions.mountPoint', '_conditions.mountPoint.expression', (mnt: any) => ensureMountPoint(mnt as any).expression);
@@ -201,7 +188,7 @@ RPCServer.methods.deleteResolver = async (query: any) => {
 }
 
 RPCServer.methods.updateResolver = async (id: string, fields: any) => {
-    let doc = await Resolver.findOne({ _id: MUUID.from(id) });
+    let doc = await Resolver.findOne({ _id: new ObjectId(id) });
 
     _.extend(doc, fields);
     await doc.save();
@@ -283,15 +270,17 @@ export async function rootResolverResolve(location: ILocation): Promise<ILocatio
 }
 
 export interface ResolveOptionsModel {
-    id?: string|MUUID.MUUID;
+    id?: string|ObjectId;
 }
 
 export type ResolveOptions = ResolveOptionsBase&ResolveOptionsModel;
 
-export async function resolve(location: ILocation|string, options: ResolveOptions = { noCache: true }) {
+export async function resolve(location: ILocation|string, options: ResolveOptions = { noCache: false }) {
     let resolver;
     let result: Document&ILocation;
     let { id, noCache } = options;
+
+    if (!Config.enableCache) noCache = true;
 
     if (typeof(location) === 'string') {
         location = <ILocation>{ href: location };
@@ -303,12 +292,10 @@ export async function resolve(location: ILocation|string, options: ResolveOption
 
     if (!result) {
         if (id) {
-            let findOne: any = {driver: {$exists: true}};
-            if (typeof (id) === 'string') {
-                findOne.id = MUUID.from(id);
-            } else {
-                findOne._id = id;
-            }
+            let findOne: any = {
+                driver: {$exists: true},
+                _id: new ObjectId(id)
+            };
             resolver = await Resolver.findOne(findOne);
         }
 

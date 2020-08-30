@@ -19,5 +19,8 @@
     "typescript": "^3.9.7"
   },
   "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
-  "license": "LGPL-3.0"
+  "license": "LGPL-3.0",
+  "dependencies": {
+    "tslib": "^2.0.1"
+  }
 }

@@ -1,5 +1,5 @@
 import {Command, flags} from '@oclif/command'
-import {OutputFormat} from './misc';
+import {OutputFormat} from 'attic-cli-common/src/misc';
 import Config from '../Config';
 
 export default abstract class List extends Command {

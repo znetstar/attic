@@ -1,8 +1,0 @@
-    findEntities(query: BasicFindOptions): Promise<IEntity[]|number>;
-    findEntity(query: any): Promise<IEntity>;
-    searchEntities(query: BasicTextSearchOptions): Promise<IEntity[]|number>;
-    createEntity(Entity: IEntity): Promise<string>;
-    updateEntity(id: string, fields: any): Promise<void>
-    deleteEntities(query: BasicFindQueryOptions): Promise<void>;
-    deleteEntity(query: any): Promise<void>;
-    listEntityTypes(): Promise<string[]>;

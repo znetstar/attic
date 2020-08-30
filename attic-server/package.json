@@ -40,6 +40,6 @@
     "multi-rpc-express-transport": "^1.0.1",
     "nanoid": "^3.1.12",
     "nconf": "^0.10.0",
-    "uuid-mongodb": "^2.3.0"
+    "tslib": "^2.0.1"
   }
 }

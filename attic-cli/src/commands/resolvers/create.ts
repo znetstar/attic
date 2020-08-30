@@ -1,11 +1,11 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from '../../RPC';
+import RPCProxy from 'attic-cli-common/src/RPC';
 import Config from '../../Config';
 import Find from "../../Common/Find";
 import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from "cliff";
 import * as _ from 'lodash';
-import {formatOutput, formatOutputFromFlags, OutputFormat} from "../../Common/misc";
+import {formatOutput, formatOutputFromFlags, OutputFormat} from "attic-cli-common/src/misc";
 import Create from "../../Common/Create";
 import {ensureMountPoint, ILocation, IResolver} from "attic-common/lib";
 import * as URL from 'url';
@@ -15,7 +15,7 @@ export default class ResolverCreate extends Create {
   static flags = {
     help: flags.help({char: 'h'}),
     // flag with a value (-n, --name=VALUE)
-    mountpoint: flags.string({
+    mountPoint: flags.string({
       char: 'm',
       required: true
     }),
@@ -51,8 +51,8 @@ required: true
 
     let resolver: IResolver = !_.isEmpty(argv[0]) ? JSON.parse(argv[0]) : {};
 
-    if (flags.mountpoint) {
-      resolver.mountPoint = ensureMountPoint(flags.mountpoint);
+    if (flags.mountPoint) {
+      resolver.mountPoint = ensureMountPoint(flags.mountPoint);
     }
 
     if (flags.type) {

@@ -3,7 +3,7 @@ import { IEntity, default as Entity } from '../Entity';
 import { Mongoose, Schema, Document } from 'mongoose';
 import config from '../Config';
 import mongoose from '../Database';
-import * as MUUID from 'uuid-mongodb';
+import { ObjectId } from 'mongodb';
 
 export interface IHTTPResourceEntity {
     headers?: Map<string, string>;

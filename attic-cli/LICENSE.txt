@@ -1,4 +1,4 @@
-Attic Cli
+Attic CLI
 Copyright 2020 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
 
 Licensed under the Apache License, Version 2.0 (the "License");

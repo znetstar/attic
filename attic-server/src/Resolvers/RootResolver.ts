@@ -4,7 +4,7 @@ import { Mongoose, Schema, Document } from 'mongoose';
 import config from '../Config';
 import Resolver, {IResolver, ResolverSchema, rootResolverResolve} from '../Resolver';
 import mongoose from '../Database';
-import * as MUUID from 'uuid-mongodb';
+import { ObjectId } from 'mongodb';
 import Config from "../Config";
 
 

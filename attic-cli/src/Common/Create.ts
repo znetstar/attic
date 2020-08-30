@@ -1,8 +1,8 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from '../RPC';
+import RPCProxy from 'attic-cli-common/src/RPC';
 import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from 'cliff';
-import {OutputFormat} from './misc';
+import {OutputFormat} from 'attic-cli-common/src/misc';
 import Config from '../Config';
 import * as _ from "lodash";
 

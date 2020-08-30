@@ -10,20 +10,7 @@
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "@oclif/plugin-help": "^3.2.0",
-    "@types/cliff": "^0.1.5",
-    "@types/fs-extra": "^9.0.1",
-    "@types/lodash": "^4.14.160",
-    "@types/nconf": "^0.10.0",
-    "@types/yargs": "^15.0.5",
-    "cliff": "^0.1.10",
-    "dotenv": "^8.2.0",
-    "fs-extra": "^9.0.1",
-    "lodash": "^4.17.20",
-    "mongo-dot-notation": "^2.0.0",
-    "multi-rpc": "^1.5.7",
-    "nconf": "^0.10.0",
-    "tslib": "^1.13.0",
-    "yargs": "^15.4.1"
+    "tslib": "^1.13.0"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.2",
@@ -51,8 +38,12 @@
     "commands": "./lib/commands",
     "bin": "attic-cli",
     "plugins": [
-      "@oclif/plugin-help"
-    ]
+      "@oclif/plugin-help",
+      "attic-cli-url-shortner"
+    ],
+    "hooks": {
+      "init": "./lib/hooks/init/config"
+    }
   },
   "repository": "znetstar/attic",
   "scripts": {

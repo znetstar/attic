@@ -1,4 +1,4 @@
-import {OutputFormat} from "../Common/misc";
+import {OutputFormat} from "../misc";
 
 export default interface Config {
     serverUri: string;

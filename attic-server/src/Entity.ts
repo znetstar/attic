@@ -4,7 +4,7 @@ import { Stream } from 'stream';
 import { Mongoose, Schema, Document } from 'mongoose';
 import config from './Config';
 import mongoose from './Database';
-import * as MUUID from 'uuid-mongodb';
+import { ObjectId } from 'mongodb';
 import {ensureMountPoint} from "attic-common/lib";
 import {ResolverSchema} from "./Resolver";
 import {RPCServer} from "./RPC";
@@ -15,19 +15,15 @@ import { HTTPResourceEntity } from './Entities';
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 
 export interface IEntityModel {
-    id: MUUID.MUUID;
-    _id: MUUID.MUUID;
+    id: ObjectId;
+    _id: ObjectId;
     source: ILocation;
 }
 
 export type IEntity = IEntityModel&IEntityBase;
 
 export const EntitySchema = <Schema<IEntity>>new (mongoose.Schema)({
-    _id: {
-        type: 'object',
-        value: { type: 'Buffer' },
-        default: () => MUUID.v1(),
-    },
+
     source: {
         type: LocationSchema,
         unique: true
@@ -42,19 +38,12 @@ export const EntitySchema = <Schema<IEntity>>new (mongoose.Schema)({
     timestamps: true
 });
 
-EntitySchema.virtual('id')
-    .get(function() {
-        return MUUID.from(this._id).toString();
-    })
-    .set(function(val: string|MUUID.MUUID) {
-        this._id = MUUID.from(val);
-    });
 
 
 EntitySchema.pre(([ 'find', 'findOne' ] as  any),  function () {
     let self = this as any;
 
-    parseUUIDQueryMiddleware.call(this as any);
+
     moveAndConvertValue(self, '_conditions.source', '_conditions.source.href');
 })
 
@@ -117,7 +106,7 @@ RPCServer.methods.deleteEntities = async (query: BasicFindQueryOptions) => {
 }
 
 RPCServer.methods.updateEntity = async (id: string, fields: any) => {
-    let doc = await Location.findOne({ _id: MUUID.from(id) });
+    let doc = await Location.findOne({ _id: new ObjectId(id) });
 
     _.extend(doc, fields);
     await doc.save();

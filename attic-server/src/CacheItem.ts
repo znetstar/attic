@@ -1,7 +1,7 @@
 import Location, {ILocation, LocationSchema} from './Location';
 import { Mongoose, Schema, Document } from 'mongoose';
 import mongoose from './Database';
-import * as MUUID from 'uuid-mongodb';
+import { ObjectId } from 'mongodb';
 import Config from "./Config";
 import ICacheItemBase  from "attic-common/lib/ICacheItem";
 import config from "./Config";
@@ -10,8 +10,8 @@ import {EntitySchema, IEntity} from "./Entity";
 import * as _ from 'lodash';
 
 export interface ICacheItemModel {
-    id: MUUID.MUUID;
-    _id: MUUID.MUUID;
+    id: ObjectId;
+    _id: ObjectId;
     source: ILocation;
     target: ILocation;
     expiresAt: Date;
@@ -21,11 +21,7 @@ export interface ICacheItemModel {
 export type ICacheItem = ICacheItemBase&ICacheItemModel;
 
 export const CacheItemSchema = <Schema<ICacheItem>>(new (mongoose.Schema)({
-    _id: {
-        type: 'object',
-        value: { type: 'Buffer' },
-        default: () => MUUID.v1(),
-    },
+
     source: {
         type: LocationSchema,
         required: true
@@ -67,7 +63,7 @@ CacheItemSchema.index({
 CacheItemSchema.pre(([ 'find', 'findOne' ] as  any),  function () {
     let self = this as any;
 
-    parseUUIDQueryMiddleware.call(this as any);
+
     moveAndConvertValue(self, '_conditions.source', '_conditions.source.href');
     moveAndConvertValue(self, '_conditions.target', '_conditions.target.href');
 });

@@ -1,11 +1,11 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from '../../RPC';
+import RPCProxy from 'attic-cli-common/src/RPC';
 import Config from '../../Config';
 import Find from "../../Common/Find";
 import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from "cliff";
 import * as _ from 'lodash';
-import {OutputFormat} from "../../Common/misc";
+import {OutputFormat} from "attic-cli-common/src/misc";
 import Delete from "../../Common/Delete";
 
 export default class ResolverDelete extends Delete {
@@ -18,7 +18,7 @@ export default class ResolverDelete extends Delete {
       char: 'i',
       required: true
     }),
-    mountpoint: flags.string({
+    mountPoint: flags.string({
       char: 'm',
       required: false
     }),
@@ -61,8 +61,8 @@ export default class ResolverDelete extends Delete {
     if (!_.isEmpty(flags.id)) {
       findOptions.query.id = flags.id;
     }
-    if (!_.isEmpty(flags.mountpoint)) {
-      findOptions.query['mountPoint.expression'] = flags.mountpoint;
+    if (!_.isEmpty(flags.mountPoint)) {
+      findOptions.query['mountPoint.expression'] = flags.mountPoint;
     }
     if (!_.isEmpty(flags.priority) || flags.priority === 0) {
       findOptions.query.priority = flags.priority;
