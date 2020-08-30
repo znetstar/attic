@@ -7,3 +7,4 @@ export * from './Drivers';
 export * from './Entity';
 export * from './Resolvers';
 export * from './Web';
+export * from './CacheItem';

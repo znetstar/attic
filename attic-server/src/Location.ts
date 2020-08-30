@@ -3,17 +3,18 @@ import * as MUUID from 'uuid-mongodb';
 import * as url  from 'url';
 import Config from './Config';
 import mongoose from './Database';
-import {EntitySchema, IEntity} from "./Entity";
-import { ILocation as ILocationBase } from 'attic-common/src';
+import { ILocation as ILocationBase, IEntity } from 'attic-common/src';
 import {ICredentials} from "./Credentials";
 import {IDriver} from "attic-common/lib/IDriver";
-import { drivers } from './Drivers';
 import Constructible from "./Constructible";
 import { RPCServer } from './RPC';
 import Resolver, {ResolverSchema} from "./Resolver";
 import { nanoid } from 'nanoid';
 import * as _ from 'lodash';
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
+import {parseUUIDQueryMiddleware} from "./misc";
+import {EntitySchema} from "./Entity";
+const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export interface ILocationModel {
     id?: MUUID.MUUID;
@@ -26,7 +27,6 @@ export interface ILocationModel {
     entity?: IEntity|MUUID.MUUID;
 }
 
-
 export type ILocation = ILocationModel&ILocationBase;
 export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     _id: {
@@ -36,8 +36,7 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     },
     href: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     protocol: {
         type: String,
@@ -79,7 +78,7 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     },
     driver: {
         type: String,
-        required: true,
+        required: false,
         enum: Config.drivers.slice(0)
     }
 }, {
@@ -106,6 +105,7 @@ LocationSchema.index({
     },
     name: 'location_search'
 });
+
 
 LocationSchema.methods.getDriver = function () {
     return drivers.get(this.driver);
@@ -141,16 +141,7 @@ LocationSchema.pre(['save', 'init'] as any, function () {
         self.setHref(self.href);
 });
 
-LocationSchema.pre([
-    'find',
-    'findOne'
-] as any, function () {
-    let self = this as any;
-    if (self.id) {
-        self._id = MUUID.from(self.id);
-        delete self._id;
-    }
-})
+LocationSchema.pre([ 'find', 'findOne' ] as any, parseUUIDQueryMiddleware);
 
 RPCServer.methods.findLocation = async (query: any) => {
     let location = await Location.findOne(query).exec();
@@ -224,4 +215,12 @@ RPCServer.methods.searchLocations = async (query:  BasicTextSearchOptions) => {
 }
 
 const Location = mongoose.model<ILocation&Document>('Location', LocationSchema);
+
+Location.collection.createIndex({ 'href': 1 }, { unique: true });
+Location.collection.createIndex({
+    '_id': 1,
+    'driver': -1
+}, {
+    unique: true
+});
 export default Location;

@@ -11,6 +11,9 @@ import {RPCServer} from "./RPC";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
 import * as _ from "lodash";
 
+import { HTTPResourceEntity } from './Entities';
+import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
+
 export interface IEntityModel {
     id: MUUID.MUUID;
     _id: MUUID.MUUID;
@@ -19,7 +22,7 @@ export interface IEntityModel {
 
 export type IEntity = IEntityModel&IEntityBase;
 
-export const EntitySchema = <Schema<IEntity>>(new (mongoose.Schema)({
+export const EntitySchema = <Schema<IEntity>>new (mongoose.Schema)({
     _id: {
         type: 'object',
         value: { type: 'Buffer' },
@@ -35,9 +38,9 @@ export const EntitySchema = <Schema<IEntity>>(new (mongoose.Schema)({
         enum: config.entityTypes.slice(0)
     }
 }, {
-    discriminatorKey: 'type',
+    discriminatorKey: 'class',
     timestamps: true
-}))
+});
 
 EntitySchema.virtual('id')
     .get(function() {
@@ -48,19 +51,11 @@ EntitySchema.virtual('id')
     });
 
 
-
 EntitySchema.pre(([ 'find', 'findOne' ] as  any),  function () {
     let self = this as any;
 
-    if (typeof(self.source) === 'string') {
-        let href = self.source;
-        self['source.href'] = href;
-        delete self.source;
-    }
-    if (self.id) {
-        self._id = MUUID.from(self.id);
-        delete self._id;
-    }
+    parseUUIDQueryMiddleware.call(this as any);
+    moveAndConvertValue(self, '_conditions.source', '_conditions.source.href');
 })
 
 EntitySchema.index({

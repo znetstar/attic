@@ -4,6 +4,8 @@ import config from './Config';
 import mongoose from './Database';
 import * as MUUID from 'uuid-mongodb';
 import { ICredentials as ICredentialsBase } from 'attic-common/src/index';
+import {parseUUIDQueryMiddleware} from "./misc";
+import {EntitySchema} from "./Entity";
 
 export interface ICredentialsModel {
     id: MUUID.MUUID;
@@ -34,6 +36,9 @@ CredentialsSchema.virtual('id')
     .set(function(val: string|MUUID.MUUID) {
         this._id = MUUID.from(val);
     });
+
+CredentialsSchema.pre([ 'find', 'findOne' ] as any, parseUUIDQueryMiddleware);
+
 
 const Credentials = mongoose.model<ICredentials&Document>('Credentials', CredentialsSchema);
 export default Credentials;

@@ -3,14 +3,27 @@ import { JSONSerializer } from 'multi-rpc';
 import { ExpressTransport } from 'multi-rpc-express-transport';
 import resolverMiddleware from './ResolverMiddleware';
 import { RPCServer } from '../RPC';
+import Config from '../Config';
+import { Server as HTTPServer } from 'http';
+import {Router} from "express";
 
-let app = express();
-app.use(require('cors')());
+export let RPCTransport: ExpressTransport;
+export let RPCRouter: Router;
 
-export const RPCRouter = express.Router();
-export const RPCTransport = new ExpressTransport(new JSONSerializer(), RPCRouter);
+
+export let RPCHTTPServer: HTTPServer;
+export let RPCExpress: any;
+export let WebHTTPServer: HTTPServer;
+export let WebExpress: any;
+RPCExpress = express();
+RPCHTTPServer = new HTTPServer(RPCExpress);
+RPCRouter = express.Router();
+RPCTransport = new ExpressTransport(new JSONSerializer(), RPCRouter);
 RPCServer.addTransport(RPCTransport);
-app.post('/rpc', RPCRouter);
-app.use(resolverMiddleware);
+RPCExpress.post('/rpc', RPCRouter);
 
-export default app;
+if (Config.enableWebResolver) {
+    WebExpress = Config.webResolverShareRpcServer ? RPCExpress : express();
+    WebHTTPServer = Config.webResolverShareRpcServer ? RPCHTTPServer : new HTTPServer(WebExpress);
+    WebExpress.use(resolverMiddleware);
+}

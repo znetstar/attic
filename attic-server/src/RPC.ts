@@ -18,4 +18,5 @@ RPCServer.methods.listDrivers = async () => Config.drivers.slice(0);
 RPCServer.methods.listResolverTypes = async () => Config.resolverTypes.slice(0);
 RPCServer.methods.listEntityTypes = async () => Config.entityTypes.slice(0);
 
+
 export default RPCServer;

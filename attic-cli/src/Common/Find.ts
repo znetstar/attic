@@ -4,6 +4,7 @@ import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from 'cliff';
 import {OutputFormat} from './misc';
 import * as _ from "lodash";
+import Config from '../Config';
 
 export default abstract class Find extends Command {
   static description = 'describe the command here'

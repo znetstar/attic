@@ -6,12 +6,14 @@ import mongoose from "./Database";
 import { IResolver as IResolverBase } from 'attic-common/lib';
 import Entity,{EntitySchema, IEntity} from "./Entity";
 import {RPCServer} from "./RPC";
-import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
+import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions, ResolveOptions as ResolveOptionsBase} from "attic-common/lib/IRPC";
 import * as _ from "lodash";
 import {RootResolverSchema} from "./Resolvers/RootResolver";
 import {ensureMountPoint} from "attic-common/lib";
 import {IMountPoint} from "attic-common/lib/IResolver";
 import Config from "./Config";
+import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
+import {createCacheItem, resolveFromCache} from "./CacheItem";
 
 export interface IResolverModel {
     id: MUUID.MUUID;
@@ -62,11 +64,13 @@ export const ResolverSchema = <Schema<IResolver>>(new (mongoose.Schema)({
         default: false
     }
 }, {
-    discriminatorKey: 'type',
+    discriminatorKey: 'class',
     timestamps: true
 }));
 
 ResolverSchema.index({
+    mountPoint: 1,
+    priority: -1,
     isRootResolver: 1
 });
 
@@ -105,19 +109,20 @@ ResolverSchema.virtual('id')
         this._id = MUUID.from(val);
     });
 
+
 ResolverSchema.pre(([ 'find', 'findOne' ] as  any),  function () {
+    parseUUIDQueryMiddleware.call(this as any);
     let self = this as any;
 
-    if (typeof(self.mountPoint) === 'string') {
-        let mountPoint = ensureMountPoint(self.mountPoint);
-        self['mountPoint.expression'] = mountPoint.expression;
-        delete self.mountPoint;
-    }
-    if (self.id) {
-        self._id = MUUID.from(self.id);
-        delete self._id;
-    }
+    moveAndConvertValue(self, '_conditions.mountPoint', '_conditions.mountPoint.expression', (mnt: any) => ensureMountPoint(mnt as any).expression);
 })
+
+ResolverSchema.pre('init', function () {
+    let self: any = this;
+
+    self.mountPoint = ensureMountPoint(self.mountPoint);
+    self.isRootResolver = self.type === 'RootResolver';
+});
 
 ResolverSchema.pre('save', async function () {
     let self: any = this;
@@ -148,7 +153,7 @@ export async function getNextResolverPriority(mountPoint: IMountPoint) {
 }
 
 ResolverSchema.methods.resolve = async function (location: ILocation): Promise<ILocation&Document> {
-    return Location.findOne({ 'href': location.href });
+    return Location.findOne({ 'href': location.href, driver: { $exists: true } });
 }
 
 RPCServer.methods.getNextResolverPriority = getNextResolverPriority;
@@ -223,18 +228,112 @@ RPCServer.methods.searchResolvers = async (query:  BasicTextSearchOptions) => {
     return resolvers.map(l => l.toJSON({ virtuals: true }));
 }
 
-
-RPCServer.methods.resolve = async function (location: ILocation|string, id?: string) {
-    let resolver;
-    if (id) {
-        resolver = await Resolver.findOne({ _id: MUUID.from(id) });
+export async function rootResolverResolve(location: ILocation): Promise<ILocation&Document> {
+    // First find a resolver
+    let match = <any>{
+        match: true
+    };
+    if (this && this._id) {
+        match._id = { $ne: this._id };
     }
+    let resolvers = (Resolver.aggregate()
+        .sort({
+            mountPoint: 1,
+            priority: -1,
+            isRootResolver: 1
+        })
+        .append({
+            $addFields: {
+                match: {
+                    $regexMatch: {
+                        input: location.href,
+                        regex: '$mountPoint.regex',
+                        options: '$mountPoint.options'
+                    }
+                }
+            }
+        })
+        .sort({
+            match: -1
+        })
+        .match({
+            match: true
+        })
+        .cursor({ batchSize: 500 })
+        .exec());
+
+    // Loop through each resolver
+    let resolver: IResolver&Document;
+    while (resolver = await resolvers.next()) {
+        // Attempt to resolve the location
+        let outLocation: ILocation&Document;
+        if (resolver.isRootResolver) {
+            outLocation = await ResolverSchema.methods.resolve.call(resolver, location);
+        }
+        else {
+            outLocation = (await resolver.resolve(location)) as ILocation&Document;
+        }
+
+        if (outLocation) {
+            return (outLocation);
+        }
+    }
+
+    return null;
+}
+
+export interface ResolveOptionsModel {
+    id?: string|MUUID.MUUID;
+}
+
+export type ResolveOptions = ResolveOptionsBase&ResolveOptionsModel;
+
+export async function resolve(location: ILocation|string, options: ResolveOptions = { noCache: true }) {
+    let resolver;
+    let result: Document&ILocation;
+    let { id, noCache } = options;
+
     if (typeof(location) === 'string') {
         location = <ILocation>{ href: location };
     }
 
-    if (resolver) return resolver.resolve(location);
-    else return RootResolverSchema.methods.resolve(location);
+    if (!noCache) {
+        result = await resolveFromCache(location);
+    }
+
+    if (!result) {
+        if (id) {
+            let findOne: any = {driver: {$exists: true}};
+            if (typeof (id) === 'string') {
+                findOne.id = MUUID.from(id);
+            } else {
+                findOne._id = id;
+            }
+            resolver = await Resolver.findOne(findOne);
+        }
+
+
+        if (resolver) {
+            result = ((await resolver.resolve(location)) as Document & ILocation);
+        } else {
+            result = (await rootResolverResolve(location)) as ILocation & Document;
+        }
+
+        if (result) {
+            await createCacheItem(location, result);
+        }
+    }
+
+    return result;
+}
+
+RPCServer.methods.resolve = async function (location: ILocation|string, options: ResolveOptionsBase) {
+    let doc = await resolve(location, options);
+
+    if (doc) {
+        return doc.toJSON({ virtuals: true }) as any;
+    }
+    return doc;
 }
 
 const Resolver = mongoose.model<IResolver&Document>('Resolver', ResolverSchema);

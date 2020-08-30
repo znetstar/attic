@@ -29,6 +29,10 @@ export interface BasicFindQueryOptionAdditions {
 
 export type BasicFindOptions = BasicFindQueryOptions&BasicFindQueryOptionAdditions;
 
+export interface ResolveOptions {
+    id?: string;
+    noCache?: boolean;
+}
 
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
@@ -49,8 +53,6 @@ export default interface IRPC {
     updateResolver(id: string, fields: any): Promise<void>
     deleteResolvers(query: BasicFindQueryOptions): Promise<void>;
     deleteResolver(query: any): Promise<void>;
-    resolveLocation(location: ILocation): Promise<ILocation>;
-    resolve(location: ILocation|string, id?: string): Promise<ILocation>;
     listResolverTypes(): Promise<string[]>;
 
     findEntities(query: BasicFindOptions): Promise<IEntity[]|number>;
@@ -63,4 +65,7 @@ export default interface IRPC {
     listEntityTypes(): Promise<string[]>;
 
     getNextResolverPriority(mountPoint: IMountPoint): Promise<number>;
+
+    resolveLocation(location: ILocation): Promise<ILocation>;
+    resolve(location: ILocation|string, options: ResolveOptions): Promise<ILocation>;
 }

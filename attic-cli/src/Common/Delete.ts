@@ -3,6 +3,7 @@ import RPCProxy from '../RPC';
 import {BasicFindOptions, BasicFindQueryOptions} from "attic-common/lib/IRPC";
 import * as cliff from 'cliff';
 import {OutputFormat} from './misc';
+import Config from '../Config';
 import * as _ from "lodash";
 
 export default abstract class Find extends Command {

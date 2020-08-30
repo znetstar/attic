@@ -1,5 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import RPCProxy from '../../RPC';
+import Config from '../../Config';
 import Find from "../../Common/Find";
 import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from "cliff";
@@ -8,7 +9,7 @@ import {OutputFormat} from "../../Common/misc";
 import List from "../../Common/List";
 
 export default class EntityList extends List {
-  static description = 'lists all Resolver types'
+  static description = 'lists all entity types'
 
   async run() {
     const {argv, flags} = this.parse(List);

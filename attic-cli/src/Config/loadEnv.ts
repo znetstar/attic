@@ -6,7 +6,11 @@
      * @type {string[]}
      */
     const envWhitelist: any[] = [
-        'SERVER_URI'
+        'SERVER_URI',
+        'VERBOSE',
+        'OUTPUT_FORMAT',
+        'LOG_RPC_STACK',
+        'LOG_RPC_PROTOCOL_ERRORS'
     ];
 
     const noTransform: any[] = [

@@ -7,7 +7,19 @@
      */
     const envWhitelist: any[] = [
         'MONGO_URI',
-        'PORT'
+        'PORT',
+        'HOST',
+        'UNIX_SOCKET',
+        'ENABLE_CACHE',
+        'CACHE_SIZE',
+        'CACHE_MAX',
+        'ENABLE_WEB_RESOLVER',
+        'WEB_RESOLVER_PORT',
+        'WEB_RESOLVER_HOST',
+        'WEB_RESOLVER_UNIX_SOCKET',
+        'WEB_RESOLVER_SHARE_RPC_SERVER',
+        'SHORT_URL_SIZE',
+        'ROOT_RESOLVER_BATCH_SIZE'
     ];
 
     const noTransform: any[] = [

@@ -6,6 +6,5 @@ export {
     IDriverHead,
     IDriverPut,
     IDriverDelete,
-    IDriverList,
-    default
+    IDriverList
 } from 'attic-common/src/IDriver';

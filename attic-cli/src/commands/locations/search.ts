@@ -1,5 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import RPCProxy from '../../RPC';
+import Config from '../../Config';
 import Find from "../../Common/Find";
 import {BasicFindOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
 import * as cliff from "cliff";
@@ -8,7 +9,7 @@ import {formatOutputFromFlags, OutputFormat} from "../../Common/misc";
 import Search from "../../Common/Search";
 
 export default class LocationSearch extends Search {
-  static description = 'conducts a MongoDB text search on the Locations collection'
+  static description =  'searches for an entity via MongoDB text search';
 
   async run() {
     const {argv, flags} = this.parse(Search);

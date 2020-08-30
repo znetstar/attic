@@ -9,7 +9,7 @@ export interface IMountPoint {
 export default interface IResolver {
     id?: string;
     _id?: string;
-    type?: string;
+    class?: string;
     mountPoint: IMountPoint;
     priority?: number;
     isRootResolver?: boolean;
@@ -34,6 +34,9 @@ export interface IPartialMountPointExpression {
     regex?: string;
     options?: string;
 }
+
+
+
 
 export function ensureMountPoint(mountPoint: IMountPoint|IPartialMountPointExpression|IPartialMountPointRegex|string): IMountPoint {
     let expression: string, regex: string, options: string;

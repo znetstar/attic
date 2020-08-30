@@ -6,4 +6,12 @@ mongoose.connect(config.mongoUri, { useNewUrlParser: true }).catch((err: Error) 
     console.error(`Error connecting to mongoose: ${err.stack}`)
 });
 
+
+export function loadModels() {
+    require('../Location');
+    require('../Entity');
+    require('../Resolver');
+    require('../CacheItem');
+}
+
 export default mongoose;

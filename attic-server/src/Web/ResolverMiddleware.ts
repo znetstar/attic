@@ -5,12 +5,13 @@ import {ILocation} from "../Location";
 import {IDriverFull,IDriverOfFull} from "../Driver";
 import {IHTTPResponse} from "../Drivers/HTTPCommon";
 import Constructible from "../Constructible";
+import {resolve} from "../Resolver";
 
 export default function ResolverMiddleware(req: any, res: any, next: any) {
     asyncMiddleware(async function (req: any, res: any) {
         let href = req.protocol + '://' + req.get('host') + req.originalUrl;
 
-        const location = await RootResolverSchema.methods.resolve({ href });
+        const location = await resolve({ href });
 
         if (!location) {
             return true;

@@ -1,5 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import RPCProxy from '../../RPC';
+import Config from '../../Config';
 import Find from "../../Common/Find";
 import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from "cliff";
@@ -24,14 +25,15 @@ export default class ResolverCreate extends Create {
     }),
     type: flags.string({
       char: 't',
-      required: true
+
+required: true
     }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
-      default: OutputFormat.text
+      default: Config.outputFormat
     }),
     verbose: flags.boolean({
-      default: false,
+      default: Config.verbose,
       required: false,
       char: 'v'
     })
@@ -56,18 +58,16 @@ export default class ResolverCreate extends Create {
     if (flags.type) {
       resolver.type = flags.type;
     }
-
-    resolver.priority = typeof(flags.priority) !== 'undefined' ? flags.priority :
+    resolver.priority = typeof (flags.priority) !== 'undefined' ? flags.priority :
       await RPCProxy.getNextResolverPriority(resolver.mountPoint);
 
     let resolverId = await RPCProxy.createResolver(resolver);
-
     let output = formatOutputFromFlags(
-      { id: resolverId, 'mountPoint': resolver.mountPoint, priority: resolver.priority },
+      {id: resolverId, 'mountPoint': resolver.mountPoint, priority: resolver.priority},
       flags,
-       [ 'id', 'mountPoint.expression', 'priority' ]
+      ['id', 'mountPoint.expression', 'priority']
     );
 
-    console.log(formatOutput(output));
+    console.log((output));
   }
 }

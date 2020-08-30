@@ -3,6 +3,7 @@ import RPCProxy from '../RPC';
 import {BasicFindOptions} from "attic-common/lib/IRPC";
 import * as cliff from 'cliff';
 import {OutputFormat} from './misc';
+import Config from '../Config';
 import * as _ from "lodash";
 
 export default abstract class Create extends Command {
@@ -13,10 +14,10 @@ export default abstract class Create extends Command {
     // flag with a value (-n, --name=VALUE)
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
-      default: OutputFormat.text
+      default: Config.outputFormat
     }),
     verbose: flags.boolean({
-      default: false,
+      default: Config.verbose,
       required: false,
       char: 'v'
     })
