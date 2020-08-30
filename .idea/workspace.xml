@@ -11,61 +11,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2f2e9672-5385-457e-a4e5-7831fcab0339" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/attic-cli-common/src/Config/index.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/attic-cli-url-shortner/LICENSE.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/LICENSE.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/Create.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Common/Create.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/Delete.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Common/Delete.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/Find.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Common/Find.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/List.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Common/List.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/Resolve.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Common/Resolve.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/Search.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Common/Search.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Common/misc.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/src/misc.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Config/Config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/src/Config/Config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Config/DefaultConfig.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/src/Config/DefaultConfig.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Config/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/Config/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/Config/loadEnv.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/src/Config/loadEnv.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/RPC.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/src/RPC.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/drivers/listTypes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/drivers/listTypes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/entities/create.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/entities/create.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/entities/delete.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/entities/delete.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/entities/find.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/entities/find.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/entities/listTypes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/entities/listTypes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/entities/search.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/entities/search.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/entities/update.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/entities/update.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/create.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/create.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/delete.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/delete.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/find.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/find.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/search.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/search.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/update.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/update.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolve/entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolve/entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolve/location.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolve/location.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/create.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/create.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/delete.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/delete.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/find.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/find.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/listTypes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/listTypes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/search.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/search.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/update.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/resolvers/update.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-common/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-common/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-common/src/test" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-common/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/CacheItem.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/CacheItem.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/attic-server/src/Config/DefaultConfig.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Config/DefaultConfig.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Credentials.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Credentials.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Entities/HTTPResourceEntity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Entities/HTTPResourceEntity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Location.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Location.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Resolver.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Resolver.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/Resolvers/RootResolver.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Resolvers/RootResolver.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/launch.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/launch.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/src/misc.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/misc.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/attic-server/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -319,7 +265,7 @@
       <workItem from="1598369585900" duration="25335000" />
       <workItem from="1598499669341" duration="4176000" />
       <workItem from="1598542730309" duration="40430000" />
-      <workItem from="1598653636998" duration="51218000" />
+      <workItem from="1598653636998" duration="51324000" />
     </task>
     <servers />
   </component>
@@ -361,102 +307,102 @@
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="629" y="272" key="FileChooserDialogImpl/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598722044907" />
-    <state width="939" height="339" key="GridCell.Tab.0.bottom" timestamp="1598760765230">
+    <state width="939" height="339" key="GridCell.Tab.0.bottom" timestamp="1598760833262">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730639" />
     <state width="1638" height="275" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815726" />
-    <state width="939" height="339" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765230" />
-    <state width="939" height="339" key="GridCell.Tab.0.center" timestamp="1598760765229">
+    <state width="939" height="339" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833262" />
+    <state width="939" height="339" key="GridCell.Tab.0.center" timestamp="1598760833261">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730639" />
     <state width="1638" height="275" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815726" />
-    <state width="939" height="339" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765229" />
-    <state width="939" height="339" key="GridCell.Tab.0.left" timestamp="1598760765229">
+    <state width="939" height="339" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833261" />
+    <state width="939" height="339" key="GridCell.Tab.0.left" timestamp="1598760833256">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730638" />
     <state width="1638" height="275" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815725" />
-    <state width="939" height="339" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765229" />
-    <state width="939" height="339" key="GridCell.Tab.0.right" timestamp="1598760765230">
+    <state width="939" height="339" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833256" />
+    <state width="939" height="339" key="GridCell.Tab.0.right" timestamp="1598760833262">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730639" />
     <state width="1638" height="275" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815726" />
-    <state width="939" height="339" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765230" />
-    <state width="939" height="339" key="GridCell.Tab.1.bottom" timestamp="1598760766733">
+    <state width="939" height="339" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833262" />
+    <state width="939" height="339" key="GridCell.Tab.1.bottom" timestamp="1598760833264">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.1.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730414" />
     <state width="1638" height="342" key="GridCell.Tab.1.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815715" />
-    <state width="939" height="339" key="GridCell.Tab.1.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760766733" />
-    <state width="939" height="339" key="GridCell.Tab.1.center" timestamp="1598760766732">
+    <state width="939" height="339" key="GridCell.Tab.1.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833264" />
+    <state width="939" height="339" key="GridCell.Tab.1.center" timestamp="1598760833264">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.1.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730413" />
     <state width="1638" height="342" key="GridCell.Tab.1.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815714" />
-    <state width="939" height="339" key="GridCell.Tab.1.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760766732" />
-    <state width="939" height="339" key="GridCell.Tab.1.left" timestamp="1598760766732">
+    <state width="939" height="339" key="GridCell.Tab.1.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833264" />
+    <state width="939" height="339" key="GridCell.Tab.1.left" timestamp="1598760833263">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.1.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730412" />
     <state width="1638" height="342" key="GridCell.Tab.1.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815714" />
-    <state width="939" height="339" key="GridCell.Tab.1.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760766732" />
-    <state width="939" height="339" key="GridCell.Tab.1.right" timestamp="1598760766733">
+    <state width="939" height="339" key="GridCell.Tab.1.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833263" />
+    <state width="939" height="339" key="GridCell.Tab.1.right" timestamp="1598760833264">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.1.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730413" />
     <state width="1638" height="342" key="GridCell.Tab.1.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815715" />
-    <state width="939" height="339" key="GridCell.Tab.1.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760766733" />
-    <state width="939" height="339" key="GridCell.Tab.2.bottom" timestamp="1598760765234">
+    <state width="939" height="339" key="GridCell.Tab.1.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833264" />
+    <state width="939" height="339" key="GridCell.Tab.2.bottom" timestamp="1598760833266">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.2.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730415" />
     <state width="1638" height="342" key="GridCell.Tab.2.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.2.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765234" />
-    <state width="939" height="339" key="GridCell.Tab.2.center" timestamp="1598760765233">
+    <state width="939" height="339" key="GridCell.Tab.2.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833266" />
+    <state width="939" height="339" key="GridCell.Tab.2.center" timestamp="1598760833265">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.2.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730414" />
     <state width="1638" height="342" key="GridCell.Tab.2.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815716" />
-    <state width="939" height="339" key="GridCell.Tab.2.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765233" />
-    <state width="939" height="339" key="GridCell.Tab.2.left" timestamp="1598760765232">
+    <state width="939" height="339" key="GridCell.Tab.2.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833265" />
+    <state width="939" height="339" key="GridCell.Tab.2.left" timestamp="1598760833265">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.2.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730414" />
     <state width="1638" height="342" key="GridCell.Tab.2.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815716" />
-    <state width="939" height="339" key="GridCell.Tab.2.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765232" />
-    <state width="939" height="339" key="GridCell.Tab.2.right" timestamp="1598760765234">
+    <state width="939" height="339" key="GridCell.Tab.2.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833265" />
+    <state width="939" height="339" key="GridCell.Tab.2.right" timestamp="1598760833266">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.2.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730415" />
     <state width="1638" height="342" key="GridCell.Tab.2.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815716" />
-    <state width="939" height="339" key="GridCell.Tab.2.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765234" />
-    <state width="939" height="339" key="GridCell.Tab.3.bottom" timestamp="1598760765235">
+    <state width="939" height="339" key="GridCell.Tab.2.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833266" />
+    <state width="939" height="339" key="GridCell.Tab.3.bottom" timestamp="1598760833268">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.3.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730417" />
     <state width="1638" height="342" key="GridCell.Tab.3.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815718" />
-    <state width="939" height="339" key="GridCell.Tab.3.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765235" />
-    <state width="939" height="339" key="GridCell.Tab.3.center" timestamp="1598760765235">
+    <state width="939" height="339" key="GridCell.Tab.3.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833268" />
+    <state width="939" height="339" key="GridCell.Tab.3.center" timestamp="1598760833267">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.3.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730416" />
     <state width="1638" height="342" key="GridCell.Tab.3.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.3.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765235" />
-    <state width="939" height="339" key="GridCell.Tab.3.left" timestamp="1598760765234">
+    <state width="939" height="339" key="GridCell.Tab.3.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833267" />
+    <state width="939" height="339" key="GridCell.Tab.3.left" timestamp="1598760833267">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.3.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730415" />
     <state width="1638" height="342" key="GridCell.Tab.3.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.3.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765234" />
-    <state width="939" height="339" key="GridCell.Tab.3.right" timestamp="1598760765235">
+    <state width="939" height="339" key="GridCell.Tab.3.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833267" />
+    <state width="939" height="339" key="GridCell.Tab.3.right" timestamp="1598760833268">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="819" height="341" key="GridCell.Tab.3.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730416" />
     <state width="1638" height="342" key="GridCell.Tab.3.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.3.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760765235" />
+    <state width="939" height="339" key="GridCell.Tab.3.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833268" />
     <state x="342" y="171" key="SettingsEditor" timestamp="1598268887780">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
@@ -473,11 +419,11 @@
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state x="2437" y="477" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598681879266" />
-    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1598725941972">
+    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1598760832506">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state x="383" y="268" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.23.1680.1027@0.23.1680.1027" timestamp="1597980975771" />
-    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598725941972" />
+    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760832506" />
     <state x="1786" y="126" width="1692" height="842" key="dock-window-1" timestamp="1598681179064">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
@@ -510,71 +456,5 @@
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="571" y="456" key="vcs.readOnlyHandler.ReadOnlyStatusDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1598281920607" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts</url>
-          <line>38</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="171" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts</url>
-          <line>27</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="173" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Resolver.ts</url>
-          <line>280</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="190" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Resolver.ts</url>
-          <line>279</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="191" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Resolver.ts</url>
-          <line>278</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="192" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Resolver.ts</url>
-          <line>288</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="193" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts</url>
-          <line>15</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="197" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Location.ts</url>
-          <line>163</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="198" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Location.ts</url>
-          <line>164</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="199" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts</url>
-          <line>16</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="200" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

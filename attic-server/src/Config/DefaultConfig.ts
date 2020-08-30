@@ -7,7 +7,7 @@ export default <Config>{
     port: 7373,
     host: '127.0.0.1',
 
-    enableCache: false,
+    enableCache: true,
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
