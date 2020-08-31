@@ -4,7 +4,6 @@ import * as url  from 'url';
 import Config from './Config';
 import mongoose from './Database';
 import { ILocation as ILocationBase, IEntity } from 'attic-common/src';
-import {ICredentials} from "./Credentials";
 import {IDriver} from "attic-common/lib/IDriver";
 import Constructible from "./Constructible";
 import { RPCServer } from './RPC';
@@ -14,12 +13,14 @@ import * as _ from 'lodash';
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema} from "./Entity";
+import {IUser} from "./User";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export interface ILocationModel {
     id?: ObjectId;
     _id?: ObjectId;
-    auth?: ICredentials|ObjectId,
+    auth?: string;
+    user?: IUser;
     getHref?(): string;
     setHref?(value: string|url.UrlWithStringQuery): void;
     toString?(): string;
@@ -58,8 +59,8 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
         required: false
     },
     auth: {
-        type: Schema.Types.ObjectId,
-        ref: 'Credentials'
+        type: String,
+        required: false
     },
     entity: {
         type: Schema.Types.ObjectId,
@@ -73,10 +74,21 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
         type: String,
         required: false,
         enum: Config.drivers.slice(0)
+    },
+    expiresAt: {
+        type: Date,
+        required: false
     }
 }, {
     timestamps: true
 }));
+
+LocationSchema.virtual('user', {
+    ref: 'User',
+    localField: 'auth',
+    foreignField: 'username',
+    justOne: true
+});
 
 LocationSchema.index({
     'href': 'text',
@@ -106,14 +118,19 @@ LocationSchema.methods.getDriver = function () {
 
 
 LocationSchema.methods.getHref = LocationSchema.methods.toString = function () {
-    return url.format(this.toJSON());
+    let clone = this.toJSON();
+    delete clone.auth;
+    return url.format(clone);
 }
 
 LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): void {
     if (typeof(val) === 'string')
         val = url.parse(val);
 
+
     for (let k in val) {
+        if (k === 'auth' && _.isEmpty(val[k]))
+            continue;
         if (['href', 'toString', 'id', '_id'].includes((k)))
             continue;
         this[<any>k] = (<any>val)[<any>k];
@@ -122,9 +139,9 @@ LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): 
 
 LocationSchema.pre(['save', 'init', 'create'] as any, function () {
     let self: ILocation&Document = <ILocation&Document>(this as any);
-    // self.href = self.getHref();
     if (self.href)
-        self.setHref(self.href);
+        LocationSchema.methods.setHref.call(self, self.href);
+    self.href = LocationSchema.methods.getHref.call(self);
     // moveAndConvertValue(self, 'entity', 'entity', (x: any) => new ObjectId(x));
 });
 
@@ -162,9 +179,12 @@ RPCServer.methods.createLocation = async (fields: any) => {
     if (fields.entity)
         fields.entity = new ObjectId(fields.entity);
     let location = new Location(fields);
-    location.save();
+    await location.save();
 
-    return location.id;
+    return {
+        id: location.id,
+        href: location.href
+    };
 }
 
 RPCServer.methods.deleteLocation = async (query: any) => {
@@ -183,6 +203,11 @@ RPCServer.methods.updateLocation = async (id: string, fields: any) => {
 
     _.extend(doc, fields);
     await doc.save();
+
+    return {
+        id: doc.id,
+        href: doc.href
+    }
 }
 
 RPCServer.methods.searchLocations = async (query:  BasicTextSearchOptions) => {
@@ -209,10 +234,18 @@ RPCServer.methods.searchLocations = async (query:  BasicTextSearchOptions) => {
 const Location = mongoose.model<ILocation&Document>('Location', LocationSchema);
 
 Location.collection.createIndex({ 'href': 1 }, { unique: true });
+
 Location.collection.createIndex({
     '_id': 1,
     'driver': -1
 }, {
     unique: true
 });
+
+Location.collection.createIndex({
+    expiresAt: 1
+}, {
+    expireAfterSeconds: 0
+});
+
 export default Location;

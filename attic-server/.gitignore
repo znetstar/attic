@@ -7,3 +7,4 @@ lib/
 tscommand*
 .idea
 data
+.env

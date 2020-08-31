@@ -1,6 +1,6 @@
 
 import Constructible from "./Constructible";
-import {default as ICredentials} from "./ICredentials";
+import {default as IUser} from "./IUser";
 import IEntity from "./IEntity";
 import IResolver from "./IResolver";
 
@@ -14,10 +14,11 @@ export default interface ILocation {
     pathname?: string;
     path?: string;
     href: string;
-    auth?: ICredentials|string;
+    auth?: string;
     entity?: IEntity|string;
     driver?: string;
     search?: string;
+    expiresAt?: Date;
 }
 
 export function defaultLocation(): ILocation {

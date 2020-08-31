@@ -1,11 +1,20 @@
 {
   "name": "attic-cli",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Zachary Boyd <zachary@zacharyboyd.nyc>",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "bin": {
     "attic-cli": "./bin/run"
   },
+  "homepage": "https://github.com/znetstar/attic",
   "bugs": "https://github.com/znetstar/attic/issues",
+  "repository": {
+    "url": "https://github.com/znetstar/attic.git",
+    "type":  "git"
+  },
   "dependencies": {
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
@@ -28,7 +37,6 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/znetstar/attic",
   "keywords": [
     "oclif"
   ],
@@ -45,7 +53,6 @@
       "init": "./lib/hooks/init/config"
     }
   },
-  "repository": "znetstar/attic",
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",

@@ -11,7 +11,7 @@ import {ILocation} from "attic-common/lib";
 import * as URL from 'url';
 
 export default class LocationCreate extends Create {
-  static description = 'creates a location returning a location id'
+  static description = 'creates a location, returning the url and id'
   static flags = {
     help: flags.help({char: 'h'}),
     // flag with a value (-n, --name=VALUE)
@@ -44,6 +44,10 @@ export default class LocationCreate extends Create {
       default: Config.verbose,
       required: false,
       char: 'v'
+    }),
+    expiresIn: flags.integer({
+      required: false,
+      char: 'x'
     })
   }
 
@@ -73,11 +77,12 @@ export default class LocationCreate extends Create {
     if (!_.isEmpty(flags.driver)) {
       location.driver = flags.driver;
     }
+    if (!_.isEmpty(flags.expiresIn) && flags.expiresIn) {
+      location.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
+    }
 
     let output: string;
-    let locationId = await RPCProxy.createLocation(location);
-
-    let outObject = { id: locationId, href };
+    let outObject = await RPCProxy.createLocation(location);
 
     console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'href' ]));
   }

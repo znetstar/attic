@@ -36,6 +36,11 @@ export function formatOutput(objects: any, format: OutputFormat = OutputFormat.t
           (o as any)[k as any] = undefined;
         }
       }
+
+      if (typeof(o) === 'boolean') {
+        o = o ? '✅️' : '❌';
+      }
+
       return o;
     })
 

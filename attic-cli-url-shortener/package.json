@@ -1,13 +1,22 @@
 {
-  "name": "attic-cli-url-shortner",
+  "name": "@znetstar/attic-cli-url-shortener",
   "description": "URL Shortening plugin for attic-cli",
   "version": "1.0.0",
-  "author": "Zachary Boyd <zachary@zacharyboyd.nyc>",
-  "bugs": "https://github.com/znetstar/attic-cli-url-shortner/issues",
+  "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
+  "homepage": "https://github.com/znetstar/attic",
+  "bugs": "https://github.com/znetstar/attic/issues",
+  "repository": {
+    "url": "https://github.com/znetstar/attic.git",
+    "type":  "git"
+  },
   "dependencies": {
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "tslib": "^1.13.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.2",
@@ -26,7 +35,6 @@
     "/oclif.manifest.json",
     "/yarn.lock"
   ],
-  "homepage": "https://github.com/znetstar/attic-cli-url-shortner",
   "keywords": [
     "oclif-plugin"
   ],
@@ -38,7 +46,6 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "znetstar/attic-cli-url-shortner",
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",

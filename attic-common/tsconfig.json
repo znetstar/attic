@@ -15,6 +15,6 @@
   },
   "files": [
     "src/index.ts",
-    "src/ICredentials.ts"
+    "src/IUser.ts"
   ]
 }

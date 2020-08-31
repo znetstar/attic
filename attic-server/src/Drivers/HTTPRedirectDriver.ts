@@ -13,7 +13,6 @@ export default class HTTPRedirectDriver extends Driver<IHTTPResourceEntity> {
         super();
     }
     protected async getHead(loc: ILocation&Document, method: string = 'GET'): Promise<IHTTPResponse> {
-        await loc.populate('entity').execPopulate();
         let entity: IHTTPResourceEntity&IEntity&Document = loc.entity as IHTTPResourceEntity&IEntity&Document;
 
             let headers = new Map<string,string>();

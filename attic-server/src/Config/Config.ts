@@ -1,5 +1,10 @@
 export default interface Config {
     /**
+     * A list of plugins to load, as paths
+     */
+    plugins?: string[];
+
+    /**
      * URI to the MongoDB database used as a datastore
      */
     mongoUri?: string;
@@ -54,6 +59,15 @@ export default interface Config {
      * If enabled, the web resolver will share the same HTTP server as the RPC function.
      */
     webResolverShareRpcServer?: boolean;
+    /**
+     * Authenticate incoming resolve requests. Set to false to disable authentication
+     */
+    webResolverAuthenticateRequests?: boolean;
+    /**
+     * Prompt the user to login if authentication details fails for the location.
+     * If false will return a HTTP 403 or 401 instead of prompt.
+     */
+    webResolverPromptLogin?: boolean;
 
     /**
      * Size of each "short" url generated (in characters).
@@ -63,6 +77,24 @@ export default interface Config {
      * The number of resolvers MongoDB should query at once when attempting to match a location.
      */
     rootResolverBatchSize?: number;
+
+    /**
+     * Passed to bcrypt
+     */
+    saltRounds: number;
+
+    /**
+     * Max age for the express session
+     */
+    expressSessionMaxAge?: number;
+    /**
+     * Secret for the express session. If left unset, will generate at runtime
+     */
+    expressSessionSecret?: string;
+    /**
+     * Defult key size for the express session string
+     */
+    expressSessionSecretSize?: number;
 
     /**
      * List of drivers available
@@ -76,5 +108,11 @@ export default interface Config {
      * List of entities available
      */
     entityTypes: string[];
+    /**
+     * User types supported
+     */
+    userTypes: string[];
+
+
 }
 

@@ -12,7 +12,7 @@ import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "a
 import * as _ from "lodash";
 
 import { HTTPResourceEntity } from './Entities';
-import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
+import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 
 export interface IEntityModel {
     id: ObjectId;

@@ -1,11 +1,10 @@
-    require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Provider } from 'nconf';
 const yargs = <any>require('yargs');
 import { default as DefaultConfig } from './DefaultConfig';
 import { default as Config } from './Config';
-
 
 let nconf: Provider&Config = (new Provider()) as any;
 const pkg: any = JSON.parse(fs.readFileSync(__dirname+'/../../package.json', 'utf8')) ;
@@ -74,5 +73,6 @@ const configHandler = {
 };
 
 interface nconfHolder { nconf: Provider; }
-const config = <Config&Provider&nconfHolder>(new Proxy(<Config&Provider&nconfHolder>(<any>{ nconf }), configHandler));
+export type ConfigType = Config&Provider&nconfHolder;
+const config = <ConfigType>(new Proxy(<ConfigType>(<any>{ nconf }), configHandler));
 export default config;

@@ -9,9 +9,10 @@ import {formatOutputFromFlags, OutputFormat} from "attic-cli-common/src/misc";
 import Create from "../../Common/Create";
 import {ILocation} from "attic-common/lib";
 import * as URL from 'url';
+import {default as IUser} from "attic-common/lib/IUser";
 
 export default class LocationUpdate extends Create {
-  static description = 'updates an existing location, returning the url and id';
+  static description = 'updates an existing location';
   static flags = {
     help: flags.help({char: 'h'}),
     // flag with a value (-n, --name=VALUE)
@@ -19,24 +20,16 @@ export default class LocationUpdate extends Create {
       char: 'i',
       required: true
     }),
-    href: flags.string({
-      char: 'r',
-      required: false
-    }),
-    auth: flags.string({
+    username: flags.string({
       char: 'u',
       required: false
     }),
-    entity: flags.string({
-      char: 'e',
-      required: false
+    type: flags.string({
+      char: 't',
+      required: true
     }),
-    driver: flags.string({
+    disabled: flags.boolean({
       char: 'd',
-      required: false
-    }),
-    short: flags.boolean({
-      char: 's',
       required: false,
       default: false
     }),
@@ -58,32 +51,25 @@ export default class LocationUpdate extends Create {
   async run() {
     const {argv, flags} = this.parse(LocationUpdate);
 
-    let location: ILocation = !_.isEmpty(argv[0]) ? JSON.parse(argv[0]) : {};
+    let user: IUser = !_.isEmpty(argv[0]) ? JSON.parse(argv[0]) : {};
 
-    if (!_.isEmpty(flags.href) && flags.href) {
-      let url = URL.parse(flags.href);
-      if (flags.short) {
-        url.pathname = '/' + (await RPCProxy.generateId());
-      }
-      let href = URL.format(url);
-      location.href = href;
+    if (!_.isEmpty(flags.type)) {
+      user.type = flags.type;
     }
-
-    if (!_.isEmpty(flags.auth)) {
-      location.auth = flags.auth;
-    }
-    if (!_.isEmpty(flags.entity)) {
-      location.entity = flags.entity;
-    }
-    if (!_.isEmpty(flags.driver)) {
-      location.driver = flags.driver;
+    if (typeof(flags.disabled) !== 'undefined') {
+      user.disabled = flags.disabled;
     }
     if (flags.expiresIn) {
-      location.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
-
+      user.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
     }
-    const outObject = await RPCProxy.updateLocation(flags.id, location);
+    if (!_.isEmpty(flags.username) && flags.username) {
+      user.username = flags.username;
+    } else {
+      user.username = await RPCProxy.generateUsername();
+    }
 
-    console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'href' ]));
+    await RPCProxy.updateUser(flags.id, user);
+
+    process.exit(0);
   }
 }

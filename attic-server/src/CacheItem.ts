@@ -21,7 +21,6 @@ export interface ICacheItemModel {
 export type ICacheItem = ICacheItemBase&ICacheItemModel;
 
 export const CacheItemSchema = <Schema<ICacheItem>>(new (mongoose.Schema)({
-
     source: {
         type: LocationSchema,
         required: true
@@ -80,10 +79,14 @@ export async function resolveFromCache(source: ILocation): Promise<ILocation&Doc
         'source.href': 1
     }).limit(1).exec());
 
-    if (_.isEmpty(items))
+    if (_.isEmpty(items) || !items)
         return null as any;
 
-    return items[0].target as Document&ILocation;
+    await items[0].populate('target.entity target.entity.source target.user').execPopulate();
+
+    let location: ILocation&Document = items[0].target as Document&ILocation;
+
+    return location;
 }
 
 export async function invalidateCacheItem(source: ILocation): Promise<void> {

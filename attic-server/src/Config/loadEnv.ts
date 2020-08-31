@@ -13,13 +13,19 @@
         'ENABLE_CACHE',
         'CACHE_SIZE',
         'CACHE_MAX',
+        'CACHE_EXPIRE_IN',
         'ENABLE_WEB_RESOLVER',
         'WEB_RESOLVER_PORT',
         'WEB_RESOLVER_HOST',
         'WEB_RESOLVER_UNIX_SOCKET',
         'WEB_RESOLVER_SHARE_RPC_SERVER',
+        'WEB_RESOLVER_AUTHENTICATE_REQUESTS',
+        'WEB_RESOLVER_PROMPT_LOGIN',
         'SHORT_URL_SIZE',
-        'ROOT_RESOLVER_BATCH_SIZE'
+        'ROOT_RESOLVER_BATCH_SIZE',
+        'EXPRESS_SESSION_MAX_AGE',
+        'EXPRESS_SESSION_SECRET',
+        'EXPRESS_SESSION_SECRET_SIZE'
     ];
 
     const noTransform: any[] = [

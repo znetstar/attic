@@ -1,11 +1,26 @@
 {
-  "name": "attic-server",
+  "name": "@znetstar/attic-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "homepage": "https://github.com/znetstar/attic",
+  "bugs": "https://github.com/znetstar/attic/issues",
+  "repository": {
+    "url": "https://github.com/znetstar/attic.git",
+    "type":  "git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "bin": {
+    "attic-server": "bin/attic-server"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "lib/launch"
+    "start": "node lib/launch",
+    "build": "grunt",
+    "prepare": "grunt"
   },
   "devDependencies": {
     "docdash": "^1.2.0",
@@ -20,19 +35,33 @@
     "typescript": "^3.9.7"
   },
   "keywords": [],
-  "author": "",
+  "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
   "license": "AGPL-3.0",
   "dependencies": {
+    "@types/bcrypt": "^3.0.0",
+    "@types/chance": "^1.1.0",
+    "@types/connect-mongodb-session": "0.0.3",
+    "@types/cookie-parser": "^1.4.2",
+    "@types/eventemitter2": "^4.1.0",
     "@types/express": "^4.17.7",
+    "@types/express-session": "^1.17.0",
     "@types/fs-extra": "^9.0.1",
     "@types/mongoose": "^5.7.36",
     "@types/nanoid": "^2.1.0",
     "@types/nconf": "^0.10.0",
+    "@types/passport": "^1.0.4",
+    "@types/passport-http": "^0.3.8",
     "@types/yargs": "^15.0.5",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
+    "chance": "^1.1.7",
+    "connect-mongodb-session": "^2.4.1",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "eventemitter2": "^6.4.3",
     "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "fs-extra": "^9.0.1",
     "json-rpc-2.0": "^0.2.10",
     "mongoose": "^5.10.0",
@@ -40,6 +69,13 @@
     "multi-rpc-express-transport": "^1.0.1",
     "nanoid": "^3.1.12",
     "nconf": "^0.10.0",
+    "passport": "^0.4.1",
+    "passport-http": "^0.3.0",
+    "sentencer": "^0.2.1",
     "tslib": "^2.0.1"
-  }
+  },
+  "files": [
+    "/lib",
+    "/LICENSE.txt"
+  ]
 }

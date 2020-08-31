@@ -6,15 +6,48 @@ import {IDriverFull,IDriverOfFull} from "../Driver";
 import {IHTTPResponse} from "../Drivers/HTTPCommon";
 import Constructible from "../Constructible";
 import {resolve} from "../Resolver";
+import * as _ from 'lodash';
+import Config from "../Config";
+import {IUser} from "../User";
+import AuthMiddlewares from "./AuthMiddleware";
 
 export default function ResolverMiddleware(req: any, res: any, next: any) {
     asyncMiddleware(async function (req: any, res: any) {
+        if (req.originalUrl.substr(0, 5) === '/auth')
+            return true;
         let href = req.protocol + '://' + req.get('host') + req.originalUrl;
 
         const location = await resolve({ href });
 
-        if (!location) {
+        if (_.isEmpty(location) || !location) {
             return true;
+        }
+
+        if (Config.webResolverAuthenticateRequests) {
+            if (!_.isEmpty(location.auth) && location.auth) {
+                // if (!location.user && (location as any).$parent)
+                //     await (location as any).$parent.populate('target.user').execPopulate();
+                // else
+                //     await location.populate('user').execPopulate();
+                if (Config.webResolverPromptLogin) {
+                    let middleware = AuthMiddlewares.get((location.user as IUser).type);
+
+                    await new Promise((resolve, reject) => {
+                        middleware(req, res, (err: any) => {
+                            if (err) reject(err);
+                            else resolve();
+                        })
+                    });
+                }
+
+                if (!req.user) {
+                    res.sendStatus(401);
+                    return;
+                } else if (req.user.username !== location.auth.toString()) {
+                    res.sendStatus(403);
+                    return;
+                }
+            }
         }
 
         let Driver = <Constructible<IDriverOfFull<IHTTPResponse>>>(location.getDriver());

@@ -1,10 +1,21 @@
 {
-  "name": "attic-common",
+  "name": "@znetstar/attic-common",
   "version": "1.0.0",
   "description": "",
   "main": "lib/index.js",
+  "homepage": "https://github.com/znetstar/attic",
+  "bugs": "https://github.com/znetstar/attic/issues",
+  "repository": {
+    "url": "https://github.com/znetstar/attic.git",
+    "type":  "git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "scripts": {
-    "build": "grunt default",
+    "build": "grunt",
+    "prepare": "grunt",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
@@ -22,5 +33,9 @@
   "license": "LGPL-3.0",
   "dependencies": {
     "tslib": "^2.0.1"
-  }
+  },
+  "files": [
+    "/lib",
+    "LICENSE.txt"
+  ]
 }

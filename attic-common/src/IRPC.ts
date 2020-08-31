@@ -2,6 +2,7 @@ import ILocation from "./ILocation";
 import {IDriver} from "./IDriver";
 import IResolver, {IMountPoint} from "./IResolver";
 import IEntity from "./IEntity";
+import IUser from "./IUser";
 
 
 export interface BasicTextSearchQueryOptions {
@@ -34,6 +35,11 @@ export interface ResolveOptions {
     noCache?: boolean;
 }
 
+export interface CreateLocationResponse {
+    id: string;
+    href: string;
+}
+
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
     generateId(size?: number): Promise<string>;
@@ -41,8 +47,8 @@ export default interface IRPC {
     findLocations(query: BasicFindOptions): Promise<ILocation[]|number>;
     findLocation(query: any): Promise<ILocation>;
     searchLocations(query: BasicTextSearchOptions): Promise<ILocation[]|number>;
-    createLocation(location: ILocation): Promise<string>;
-    updateLocation(id: string, fields: any): Promise<void>
+    createLocation(location: ILocation): Promise<CreateLocationResponse>;
+    updateLocation(id: string, fields: any): Promise<CreateLocationResponse>
     deleteLocations(query: BasicFindQueryOptions): Promise<void>;
     deleteLocation(query: any): Promise<void>;
 
@@ -68,4 +74,14 @@ export default interface IRPC {
 
     resolveLocation(location: ILocation): Promise<ILocation>;
     resolve(location: ILocation|string, options: ResolveOptions): Promise<ILocation>;
+
+    findUsers(query: BasicFindOptions): Promise<IUser[]|number>;
+    findUser(query: any): Promise<IUser>;
+    searchUsers(query: BasicTextSearchOptions): Promise<IUser[]|number>;
+    createUser(user: IUser): Promise<string>;
+    updateUser(id: string, fields: any): Promise<void>
+    deleteUsers(query: BasicFindQueryOptions): Promise<void>;
+    deleteUser(query: any): Promise<void>;
+    listUserTypes(): Promise<string[]>;
+    generateUsername(): Promise<string>;
 }

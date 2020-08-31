@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 import {Document} from "mongoose";
 import { ObjectId } from 'mongodb';
+import Config from "./Config";
+import mongoose from "./Database";
 
 export function moveAndConvertValue(obj: any, startPath: string, endPath: string, convert?: any) {
     convert = convert || ((x: any): any => x);

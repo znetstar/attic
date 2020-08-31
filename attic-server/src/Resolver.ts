@@ -12,7 +12,7 @@ import {RootResolverSchema} from "./Resolvers/RootResolver";
 import {ensureMountPoint} from "attic-common/lib";
 import {IMountPoint} from "attic-common/lib/IResolver";
 import Config from "./Config";
-import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
+import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {createCacheItem, resolveFromCache} from "./CacheItem";
 
 export interface IResolverModel {
@@ -139,8 +139,10 @@ export async function getNextResolverPriority(mountPoint: IMountPoint) {
     return count;
 }
 
-ResolverSchema.methods.resolve = async function (location: ILocation): Promise<ILocation&Document> {
-    return Location.findOne({ 'href': location.href, driver: { $exists: true } });
+ResolverSchema.methods.resolve = async function (inLoccation: ILocation): Promise<ILocation&Document> {
+    let location: ILocation&Document = await Location.findOne({ 'href': inLoccation.href, driver: { $exists: true } });
+    await location.populate('entity entity.source user').execPopulate();
+    return location;
 }
 
 RPCServer.methods.getNextResolverPriority = getNextResolverPriority;

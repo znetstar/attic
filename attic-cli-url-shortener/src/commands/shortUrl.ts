@@ -2,7 +2,7 @@ import {Command, flags} from '@oclif/command'
 import {formatOutputFromFlags, OutputFormat, RPCProxy} from "attic-cli-common";
 import * as  URL from "url";
 import Config from "attic-cli-common/lib/Config";
-import {ILocation} from "attic-common/lib";
+import {ILocation, IEntity} from "attic-common/lib";
 
 export default class ShortUrl extends Command {
   static description = 'shortens an existing URI, returning the new short url'
@@ -17,6 +17,10 @@ export default class ShortUrl extends Command {
     href: flags.string({
       char: 'r',
       required: true
+    }),
+    auth: flags.string({
+      char: 'u',
+      required: false
     }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
@@ -35,7 +39,7 @@ export default class ShortUrl extends Command {
     const {args, flags} = this.parse(ShortUrl);
 
     let url = URL.parse(flags.href);
-    let outLocation: ILocation = null as any;
+    let location: ILocation = null as any;
 
     // Check for existing entity
     let entityId: any = await RPCProxy.findEntity({ 'source.href': flags.source });
@@ -43,7 +47,7 @@ export default class ShortUrl extends Command {
     // If it exists return the existing location
     if (entityId) {
       entityId = entityId.id;
-      outLocation = await RPCProxy.findLocation({
+      location = await RPCProxy.findLocation({
         host: url.host,
         port: url.port,
         auth: url.auth,
@@ -54,22 +58,28 @@ export default class ShortUrl extends Command {
     else {
       // If it doesn't exist create it
       entityId = await RPCProxy.createEntity({
-        'source.href': flags.source,
+        'source': {
+          href: flags.source
+        },
         type: 'HTTPResourceEntity'
       });
     }
 
-    if (!outLocation) {
+    let outLocation: ILocation = location;
+    if (!location) {
       url.pathname = '/' + (await RPCProxy.generateId());
+      if (flags.auth) {
+        url.auth = flags.auth;
+      }
       let href = URL.format(url);
 
-      outLocation = {
+      location = {
         href,
         entity: entityId,
         driver: 'HTTPRedirectDriver'
       };
-      let id = await RPCProxy.createLocation(outLocation);
-      outLocation.id = id;
+      outLocation = await RPCProxy.createLocation(location);
+      outLocation.entity = entityId;
     }
     let outString = formatOutputFromFlags(outLocation, flags, [ 'id', 'href', 'entity' ])
 

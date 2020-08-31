@@ -11,7 +11,76 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2f2e9672-5385-457e-a4e5-7831fcab0339" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LICENSE.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-cli/src/commands/users/create.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-cli/src/commands/users/delete.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-cli/src/commands/users/find.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-cli/src/commands/users/listTypes.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-cli/src/commands/users/search.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-cli/src/commands/users/update.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-common/src/IUser.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/bin/attic-server" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/ApplicationContext.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/Plugins.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/User.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/Users/BasicUser.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/Users/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/Web/AuthMiddleware.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attic-server/src/Web/SessionMiddleware.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-common/Gruntfile.js" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/Gruntfile.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-common/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-common/src/misc.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-common/src/misc.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/.editorconfig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/LICENSE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/bin/run" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/bin/run" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/bin/run.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/bin/run.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/src/commands/shortUrl.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/src/commands/shortUrl.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli-url-shortner/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli-url-shortener/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/create.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/create.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/find.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/find.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/search.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/search.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-cli/src/commands/locations/update.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-cli/src/commands/locations/update.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/Gruntfile.js" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/Gruntfile.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/src/ICredentials.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/src/IEntity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/src/IEntity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/src/ILocation.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/src/ILocation.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/src/IRPC.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/src/IRPC.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-common/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-common/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/Gruntfile.js" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/Gruntfile.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/CacheItem.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/CacheItem.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Config/Config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Config/Config.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/attic-server/src/Config/DefaultConfig.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Config/DefaultConfig.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Config/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Config/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Config/loadEnv.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Config/loadEnv.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Credentials.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Database/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Database/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Drivers/HTTPRedirectDriver.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Drivers/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Drivers/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Location.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Location.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/RPC.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/RPC.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Resolver.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Resolver.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Web/ResolverMiddleware.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Web/ResolverMiddleware.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/Web/WebServer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/Web/WebServer.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/launch.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/launch.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/attic-server/src/misc.ts" beforeDir="false" afterPath="$PROJECT_DIR$/attic-server/src/misc.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,15 +103,18 @@
     <option name="ROOT_SYNC" value="SYNC" />
   </component>
   <component name="ProjectId" id="1gBqiqWXBOSDwWmhcL3TNhvRxRy" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Shell Script" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Shell Script&#10;TEXT" />
     <property name="javascript.nodejs.core.library.configured.version" value="12.12.0" />
     <property name="javascript.nodejs.core.library.typings.version" value="12.12.0" />
     <property name="js.buildTools.grunt.grunt-cli.package" value="$PROJECT_DIR$/attic-common/node_modules/grunt" />
@@ -52,8 +124,9 @@
     <property name="nodejs_interpreter_path" value="node" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="preferences.editor.code.editing" />
-    <property name="ts.external.directory.path" value="$PROJECT_DIR$/attic-server/node_modules/typescript/lib" />
+    <property name="settings.editor.selected.configurable" value="vcs.Git" />
+    <property name="ts.external.directory.path" value="$PROJECT_DIR$/attic-cli-common/node_modules/typescript/lib" />
+    <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -64,7 +137,7 @@
       <recent name="$PROJECT_DIR$/attic-cli/src/commands/location" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.Link Common to Server">
+  <component name="RunManager" selected="Grunt.js.Build Common">
     <configuration name="WebServer" type="NodeJSConfigurationType" path-to-node="$PROJECT_DIR$/attic-server/node_modules/.bin/ts-node" path-to-js-file="attic-server/src/launch.ts" working-dir="$PROJECT_DIR$">
       <method v="2">
         <option name="RunConfigurationTask" enabled="true" run_configuration_name="Build Common" run_configuration_type="js.build_tools.grunt" />
@@ -265,7 +338,8 @@
       <workItem from="1598369585900" duration="25335000" />
       <workItem from="1598499669341" duration="4176000" />
       <workItem from="1598542730309" duration="40430000" />
-      <workItem from="1598653636998" duration="51324000" />
+      <workItem from="1598653636998" duration="52291000" />
+      <workItem from="1598798871130" duration="32053000" />
     </task>
     <servers />
   </component>
@@ -284,6 +358,9 @@
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
   <component name="WindowStateProjectService">
     <state x="2353" y="382" key="#Notifications" timestamp="1598418554777">
       <screen x="1680" y="23" width="1920" height="1057" />
@@ -294,119 +371,131 @@
     </state>
     <state x="0" y="110" width="1071" height="940" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1598047910546" />
     <state x="1844" y="23" width="1071" height="1057" key="#com.intellij.execution.impl.EditConfigurationsDialog/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598754646132" />
+    <state x="2351" y="360" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1598839409633">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2351" y="360" key="#com.intellij.fileTypes.FileTypeChooser/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598839409633" />
+    <state x="275" y="279" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1598798814923">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="275" y="279" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1598798814923" />
+    <state x="325" y="290" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1598799780992">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="325" y="290" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1598799780992" />
     <state x="2386" y="413" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1598673061490">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state x="2386" y="413" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598673061490" />
-    <state width="1264" height="480" key="DebuggerActiveHint" timestamp="1598760701426">
+    <state width="1264" height="480" key="DebuggerActiveHint" timestamp="1598830195591">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state width="942" height="466" key="DebuggerActiveHint/0.23.1680.1027@0.23.1680.1027" timestamp="1598237794757" />
-    <state width="1264" height="480" key="DebuggerActiveHint/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760701426" />
+    <state width="1264" height="480" key="DebuggerActiveHint/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598830195591" />
     <state x="629" y="272" key="FileChooserDialogImpl" timestamp="1598722044907">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="629" y="272" key="FileChooserDialogImpl/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598722044907" />
-    <state width="939" height="339" key="GridCell.Tab.0.bottom" timestamp="1598760833262">
+    <state width="1878" height="286" key="GridCell.Tab.0.bottom" timestamp="1598838232416">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730639" />
+    <state width="1133" height="286" key="GridCell.Tab.0.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598808881820" />
     <state width="1638" height="275" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815726" />
-    <state width="939" height="339" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833262" />
-    <state width="939" height="339" key="GridCell.Tab.0.center" timestamp="1598760833261">
+    <state width="1878" height="286" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598838232416" />
+    <state width="1878" height="286" key="GridCell.Tab.0.center" timestamp="1598838232415">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730639" />
+    <state width="1133" height="286" key="GridCell.Tab.0.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598808881819" />
     <state width="1638" height="275" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815726" />
-    <state width="939" height="339" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833261" />
-    <state width="939" height="339" key="GridCell.Tab.0.left" timestamp="1598760833256">
+    <state width="1878" height="286" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598838232415" />
+    <state width="1878" height="286" key="GridCell.Tab.0.left" timestamp="1598838232415">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730638" />
+    <state width="1133" height="286" key="GridCell.Tab.0.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598808881819" />
     <state width="1638" height="275" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815725" />
-    <state width="939" height="339" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833256" />
-    <state width="939" height="339" key="GridCell.Tab.0.right" timestamp="1598760833262">
+    <state width="1878" height="286" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598838232415" />
+    <state width="1878" height="286" key="GridCell.Tab.0.right" timestamp="1598838232416">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730639" />
+    <state width="1133" height="286" key="GridCell.Tab.0.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598808881820" />
     <state width="1638" height="275" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815726" />
-    <state width="939" height="339" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833262" />
-    <state width="939" height="339" key="GridCell.Tab.1.bottom" timestamp="1598760833264">
+    <state width="1878" height="286" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598838232416" />
+    <state width="1878" height="318" key="GridCell.Tab.1.bottom" timestamp="1598833309269">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.1.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730414" />
+    <state width="566" height="327" key="GridCell.Tab.1.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935300" />
     <state width="1638" height="342" key="GridCell.Tab.1.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815715" />
-    <state width="939" height="339" key="GridCell.Tab.1.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833264" />
-    <state width="939" height="339" key="GridCell.Tab.1.center" timestamp="1598760833264">
+    <state width="1878" height="318" key="GridCell.Tab.1.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309269" />
+    <state width="1878" height="318" key="GridCell.Tab.1.center" timestamp="1598833309269">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.1.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730413" />
+    <state width="566" height="327" key="GridCell.Tab.1.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935299" />
     <state width="1638" height="342" key="GridCell.Tab.1.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815714" />
-    <state width="939" height="339" key="GridCell.Tab.1.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833264" />
-    <state width="939" height="339" key="GridCell.Tab.1.left" timestamp="1598760833263">
+    <state width="1878" height="318" key="GridCell.Tab.1.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309269" />
+    <state width="1878" height="318" key="GridCell.Tab.1.left" timestamp="1598833309268">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.1.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730412" />
+    <state width="566" height="327" key="GridCell.Tab.1.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935299" />
     <state width="1638" height="342" key="GridCell.Tab.1.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815714" />
-    <state width="939" height="339" key="GridCell.Tab.1.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833263" />
-    <state width="939" height="339" key="GridCell.Tab.1.right" timestamp="1598760833264">
+    <state width="1878" height="318" key="GridCell.Tab.1.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309268" />
+    <state width="1878" height="318" key="GridCell.Tab.1.right" timestamp="1598833309269">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.1.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730413" />
+    <state width="566" height="327" key="GridCell.Tab.1.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935300" />
     <state width="1638" height="342" key="GridCell.Tab.1.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815715" />
-    <state width="939" height="339" key="GridCell.Tab.1.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833264" />
-    <state width="939" height="339" key="GridCell.Tab.2.bottom" timestamp="1598760833266">
+    <state width="1878" height="318" key="GridCell.Tab.1.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309269" />
+    <state width="1878" height="318" key="GridCell.Tab.2.bottom" timestamp="1598833309271">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.2.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730415" />
+    <state width="566" height="327" key="GridCell.Tab.2.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935301" />
     <state width="1638" height="342" key="GridCell.Tab.2.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.2.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833266" />
-    <state width="939" height="339" key="GridCell.Tab.2.center" timestamp="1598760833265">
+    <state width="1878" height="318" key="GridCell.Tab.2.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309271" />
+    <state width="1878" height="318" key="GridCell.Tab.2.center" timestamp="1598833309270">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.2.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730414" />
+    <state width="566" height="327" key="GridCell.Tab.2.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935301" />
     <state width="1638" height="342" key="GridCell.Tab.2.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815716" />
-    <state width="939" height="339" key="GridCell.Tab.2.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833265" />
-    <state width="939" height="339" key="GridCell.Tab.2.left" timestamp="1598760833265">
+    <state width="1878" height="318" key="GridCell.Tab.2.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309270" />
+    <state width="1878" height="318" key="GridCell.Tab.2.left" timestamp="1598833309270">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.2.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730414" />
+    <state width="566" height="327" key="GridCell.Tab.2.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935300" />
     <state width="1638" height="342" key="GridCell.Tab.2.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815716" />
-    <state width="939" height="339" key="GridCell.Tab.2.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833265" />
-    <state width="939" height="339" key="GridCell.Tab.2.right" timestamp="1598760833266">
+    <state width="1878" height="318" key="GridCell.Tab.2.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309270" />
+    <state width="1878" height="318" key="GridCell.Tab.2.right" timestamp="1598833309270">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.2.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730415" />
+    <state width="566" height="327" key="GridCell.Tab.2.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935301" />
     <state width="1638" height="342" key="GridCell.Tab.2.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815716" />
-    <state width="939" height="339" key="GridCell.Tab.2.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833266" />
-    <state width="939" height="339" key="GridCell.Tab.3.bottom" timestamp="1598760833268">
+    <state width="1878" height="318" key="GridCell.Tab.2.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309270" />
+    <state width="1878" height="318" key="GridCell.Tab.3.bottom" timestamp="1598833309272">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.3.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730417" />
+    <state width="566" height="327" key="GridCell.Tab.3.bottom/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935303" />
     <state width="1638" height="342" key="GridCell.Tab.3.bottom/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815718" />
-    <state width="939" height="339" key="GridCell.Tab.3.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833268" />
-    <state width="939" height="339" key="GridCell.Tab.3.center" timestamp="1598760833267">
+    <state width="1878" height="318" key="GridCell.Tab.3.bottom/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309272" />
+    <state width="1878" height="318" key="GridCell.Tab.3.center" timestamp="1598833309271">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.3.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730416" />
+    <state width="566" height="327" key="GridCell.Tab.3.center/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935302" />
     <state width="1638" height="342" key="GridCell.Tab.3.center/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.3.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833267" />
-    <state width="939" height="339" key="GridCell.Tab.3.left" timestamp="1598760833267">
+    <state width="1878" height="318" key="GridCell.Tab.3.center/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309271" />
+    <state width="1878" height="318" key="GridCell.Tab.3.left" timestamp="1598833309271">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.3.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730415" />
+    <state width="566" height="327" key="GridCell.Tab.3.left/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935302" />
     <state width="1638" height="342" key="GridCell.Tab.3.left/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.3.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833267" />
-    <state width="939" height="339" key="GridCell.Tab.3.right" timestamp="1598760833268">
+    <state width="1878" height="318" key="GridCell.Tab.3.left/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309271" />
+    <state width="1878" height="318" key="GridCell.Tab.3.right" timestamp="1598833309272">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state width="819" height="341" key="GridCell.Tab.3.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598718730416" />
+    <state width="566" height="327" key="GridCell.Tab.3.right/0.23.1680.1027@0.23.1680.1027" timestamp="1598807935302" />
     <state width="1638" height="342" key="GridCell.Tab.3.right/1680.23.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1598288815717" />
-    <state width="939" height="339" key="GridCell.Tab.3.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760833268" />
-    <state x="342" y="171" key="SettingsEditor" timestamp="1598268887780">
+    <state width="1878" height="318" key="GridCell.Tab.3.right/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598833309272" />
+    <state x="342" y="171" key="SettingsEditor" timestamp="1598807867806">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
-    <state x="342" y="171" key="SettingsEditor/0.23.1680.1027@0.23.1680.1027" timestamp="1598268887780" />
+    <state x="342" y="171" key="SettingsEditor/0.23.1680.1027@0.23.1680.1027" timestamp="1598807867806" />
     <state x="442" y="455" key="com.intellij.docker.deployment.ui.DockerPortBindingsField.v173.dialogSize" timestamp="1597869883448">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
@@ -419,11 +508,11 @@
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state x="2437" y="477" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598681879266" />
-    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1598760832506">
+    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1598830815587">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state x="383" y="268" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.23.1680.1027@0.23.1680.1027" timestamp="1597980975771" />
-    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760832506" />
+    <state x="2118" y="275" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598830815587" />
     <state x="1786" y="126" width="1692" height="842" key="dock-window-1" timestamp="1598681179064">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
@@ -434,27 +523,34 @@
     </state>
     <state x="93" y="123" width="1480" height="818" key="dock-window-2/0.23.1680.1027@0.23.1680.1027" timestamp="1598047538845" />
     <state x="1908" y="136" width="1692" height="842" key="dock-window-2/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598681179065" />
-    <state x="2684" y="176" width="690" height="676" key="find.popup" timestamp="1598760130991">
+    <state x="2684" y="176" width="690" height="676" key="find.popup" timestamp="1598831477583">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state x="538" y="291" width="604" height="490" key="find.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1598072730578" />
-    <state x="2684" y="176" width="690" height="676" key="find.popup/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598760130991" />
+    <state x="538" y="291" width="604" height="548" key="find.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1598806406255" />
+    <state x="2684" y="176" width="690" height="676" key="find.popup/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598831477583" />
     <state width="600" height="428" key="javadoc.popup" timestamp="1598230892164">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state width="600" height="428" key="javadoc.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1598230892164" />
-    <state x="2304" y="258" width="670" height="675" key="run.anything.popup" timestamp="1598755862309">
+    <state x="2304" y="258" width="670" height="675" key="run.anything.popup" timestamp="1598816483184">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
-    <state x="2304" y="258" width="670" height="675" key="run.anything.popup/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598755862309" />
-    <state x="2257" y="257" width="766" height="696" key="search.everywhere.popup" timestamp="1598746280807">
+    <state x="2304" y="258" width="670" height="675" key="run.anything.popup/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598816483184" />
+    <state x="2257" y="257" width="766" height="696" key="search.everywhere.popup" timestamp="1598837689442">
       <screen x="1680" y="23" width="1920" height="1057" />
     </state>
     <state x="505" y="250" width="670" height="676" key="search.everywhere.popup/0.23.1680.1027@0.23.1680.1027" timestamp="1598718181136" />
-    <state x="2257" y="257" width="766" height="696" key="search.everywhere.popup/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598746280807" />
+    <state x="2257" y="257" width="766" height="696" key="search.everywhere.popup/1680.23.1920.1057/0.23.1680.1027@1680.23.1920.1057" timestamp="1598837689442" />
     <state x="571" y="456" key="vcs.readOnlyHandler.ReadOnlyStatusDialog" timestamp="1598281920607">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="571" y="456" key="vcs.readOnlyHandler.ReadOnlyStatusDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1598281920607" />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="NodeJSConfigurationType">
+        <watch expression="this" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

@@ -1,22 +1,21 @@
-import { RPCHTTPServer, WebHTTPServer } from './Web/WebServer';
+import {loadWebServer, RPCHTTPServer, WebHTTPServer, webServerListen} from './Web/WebServer';
 import Config from './Config';
 import {loadDrivers} from "./Drivers";
 import {loadModels} from "./Database";
+import ApplicationContext from "./ApplicationContext";
+import {loadPlugins} from "./Plugins";
 
-loadModels();
-loadDrivers();
-
-if (Config.unixSocket) {
-    RPCHTTPServer.listen(Config.unixSocket);
-}
-else if (Config.port) {
-    RPCHTTPServer.listen(Config.port, Config.host);
-}
-
-if (Config.enableWebResolver && !Config.webResolverShareRpcServer) {
-    if (Config.webResolverUnixSocket) {
-        WebHTTPServer.listen(Config.webResolverUnixSocket);
-    } else if (Config.webResolverPort) {
-        WebHTTPServer.listen(Config.webResolverPort, Config.webResolverHost);
+(async () => {
+    try {
+        await ApplicationContext.emitAsync('launchStart');
+        await loadPlugins();
+        await loadModels();
+        await loadDrivers();
+        await loadWebServer();
+        await webServerListen();
+        await ApplicationContext.emitAsync('launchComplete');
+    } catch (err) {
+        console.error(err.stack);
+        process.exit(1);
     }
-}
+})();
