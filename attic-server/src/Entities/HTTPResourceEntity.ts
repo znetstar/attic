@@ -9,6 +9,7 @@ export interface IHTTPResourceEntity {
     headers?: Map<string, string>;
     body?: Buffer;
     method?: string;
+    status?: number;
 }
 
 export const HTTPResourceEntitySchema = <Schema<IEntity&IHTTPResourceEntity>>(new (mongoose.Schema)({
@@ -22,6 +23,10 @@ export const HTTPResourceEntitySchema = <Schema<IEntity&IHTTPResourceEntity>>(ne
     },
     method: {
         type: String,
+        required: false
+    },
+    status: {
+        type: Number,
         required: false
     }
 }))

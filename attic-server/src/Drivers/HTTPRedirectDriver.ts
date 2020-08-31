@@ -29,7 +29,7 @@ export default class HTTPRedirectDriver extends Driver<IHTTPResourceEntity> {
             return {
                 href: loc.href,
                 headers,
-                status: 302,
+                status: entity.status ? entity.status : 301,
                 method
             };
         }
