@@ -1,7 +1,7 @@
 {
   "name": "@znetstar/attic-cli-url-shortener",
   "description": "URL Shortening plugin for attic-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
   "homepage": "https://github.com/znetstar/attic",
   "bugs": "https://github.com/znetstar/attic/issues",

@@ -15,7 +15,7 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
     asyncMiddleware(async function (req: any, res: any) {
         if (req.originalUrl.substr(0, 5) === '/auth')
             return true;
-        let href = req.protocol + '://' + req.get('host') + req.originalUrl;
+        let href = ((req.headers && req.headers['x-forwarded-proto']) || req.protocol) + '://' + req.get('host') + req.originalUrl;
 
         const location = await resolve({ href });
 
