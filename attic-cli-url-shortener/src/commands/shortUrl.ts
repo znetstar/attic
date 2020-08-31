@@ -22,6 +22,14 @@ export default class ShortUrl extends Command {
       char: 'u',
       required: false
     }),
+    dontGenerate: flags.boolean({
+      char: 'G',
+      required: false
+    }),
+    length: flags.integer({
+      char: 'n',
+      required: false
+    }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
       default: Config.outputFormat
@@ -67,7 +75,9 @@ export default class ShortUrl extends Command {
 
     let outLocation: ILocation = location;
     if (!location) {
-      url.pathname = '/' + (await RPCProxy.generateId());
+      if (!flags.dontGenerate) {
+        url.pathname = '/' + (await RPCProxy.generateId(flags.length));
+      }
       if (flags.auth) {
         url.auth = flags.auth;
       }
