@@ -139,10 +139,13 @@ export async function getNextResolverPriority(mountPoint: IMountPoint) {
     return count;
 }
 
-ResolverSchema.methods.resolve = async function (inLoccation: ILocation): Promise<ILocation&Document> {
-    let location: ILocation&Document = await Location.findOne({ 'href': inLoccation.href, driver: { $exists: true } });
-    await location.populate('entity entity.source user').execPopulate();
-    return location;
+ResolverSchema.methods.resolve = async function (inLocation: ILocation): Promise<ILocation&Document> {
+    let location: ILocation&Document = await Location.findOne({ 'href': inLocation.href, driver: { $exists: true } });
+    if (location) {
+        await location.populate('entity entity.source user').execPopulate();
+        return location;
+    }
+    return null;
 }
 
 RPCServer.methods.getNextResolverPriority = getNextResolverPriority;
