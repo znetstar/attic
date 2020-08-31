@@ -1,8 +1,8 @@
 import {Command, flags} from '@oclif/command'
-import {formatOutputFromFlags, OutputFormat, RPCProxy} from "attic-cli-common";
+import {formatOutputFromFlags, OutputFormat, RPCProxy} from "@znetstar/attic-cli-common";
 import * as  URL from "url";
-import Config from "attic-cli-common/lib/Config";
-import {ILocation, IEntity} from "attic-common/lib";
+import Config from "@znetstar/attic-cli-common/lib/Config";
+import {ILocation, IEntity} from "@znetstar/attic-common/lib";
 
 export default class ShortUrl extends Command {
   static description = 'shortens an existing URI, returning the new short url'

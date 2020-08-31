@@ -7,4 +7,4 @@ export {
     IDriverPut,
     IDriverDelete,
     IDriverList
-} from 'attic-common/src/IDriver';
+} from '@znetstar/attic-common/lib/IDriver';

@@ -15,11 +15,11 @@ URL Shortening plugin for attic-cli
 # Usage
 <!-- usage -->
 ```sh-session
-$ npm install -g attic-cli-url-shortner
+$ npm install -g @znetstar/attic-cli-url-shortener
 $ oclif-example COMMAND
 running command...
 $ oclif-example (-v|--version|version)
-attic-cli-url-shortner/1.0.0 darwin-x64 node-v12.12.0
+@znetstar/attic-cli-url-shortener/1.0.1 darwin-x64 node-v12.12.0
 $ oclif-example --help [COMMAND]
 USAGE
   $ oclif-example COMMAND
@@ -28,25 +28,24 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`oclif-example hello [FILE]`](#oclif-example-hello-file)
+* [`oclif-example shortUrl`](#oclif-example-shorturl)
 
-## `oclif-example hello [FILE]`
+## `oclif-example shortUrl`
 
-describe the command here
+shortens an existing URI, returning the new short url
 
 ```
 USAGE
-  $ oclif-example hello [FILE]
+  $ oclif-example shortUrl
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
-
-EXAMPLE
-  $ oclif-example hello
-  hello world from ./src/hello.ts!
+  -h, --help            show CLI help
+  -r, --href=href       (required)
+  -s, --source=source   (required)
+  -u, --auth=auth
+  -v, --verbose
+  --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/hello.ts](https://github.com/znetstar/attic-cli-url-shortner/blob/v1.0.0/src/commands/hello.ts)_
+_See code: [src/commands/shortUrl.ts](https://github.com/znetstar/attic/blob/v1.0.1/src/commands/shortUrl.ts)_
 <!-- commandsstop -->

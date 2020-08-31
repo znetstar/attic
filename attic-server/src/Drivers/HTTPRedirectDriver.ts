@@ -1,6 +1,6 @@
 import Location, { LocationSchema, ILocation } from '../Location';
 import Entity, {IEntity} from '../Entity';
-import { IDriver} from "attic-common/lib/IDriver";
+import { IDriver} from "@znetstar/attic-common/lib/IDriver";
 import { IHTTPResourceEntity } from '../Entities/HTTPResourceEntity'
 import {IHTTPResponse} from "./HTTPCommon";
 import { Document } from 'mongoose';

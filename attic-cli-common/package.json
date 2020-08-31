@@ -1,6 +1,6 @@
 {
   "name": "@znetstar/attic-cli-common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "lib/index.js",
   "publishConfig": {
@@ -28,7 +28,7 @@
   "bugs": "https://github.com/znetstar/attic/issues",
   "repository": {
     "url": "https://github.com/znetstar/attic.git",
-    "type":  "git"
+    "type": "git"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -37,6 +37,7 @@
     "@types/lodash": "^4.14.160",
     "@types/nconf": "^0.10.0",
     "@types/yargs": "^15.0.5",
+    "@znetstar/attic-common": "^1.0.1",
     "cliff": "^0.1.10",
     "dotenv": "^8.2.0",
     "fs-extra": "^9.0.1",

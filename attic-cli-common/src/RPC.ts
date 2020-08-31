@@ -1,5 +1,5 @@
 import { Client, HTTPClientTransport, JSONSerializer } from 'multi-rpc';
-import { default as IRPC }  from 'attic-common/lib/IRPC';
+import { default as IRPC }  from '@znetstar/attic-common/lib/IRPC';
 import Config from './Config';
 
 let serializer = new JSONSerializer();

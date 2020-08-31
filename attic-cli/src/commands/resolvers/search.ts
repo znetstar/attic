@@ -1,13 +1,13 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from 'attic-cli-common/src/RPC';
+import RPCProxy from '@znetstar/attic-cli-common/lib/RPC';
 import Config from '../../Config';
 import Find from "../../Common/Find";
-import {BasicFindOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
+import {BasicFindOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import * as cliff from "cliff";
 import * as _ from 'lodash';
-import {formatOutput, OutputFormat} from "attic-cli-common/src/misc";
+import {formatOutput, OutputFormat} from "@znetstar/attic-cli-common/lib/misc";
 import Search from "../../Common/Search";
-import {ensureMountPoint} from "attic-common/lib";
+import {ensureMountPoint} from "@znetstar/attic-common/lib";
 
 export default class ResolverSearch extends Search {
   static description = 'searches for a resolver via MongoDB text search';

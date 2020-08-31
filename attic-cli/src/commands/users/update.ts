@@ -1,15 +1,15 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from 'attic-cli-common/src/RPC';
+import RPCProxy from '@znetstar/attic-cli-common/lib/RPC';
 import Config from '../../Config';
 import Find from "../../Common/Find";
-import {BasicFindOptions} from "attic-common/lib/IRPC";
+import {BasicFindOptions} from "@znetstar/attic-common/lib/IRPC";
 import * as cliff from "cliff";
 import * as _ from 'lodash';
-import {formatOutputFromFlags, OutputFormat} from "attic-cli-common/src/misc";
+import {formatOutputFromFlags, OutputFormat} from "@znetstar/attic-cli-common/lib/misc";
 import Create from "../../Common/Create";
-import {ILocation} from "attic-common/lib";
+import {ILocation} from "@znetstar/attic-common/lib";
 import * as URL from 'url';
-import {default as IUser} from "attic-common/lib/IUser";
+import {default as IUser} from "@znetstar/attic-common/lib/IUser";
 
 export default class LocationUpdate extends Create {
   static description = 'updates an existing location';

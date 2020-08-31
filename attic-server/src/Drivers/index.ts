@@ -1,4 +1,4 @@
-import {IDriver} from "attic-common/lib/IDriver";
+import {IDriver} from "@znetstar/attic-common/lib/IDriver";
 import Constructible from "../Constructible";
 import { default as HTTPRedirectDriver } from "./HTTPRedirectDriver";
 import ApplicationContext from "../ApplicationContext";

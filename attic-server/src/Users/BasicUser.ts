@@ -6,7 +6,7 @@ import mongoose from '../Database';
 import Config from "../Config";
 import {moveAndConvertValue} from "../misc";
 import RPCServer from "../RPC";
-import {BasicFindOptions, BasicFindQueryOptions} from "attic-common/lib/IRPC";
+import {BasicFindOptions, BasicFindQueryOptions} from "@znetstar/attic-common/lib/IRPC";
 import AuthMiddleware from "../Web/AuthMiddleware";
 import {asyncMiddleware} from "../Web/Common";
 import * as passport from 'passport';

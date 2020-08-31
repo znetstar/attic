@@ -1,5 +1,5 @@
 import { Server } from 'multi-rpc';
-import { IRPC }  from 'attic-common/src';
+import { IRPC }  from '@znetstar/attic-common/lib';
 import Config from './Config';
 import { nanoid } from 'nanoid';
 

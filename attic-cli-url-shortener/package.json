@@ -1,17 +1,19 @@
 {
   "name": "@znetstar/attic-cli-url-shortener",
   "description": "URL Shortening plugin for attic-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
   "homepage": "https://github.com/znetstar/attic",
   "bugs": "https://github.com/znetstar/attic/issues",
   "repository": {
     "url": "https://github.com/znetstar/attic.git",
-    "type":  "git"
+    "type": "git"
   },
   "dependencies": {
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
+    "@znetstar/attic-cli-common": "^1.0.1",
+    "@znetstar/attic-common": "^1.0.1",
     "tslib": "^1.13.0"
   },
   "publishConfig": {
@@ -21,7 +23,7 @@
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.2",
     "@oclif/plugin-help": "^3.2.0",
-    "@types/node": "^10.17.28",
+    "@types/node": "^14.6.2",
     "globby": "^10.0.2",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"

@@ -3,7 +3,7 @@ import { Mongoose, Schema, Document } from 'mongoose';
 import mongoose from './Database';
 import { ObjectId } from 'mongodb';
 import Config from "./Config";
-import ICacheItemBase  from "attic-common/lib/ICacheItem";
+import ICacheItemBase  from "@znetstar/attic-common/lib/ICacheItem";
 import config from "./Config";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema, IEntity} from "./Entity";

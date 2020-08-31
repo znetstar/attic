@@ -1,14 +1,14 @@
 import Location, {ILocation, LocationSchema} from './Location';
-import { IEntity as IEntityBase } from 'attic-common/src';
+import { IEntity as IEntityBase } from '@znetstar/attic-common/lib';
 import { Stream } from 'stream';
 import { Mongoose, Schema, Document } from 'mongoose';
 import config from './Config';
 import mongoose from './Database';
 import { ObjectId } from 'mongodb';
-import {ensureMountPoint} from "attic-common/lib";
+import {ensureMountPoint} from "@znetstar/attic-common/lib";
 import {ResolverSchema} from "./Resolver";
 import {RPCServer} from "./RPC";
-import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "attic-common/lib/IRPC";
+import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import * as _ from "lodash";
 
 import { HTTPResourceEntity } from './Entities';

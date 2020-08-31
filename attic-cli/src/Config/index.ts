@@ -1,1 +1,1 @@
-export { default } from 'attic-cli-common/lib/Config';
+export { default } from '@znetstar/attic-cli-common/lib/Config';

@@ -1,5 +1,5 @@
 import {Hook} from '@oclif/config'
-import Config from 'attic-cli-common';
+import Config from '@znetstar/attic-cli-common/lib/Config';
 
 const hook: Hook<'init'> = async function (opts) {
   return Config;

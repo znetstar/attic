@@ -1,13 +1,13 @@
 {
   "name": "@znetstar/attic-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "homepage": "https://github.com/znetstar/attic",
   "bugs": "https://github.com/znetstar/attic/issues",
   "repository": {
     "url": "https://github.com/znetstar/attic.git",
-    "type":  "git"
+    "type": "git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
@@ -52,6 +52,7 @@
     "@types/passport": "^1.0.4",
     "@types/passport-http": "^0.3.8",
     "@types/yargs": "^15.0.5",
+    "@znetstar/attic-common": "^1.0.1",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "chance": "^1.1.7",
@@ -76,6 +77,7 @@
   },
   "files": [
     "/lib",
-    "/LICENSE.txt"
+    "/LICENSE.txt",
+    "/bin"
   ]
 }

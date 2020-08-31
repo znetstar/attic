@@ -1,6 +1,6 @@
 {
-  "name": "attic-cli",
-  "version": "1.0.0",
+  "name": "@znetstar/attic-cli",
+  "version": "1.0.1",
   "author": "Zachary Boyd <zachary@zacharyboyd.nyc>",
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
@@ -13,17 +13,20 @@
   "bugs": "https://github.com/znetstar/attic/issues",
   "repository": {
     "url": "https://github.com/znetstar/attic.git",
-    "type":  "git"
+    "type": "git"
   },
   "dependencies": {
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "@oclif/plugin-help": "^3.2.0",
+    "@znetstar/attic-cli-common": "^1.0.1",
+    "@znetstar/attic-cli-url-shortener": "^1.0.1",
+    "@znetstar/attic-common": "^1.0.1",
     "tslib": "^1.13.0"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.2",
-    "@types/node": "^10.17.28",
+    "@types/node": "^14.6.2",
     "globby": "^10.0.2",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
@@ -47,7 +50,7 @@
     "bin": "attic-cli",
     "plugins": [
       "@oclif/plugin-help",
-      "attic-cli-url-shortner"
+      "@znetstar/attic-cli-url-shortener"
     ],
     "hooks": {
       "init": "./lib/hooks/init/config"

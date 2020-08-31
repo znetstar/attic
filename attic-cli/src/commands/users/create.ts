@@ -1,14 +1,14 @@
 import {Command, flags} from '@oclif/command'
-import RPCProxy from 'attic-cli-common/src/RPC';
+import RPCProxy from '@znetstar/attic-cli-common/lib/RPC';
 import Config from '../../Config';
 import Find from "../../Common/Find";
-import {BasicFindOptions} from "attic-common/lib/IRPC";
+import {BasicFindOptions} from "@znetstar/attic-common/lib/IRPC";
 import * as cliff from "cliff";
 import * as _ from 'lodash';
-import {formatOutputFromFlags, OutputFormat} from "attic-cli-common/src/misc";
+import {formatOutputFromFlags, OutputFormat} from "@znetstar/attic-cli-common/lib/misc";
 import Create from "../../Common/Create";
-import {ILocation} from "attic-common/lib";
-import { default as IUser } from 'attic-common/lib/IUser';
+import {ILocation} from "@znetstar/attic-common/lib";
+import { default as IUser } from '@znetstar/attic-common/lib/IUser';
 import * as URL from 'url';
 
 export default class UserCreate extends Create {

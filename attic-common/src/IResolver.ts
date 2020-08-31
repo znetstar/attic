@@ -9,7 +9,7 @@ export interface IMountPoint {
 export default interface IResolver {
     id?: string;
     _id?: string;
-    class?: string;
+    type?: string;
     mountPoint: IMountPoint;
     priority?: number;
     isRootResolver?: boolean;
