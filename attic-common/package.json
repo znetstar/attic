@@ -7,7 +7,7 @@
   "bugs": "https://github.com/znetstar/attic/issues",
   "repository": {
     "url": "https://github.com/znetstar/attic.git",
-    "type":  "git"
+    "type": "git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
