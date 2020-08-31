@@ -46,6 +46,8 @@ RUN npm ci && \
 
 WORKDIR /app
 
+ENV NODE_ENV production
+
 ENV PATH /usr/local/bin:$PATH
 
 ENV WEB_RESOLVER_HOST 0.0.0.0
