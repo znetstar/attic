@@ -30,6 +30,10 @@ export default class ShortUrl extends Command {
       char: 'n',
       required: false
     }),
+    expiresIn: flags.integer({
+      char: 'x',
+      required: false
+    }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
       default: Config.outputFormat
@@ -88,9 +92,15 @@ export default class ShortUrl extends Command {
         entity: entityId,
         driver: 'HTTPRedirectDriver'
       };
+
+      if (flags.expiresIn) {
+        location.expiresAt = (new Date((new Date()).getTime() + (flags.expiresIn as any))).toISOString() as any;
+      }
+
       outLocation = await RPCProxy.createLocation(location);
       outLocation.entity = entityId;
     }
+
     let outString = formatOutputFromFlags(outLocation, flags, [ 'id', 'href', 'entity' ])
 
     console.log(outString);

@@ -78,9 +78,9 @@ export default class LocationUpdate extends Create {
     if (!_.isEmpty(flags.driver)) {
       location.driver = flags.driver;
     }
-    if (flags.expiresIn) {
-      location.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
 
+    if (flags.expiresIn) {
+      location.expiresAt = (new Date((new Date()).getTime() + (flags.expiresIn as any))).toISOString() as any;
     }
     const outObject = await RPCProxy.updateLocation(flags.id, location);
 

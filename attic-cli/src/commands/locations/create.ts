@@ -77,8 +77,9 @@ export default class LocationCreate extends Create {
     if (!_.isEmpty(flags.driver)) {
       location.driver = flags.driver;
     }
-    if (!_.isEmpty(flags.expiresIn) && flags.expiresIn) {
-      location.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
+
+    if (flags.expiresIn) {
+      location.expiresAt = (new Date((new Date()).getTime() + (flags.expiresIn as any))).toISOString() as any;
     }
 
     let output: string;
