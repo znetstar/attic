@@ -1,1 +1,9 @@
-node_modules
+./*/node_modules/
+./*/.tscache
+./attic-server/data
+./*/lib
+./*/.idea
+./.idea
+./**/*/.DS_STORE
+./**/*/.env
+./*/tscommand*
