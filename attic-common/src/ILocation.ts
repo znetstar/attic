@@ -11,6 +11,7 @@ export default interface ILocation {
     host?: string;
     hostname?: string;
     port?:  string;
+    hash?: string;
     pathname?: string;
     path?: string;
     href: string;

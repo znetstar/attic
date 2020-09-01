@@ -66,6 +66,10 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
         type: Schema.Types.ObjectId,
         ref: 'Entity'
     },
+    hash: {
+        type: String,
+        required: false
+    },
     search:  {
         type: String,
         required: false
@@ -97,7 +101,8 @@ LocationSchema.index({
     'pathname': 'text',
     'host': 'text',
     'hostname': 'text',
-    'protocol': 'text'
+    'protocol': 'text',
+    hash: 'text',
 }, {
     weights: {
         driver: 10,
@@ -106,7 +111,8 @@ LocationSchema.index({
         path: 4,
         pathname: 2,
         host: 4,
-        hostname: 2
+        hostname: 2,
+        hash: 1
     },
     name: 'location_search'
 });
