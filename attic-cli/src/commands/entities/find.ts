@@ -19,7 +19,7 @@ export default class EntityFind extends Find {
     }),
     source: flags.string({
       char: 's',
-      required: true
+      required: false
     }),
     type: flags.string({
       char: 't',
@@ -59,7 +59,7 @@ required: false
       findOptions.query['source.href'] = flags.source;
     }
 
-    let ents = await RPCProxy.findEntity(findOptions);
+    let ents = await RPCProxy.findEntities(findOptions);
 
     let output: string;
     if (typeof(ents) === 'number') {
