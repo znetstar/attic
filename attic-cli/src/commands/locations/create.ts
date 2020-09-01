@@ -36,6 +36,10 @@ export default class LocationCreate extends Create {
       required: false,
       default: false
     }),
+    hash: flags.string({
+      char: 'a',
+      required: false
+    }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
       default: Config.outputFormat
@@ -76,6 +80,9 @@ export default class LocationCreate extends Create {
     }
     if (!_.isEmpty(flags.driver)) {
       location.driver = flags.driver;
+    }
+    if (!_.isEmpty(flags.hash)) {
+      location.hash = flags.hash;
     }
 
     if (flags.expiresIn) {

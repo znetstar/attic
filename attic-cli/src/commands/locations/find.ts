@@ -45,6 +45,10 @@ export default class LocationFind extends Find {
       char: 'o',
       required: false
     }),
+    hash: flags.string({
+      char: 'a',
+      required: false
+    }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
       default: Config.outputFormat
@@ -82,6 +86,9 @@ export default class LocationFind extends Find {
     }
     if (!_.isEmpty(flags.driver)) {
       findOptions.query.driver = flags.driver;
+    }
+    if (!_.isEmpty(flags.hash)) {
+      location.hash = flags.hash;
     }
 
     let locs = await RPCProxy.findLocations(findOptions);

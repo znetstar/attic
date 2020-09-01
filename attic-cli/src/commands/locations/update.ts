@@ -40,6 +40,10 @@ export default class LocationUpdate extends Create {
       required: false,
       default: false
     }),
+    hash: flags.string({
+      char: 'a',
+      required: false
+    }),
     expiresIn: flags.integer({
       required: false,
       char: 'x'
@@ -77,6 +81,9 @@ export default class LocationUpdate extends Create {
     }
     if (!_.isEmpty(flags.driver)) {
       location.driver = flags.driver;
+    }
+    if (!_.isEmpty(flags.hash)) {
+      location.hash = flags.hash;
     }
 
     if (flags.expiresIn) {

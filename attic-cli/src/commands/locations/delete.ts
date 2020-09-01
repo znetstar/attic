@@ -34,6 +34,10 @@ export default class LocationDelete extends Delete {
       char: 'd',
       required: false
     }),
+    hash: flags.string({
+      char: 'a',
+      required: false
+    }),
     skip: flags.integer({
       char: 's',
       required: false
@@ -76,6 +80,9 @@ export default class LocationDelete extends Delete {
     }
     if (!_.isEmpty(flags.driver)) {
       findOptions.query.driver = flags.driver;
+    }
+    if (!_.isEmpty(flags.hash)) {
+      location.hash = flags.hash;
     }
 
     await RPCProxy.deleteLocations(findOptions);
