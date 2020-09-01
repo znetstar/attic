@@ -57,7 +57,8 @@ EntitySchema.index({
         'source.path': 2,
         'source.pathname': 1,
         'source.host': 2,
-        'source.hostname': 1
+        'source.hostname': 1,
+        'source.hash': 1
     },
     name: 'entity_search'
 });
