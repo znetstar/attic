@@ -1,24 +1,25 @@
 import Config from './Config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as os from 'os';
 
 export default <Config>{
     plugins: [],
-
+    siteUri: 'http://127.0.0.1:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
+    redisUri: 'redis://127.0.0.1:6379/0',
     port: 7373,
     host: '127.0.0.1',
-
+    hostname: os.hostname(),
+    authorizeGracePeriod: 5*60e3,
     enableCache: true,
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
+    unauthorizedScopes: [ '/rpc/', '/auth\.(.*)\.authorize/', 'auth.token' ],
+
     enableWebResolver: true,
-    webResolverPort: 3737,
-    webResolverHost: '127.0.0.1',
-    webResolverShareRpcServer: false,
-    webResolverAuthenticateRequests: true,
-    webResolverPromptLogin: true,
+
 
     shortUrlSize: 4,
     rootResolverBatchSize: 50,
@@ -37,8 +38,5 @@ export default <Config>{
     ],
     entityTypes: [
         'HTTPResourceEntity'
-    ],
-    userTypes: [
-        'BasicUser'
     ]
 };

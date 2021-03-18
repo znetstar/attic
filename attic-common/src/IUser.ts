@@ -1,9 +1,12 @@
-export default interface IUser {
-    id?: any;
-    _id?: any;
-    type: string;
-    authenticateUser(...args: any[]): Promise<boolean>;
-    expiresAt?: Date;
-    disabled?: boolean;
-    username: string;
+import {IIdentity} from "./IIdentity";
+
+export interface IUser {
+   id: string;
+   _id: string|any;
+   identities: (any|IIdentity)[];
+   scope: string[];
+   username: string;
+   disabled?: boolean;
 }
+
+export default IUser;

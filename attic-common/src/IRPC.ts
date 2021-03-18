@@ -3,6 +3,7 @@ import {IDriver} from "./IDriver";
 import IResolver, {IMountPoint} from "./IResolver";
 import IEntity from "./IEntity";
 import IUser from "./IUser";
+import IClient from "./IClient";
 
 
 export interface BasicTextSearchQueryOptions {
@@ -78,10 +79,17 @@ export default interface IRPC {
     findUsers(query: BasicFindOptions): Promise<IUser[]|number>;
     findUser(query: any): Promise<IUser>;
     searchUsers(query: BasicTextSearchOptions): Promise<IUser[]|number>;
-    createUser(user: IUser): Promise<string>;
+    createUser(User: IUser): Promise<string>;
     updateUser(id: string, fields: any): Promise<void>
     deleteUsers(query: BasicFindQueryOptions): Promise<void>;
     deleteUser(query: any): Promise<void>;
     listUserTypes(): Promise<string[]>;
     generateUsername(): Promise<string>;
+
+    findClients(query: BasicFindOptions): Promise<IClient[]|number>;
+    findClient(query: any): Promise<IClient>;
+    createClient(Client: IClient): Promise<string>;
+    updateClient(id: string, fields: any): Promise<void>
+    deleteClients(query: BasicFindQueryOptions): Promise<void>;
+    deleteClient(query: any): Promise<void>;
 }

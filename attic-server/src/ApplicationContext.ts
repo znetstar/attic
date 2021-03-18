@@ -1,7 +1,7 @@
-import mongoose from './Database';
+import mongoose, { redis } from './Database';
 import Config, { ConfigType } from "./Config";
 import RPCServer from "./RPC";
-import {RPCExpress, WebExpress} from "./Web";
+import {WebExpress} from "./Web";
 import * as passport from "passport";
 import {drivers} from "./Drivers";
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
@@ -22,6 +22,8 @@ export class ApplicationContextBase extends EventEmitter {
         return mongoose;
     }
 
+    get redis() { return redis; }
+
     get config(): ConfigType {
         return Config as any;
     }
@@ -31,9 +33,6 @@ export class ApplicationContextBase extends EventEmitter {
         return RPCServer;
     }
 
-    get rpcExpress() {
-        return RPCExpress();
-    }
 
     get webExpress() {
         return WebExpress();

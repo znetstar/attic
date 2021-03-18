@@ -9,7 +9,7 @@ import {resolve} from "../Resolver";
 import * as _ from 'lodash';
 import Config from "../Config";
 import {IUser} from "../User";
-import AuthMiddlewares from "./AuthMiddleware";
+ import AuthMiddlewares, {restrictScopeMiddleware} from "./AuthMiddleware";
 
 export default function ResolverMiddleware(req: any, res: any, next: any) {
     asyncMiddleware(async function (req: any, res: any) {
@@ -23,32 +23,11 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             return true;
         }
 
-        if (Config.webResolverAuthenticateRequests) {
-            if (!_.isEmpty(location.auth) && location.auth) {
-                // if (!location.user && (location as any).$parent)
-                //     await (location as any).$parent.populate('target.user').execPopulate();
-                // else
-                //     await location.populate('user').execPopulate();
-                if (Config.webResolverPromptLogin) {
-                    let middleware = AuthMiddlewares.get((location.user as IUser).type);
-
-                    await new Promise((resolve, reject) => {
-                        middleware(req, res, (err: any) => {
-                            if (err) reject(err);
-                            else resolve();
-                        })
-                    });
-                }
-
-                if (!req.user) {
-                    res.sendStatus(401);
-                    return;
-                } else if (req.user.username !== location.auth.toString()) {
-                    res.sendStatus(403);
-                    return;
-                }
-            }
-        }
+        let scope = location.auth || 'rpc.resolve';
+        await new Promise((resolve, reject) => restrictScopeMiddleware(scope)(req, res, (err: any) => {
+            if (err) reject(err);
+            else resolve();
+        }));
 
         let Driver = <Constructible<IDriverOfFull<IHTTPResponse>>>(location.getDriver());
         let driver = new Driver();

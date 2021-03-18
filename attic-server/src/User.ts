@@ -9,39 +9,46 @@ import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@
 import {EntitySchema} from "./Entity";
 import { Chance } from 'chance';
 import * as _ from 'lodash';
+import {IIdentityModel} from "./Auth/Identity";
+import config from "./Config";
+import ApplicationContext from "./ApplicationContext";
 const Sentencer = require('sentencer');
+
+interface IRegexQuery {
+    $regex: string,
+    $options?: string
+}
 
 export interface IUserModel {
     id: ObjectId;
     _id: ObjectId;
-    type: String;
+    scope?: (string)[];
+    identities?:(IIdentityModel)[];
     username: string;
+    isAuthorizedToDo(scope: string): boolean;
 }
 
 export type IUser = IUserBase&IUserModel;
 
 export const UserSchema = <Schema<IUser>>(new (mongoose.Schema)({
-    type: {
-        type: String,
-        enum: Config.userTypes
+    identities: [
+        { ref: 'Identity', type: Schema.Types.ObjectId }
+    ],
+    scope: {
+        type: [String]
     },
-    expiresAt: {
-        type: Date,
-        required: false
+    username: {
+        type: String,
+        unique: true,
+        required: true
     },
     disabled: {
         type: Boolean,
         default: false
-    },
-    username: {
-        type: String,
-        required: true,
-        default: () => generateUsername(),
-        unique: true
     }
 }, {
-    timestamps: true,
-    discriminatorKey: 'type'
+    collection: 'users',
+    timestamps: true
 }));
 
 
@@ -59,6 +66,27 @@ export function generateUsername() {
                             .replace(/^a-/, '')
                             .trim());
 }
+
+
+UserSchema.methods.isAuthorizedToDo = function (scope: string) {
+    let regexes = this.scope.map((x: string) => {
+        if (x[0] !== '/')
+            return new RegExp(x);
+
+        let regex = x.split('/');
+        let options = regex.slice(regex.length - 1)[0];
+        regex = regex.slice(1, regex.length - 1);
+
+        return new RegExp(regex.join('/'), options);
+    })
+
+    for (let regex of regexes) {
+        if (regex.test(scope)) return true;
+    }
+
+    return false;
+};
+
 
 RPCServer.methods.generateUsername = generateUsername;
 
@@ -88,9 +116,6 @@ RPCServer.methods.findUsers = async (query: BasicFindOptions) =>  {
 }
 
 RPCServer.methods.createUser = async (fields: any) => {
-    if (!Config.userTypes.includes(fields.type)) {
-        throw new Error(`invalid user type "${fields.type}"`);
-    }
     let users = await User.create(fields);
 
     return users.id;
@@ -136,6 +161,19 @@ RPCServer.methods.searchUsers = async (query:  BasicTextSearchOptions) => {
 }
 
 const User = mongoose.model<IUser&Document>('User', UserSchema);
+
+export const UNAUTHROIZED_USERNAME = 'unauthorized';
+
+ApplicationContext.once('loadModels.complete', () => {
+    return User.updateOne({ username: UNAUTHROIZED_USERNAME }, {
+        $setOnInsert: {
+            username: UNAUTHROIZED_USERNAME,
+        },
+        $set: ({
+            scope: config.get('unauthorizedScopes')
+        } as any)
+    }, { upsert: true });
+});
 
 User.collection.createIndex({
     expiresAt: 1

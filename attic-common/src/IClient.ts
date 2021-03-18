@@ -1,0 +1,22 @@
+import { IUser} from "./IUser";
+import { default as IAccessToken } from "./IAccessToken";
+
+export enum IClientRole {
+    provider = 'provider',
+    consumer = 'consumer'
+}
+
+export interface IClient {
+    _id: string;
+    id: string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri?: string;
+    authorizeUri?: string;
+    name?: string;
+    tokenUri?: string;
+    role: (IClientRole|string)[];
+    scope: string[];
+}
+
+export default IClient;

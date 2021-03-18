@@ -2,7 +2,7 @@ This project is broken into components each of which are licensed individually
 below. Each component is located in a folder corresponding to its name.
 
 # Attic Server (attic-server/)
-Copyright (C) 2020 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
+Copyright (C) 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Attic Common (attic-common/)
-Copyright (C) 2020 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
+Copyright (C) 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -34,7 +34,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Attic CLI URL Shortener (attic-url-shortener/)
-Copyright 2020 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
+Copyright 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ limitations under the License.
 
 # Attic CLI Common (attic-cli-common/)
 
-Copyright 2020 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
+Copyright 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -64,9 +64,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-# Attic CLI (attic-cli/)
+# Attic CLI (attic-cli/), Attic CLI URL Shortner (attic-cli-url-shortner/)
 
-Copyright 2020 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
+Copyright 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

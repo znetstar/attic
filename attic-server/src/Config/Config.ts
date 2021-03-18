@@ -1,5 +1,10 @@
 export default interface Config {
     /**
+     * Externally facing hostname
+     */
+    siteUri?: string;
+    hostname?: string;
+    /**
      * A list of plugins to load, as paths
      */
     plugins?: string[];
@@ -8,6 +13,9 @@ export default interface Config {
      * URI to the MongoDB database used as a datastore
      */
     mongoUri?: string;
+
+    redisUri?: string;
+    authorizeGracePeriod?: number;
 
     /**
      * Port the RPC server will listen on
@@ -38,36 +46,14 @@ export default interface Config {
      * Amount of time to wait before invalidating the entry
      */
     cacheExpireIn?: number;
-
+    /**
+     * Default scopes for unauthorized users
+     */
+    unauthorizedScopes?: string[];
     /**
      * Enable the HTTP Web Resolver
      */
     enableWebResolver?: boolean;
-    /**
-     * Port the web resolver will listen on
-     */
-    webResolverPort?: number;
-    /**
-     * Host the web resolver will listen on
-     */
-    webResolverHost?: string;
-    /**
-     * Unix socket the web resolver will listen on. Overrides `webResolverHost` and `webResolverPort`
-     */
-    webResolverUnixSocket?: string;
-    /**
-     * If enabled, the web resolver will share the same HTTP server as the RPC function.
-     */
-    webResolverShareRpcServer?: boolean;
-    /**
-     * Authenticate incoming resolve requests. Set to false to disable authentication
-     */
-    webResolverAuthenticateRequests?: boolean;
-    /**
-     * Prompt the user to login if authentication details fails for the location.
-     * If false will return a HTTP 403 or 401 instead of prompt.
-     */
-    webResolverPromptLogin?: boolean;
 
     /**
      * Size of each "short" url generated (in characters).
@@ -108,11 +94,6 @@ export default interface Config {
      * List of entities available
      */
     entityTypes: string[];
-    /**
-     * User types supported
-     */
-    userTypes: string[];
-
 
 }
 

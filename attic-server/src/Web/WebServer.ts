@@ -7,38 +7,59 @@ import Config from '../Config';
 import { Server as HTTPServer } from 'http';
 import {Router} from "express";
 import SessionMiddleware, {CookieMiddleware} from "./SessionMiddleware";
-import AuthMiddlewares, {initalizePassport} from "./AuthMiddleware";
+import AuthMiddlewares, {AuthMiddleware, initalizePassport, restrictScopeMiddleware} from "./AuthMiddleware";
 import * as cookieParser from 'cookie-parser';
 import ApplicationContext from "../ApplicationContext";
 import {Application} from "typedoc";
 
 export let RPCTransport: ExpressTransport;
-export let RPCRouter: Router;
+export let WebRouter: Router;
 
 
-export let RPCHTTPServer: HTTPServer;
-export let RPCExpress: any;
 export let WebHTTPServer: HTTPServer;
 export let WebExpress: any;
 
 export async function loadWebServer() {
     await ApplicationContext.emitAsync('loadWebServer.start');
-    RPCExpress = express();
-    RPCHTTPServer = new HTTPServer(RPCExpress);
-    RPCRouter = express.Router();
-    RPCTransport = new ExpressTransport(new JSONSerializer(), RPCRouter);
+    WebExpress = express();
+    WebHTTPServer = new HTTPServer(WebExpress);
+    WebRouter = express.Router();
+
+
+    WebExpress.use(AuthMiddleware);
+
+    RPCTransport = new ExpressTransport(new JSONSerializer(), WebRouter);
     RPCServer.addTransport(RPCTransport);
-    RPCExpress.post('/rpc', RPCRouter);
+
+    WebExpress.use('/rpc', require('body-parser').json(), (req: any, res: any, next: any) => {
+        if (req.body) {
+            let body = req.body;
+            if (body.method) {
+                restrictScopeMiddleware(
+                    `rpc.${body.method}`,
+                )(req, res, next);
+
+                return;
+            }
+        }
+
+        res.status(403).end();
+    });
+    WebExpress.post('/rpc', WebRouter);
 
     if (Config.enableWebResolver) {
-        WebExpress = Config.webResolverShareRpcServer ? RPCExpress : express();
-        WebHTTPServer = Config.webResolverShareRpcServer ? RPCHTTPServer : new HTTPServer(WebExpress);
-        WebExpress.use(CookieMiddleware);
+       WebExpress.use(CookieMiddleware);
         WebExpress.use(SessionMiddleware);
         initalizePassport(WebExpress);
         ApplicationContext.emit('Web.AuthMiddleware.loadAuthMiddleware', AuthMiddlewares);
         WebExpress.use(ResolverMiddleware);
     }
+
+    // WebRouter.use((req: any, res: any, next: any, error: any) => {
+    //     if (error) {
+    //         res
+    //     }
+    // });
 
     await ApplicationContext.emitAsync('loadWebServer.complete');
 }
@@ -46,17 +67,10 @@ export async function loadWebServer() {
 export async function webServerListen() {
     await ApplicationContext.emitAsync('webServerListen.start');
     if (Config.unixSocket) {
-        RPCHTTPServer.listen(Config.unixSocket);
+        WebHTTPServer.listen(Config.unixSocket);
     } else if (Config.port) {
-        RPCHTTPServer.listen(Config.port, Config.host);
+        WebHTTPServer.listen(Config.port, Config.host);
     }
 
-    if (Config.enableWebResolver && !Config.webResolverShareRpcServer) {
-        if (Config.webResolverUnixSocket) {
-            WebHTTPServer.listen(Config.webResolverUnixSocket);
-        } else if (Config.webResolverPort) {
-            WebHTTPServer.listen(Config.webResolverPort, Config.webResolverHost);
-        }
-    }
     await ApplicationContext.emitAsync('webServerComplete.complete');
 }
