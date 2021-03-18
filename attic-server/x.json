@@ -1,0 +1,61 @@
+[
+    {
+        "$match": {
+            "user": "605382e864c84e947db744f5"
+        }
+    },
+    {
+        "$sort": {
+            "expiresAt": -1
+        }
+    },
+    {
+        "$addFields": {
+            "scopeQuery": [
+                "zoom.*"
+            ]
+        }
+    },
+    {
+        "$unwind": "$scopeQuery"
+    },
+    {
+        "$unwind": "$scope"
+    },
+    {
+        "$addFields": {
+            "scopeMatch": {
+                "$regexMatch": {
+                    "input": "$scope",
+                    "regex": "$scopeQuery"
+                }
+            }
+        }
+    },
+    {
+        "$group": {
+            "_id": "$_id",
+            "scope": {
+                "$addToSet": "$scope"
+            },
+            "doc": {
+                "$max": "$$ROOT"
+            }
+        }
+    },
+    {
+        "$replaceRoot": {
+            "newRoot": {
+                "$mergeObjects": [
+                    "$doc",
+                    "$$ROOT"
+                ]
+            }
+        }
+    },
+    {
+        "$project": {
+            "doc": 0
+        }
+    }
+]

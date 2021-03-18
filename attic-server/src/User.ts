@@ -2,7 +2,7 @@ import {Document, Schema} from 'mongoose';
 import mongoose from './Database';
 import {ObjectId} from 'mongodb';
 import config from "./Config";
-import {default as IUserBase} from '@znetstar/attic-common/lib/IUser';
+import {default as IUserBase, IGetTokenResponse as IGetTokenResponseBase } from '@znetstar/attic-common/lib/IUser';
 import RPCServer from "./RPC";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import {Chance} from 'chance';
@@ -55,6 +55,13 @@ export const UserSchema = <Schema<IUser>>(new (mongoose.Schema)({
     timestamps: true
 }));
 
+export interface IGetTokenResponseModel {
+    token: IAccessToken & Document | null;
+    scope: string;
+}
+
+export type IGetTokenResponse = IGetTokenResponseBase&IGetTokenResponseModel;
+
 
 UserSchema.index({
     "$**": "text"
@@ -71,10 +78,7 @@ export function generateUsername() {
                             .trim());
 }
 
-export interface IGetTokenResponse {
-    token: IAccessToken & Document | null;
-    scope: string;
-}
+
 
 UserSchema.methods.getToken = async function* (scope: string[]|string): AsyncGenerator<IGetTokenResponse> {
     let nonImplicitScopes: string[] = [];

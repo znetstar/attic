@@ -10,6 +10,7 @@ import * as URL from "url";
 import fetch from "node-fetch";
 import {nanoid} from "nanoid";
 import config from "../Config";
+import {CouldNotFindTokenForScopeError} from "../../../attic-common/src/Error/AccessToken";
 
 export interface IAccessTokenModel {
     id: ObjectId;
@@ -24,6 +25,7 @@ export interface IAccessTokenModel {
     accessTokenFromRefresh(): Promise<IAccessToken&Document>;
     clientRole: IClientRole;
     formalScope: string[];
+    authorizationHeader: string|null;
     clientName?: string;
 }
 
@@ -33,6 +35,13 @@ export interface FormalAccessToken {
     expires_in: number;
     refresh_token?: string;
     scope?: string;
+}
+
+export interface IScopeContext {
+    currentScope?: string;
+    currentScopeAccessToken?: IAccessToken;
+    accessToken?: IAccessToken;
+    user?: IUser;
 }
 
 export type IAccessToken = IAccessTokenBase&IAccessTokenModel;
@@ -100,12 +109,20 @@ AccessTokenSchema.pre<IAccessToken&Document>('save', async function (){
   if (this.clientRole === IClientRole.consumer) {
       for await (let token of user.getToken(this.scope)) {
         if (!token.token) {
-            // res.status(500).end()
-            throw new Error(`!`);
+            throw new CouldNotFindTokenForScopeError(token);
         }
       }
   }
 });
+
+AccessTokenSchema.virtual('authorizationHeader')
+    .get(function () {
+        if (this.tokenType === TokenTypes.Bearer) {
+            return `Bearer ${this.token}`;
+        }
+
+        return null;
+    });
 
 AccessTokenSchema.virtual('formalScope').get(function () {
     if (this.clientRole === 'provider') {

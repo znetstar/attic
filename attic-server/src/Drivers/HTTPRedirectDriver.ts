@@ -7,15 +7,19 @@ import { Document } from 'mongoose';
 import Constructible from "../Constructible";
 import Driver from "./Driver";
 import * as _ from 'lodash';
+import {IUser} from "../User";
+import {HTTPDriverBase} from "./HTTPDriverBase";
 
-export default class HTTPRedirectDriver extends Driver<IHTTPResourceEntity> {
-    constructor() {
-        super();
+export default class HTTPRedirectDriver extends HTTPDriverBase {
+    constructor(public user?: IUser) {
+        super(user);
     }
+
     protected async getHead(loc: ILocation&Document, method: string = 'GET'): Promise<IHTTPResponse> {
         let entity: IHTTPResourceEntity&IEntity&Document = loc.entity as IHTTPResourceEntity&IEntity&Document;
 
-            let headers = new Map<string,string>();
+        let headers = this.defaultHeaders(loc.httpContext);
+
         if (_.isEmpty(entity)) {
             return {
                 href: loc.href,

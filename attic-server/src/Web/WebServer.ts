@@ -11,6 +11,7 @@ import AuthMiddlewares, {AuthMiddleware, initalizePassport, restrictScopeMiddlew
 import * as cookieParser from 'cookie-parser';
 import ApplicationContext from "../ApplicationContext";
 import {Application} from "typedoc";
+import {GenericError} from "../Error/GenericError";
 
 export let RPCTransport: ExpressTransport;
 export let WebRouter: Router;
@@ -43,7 +44,7 @@ export async function loadWebServer() {
             }
         }
 
-        res.status(403).end();
+        throw [ 403 ];
     });
     WebExpress.post('/rpc', WebRouter);
 
@@ -55,11 +56,19 @@ export async function loadWebServer() {
         WebExpress.use(ResolverMiddleware);
     }
 
-    // WebRouter.use((req: any, res: any, next: any, error: any) => {
-    //     if (error) {
-    //         res
-    //     }
-    // });
+    WebRouter.use((req: any, res: any, next: any, error: any) => {
+        delete error.stack;
+        if (error instanceof GenericError) {
+            res.status(error.httpCode).send({ error: JSON.stringify(error) });
+        } else if (error.message) {
+            res.status(error.httpCode || 500).send({ error: JSON.stringify(error) });
+        } else if (Array.isArray(error) && typeof(error[0]) === 'number') {
+            error = new GenericError(error[1] || 'An unknown error occurred', GenericError.code, error[0]);
+            res.status(error.httpCode).send({ error: JSON.stringify(error) });
+        } else {
+            res.status(500).end();
+        }
+    });
 
     await ApplicationContext.emitAsync('loadWebServer.complete');
 }

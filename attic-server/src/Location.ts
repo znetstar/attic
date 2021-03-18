@@ -14,18 +14,20 @@ import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema} from "./Entity";
 import {IUser} from "./User";
+import {IAccessToken} from "./Auth/AccessToken";
+import {IHttpContext} from "./Drivers/HTTPCommon";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export interface ILocationModel {
     id?: ObjectId;
     _id?: ObjectId;
     auth?: string;
-    user?: IUser;
     getHref?(): string;
     setHref?(value: string|url.UrlWithStringQuery): void;
     toString?(): string;
     getDriver?(): Constructible<IDriver>;
     entity?: IEntity|ObjectId;
+    httpContext?: IHttpContext;
 }
 
 export type ILocation = ILocationModel&ILocationBase;
@@ -87,12 +89,9 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     timestamps: true
 }));
 
-LocationSchema.virtual('user', {
-    ref: 'User',
-    localField: 'auth',
-    foreignField: 'username',
-    justOne: true
-});
+LocationSchema.virtual('httpContext')
+    .get(function (){ return this.$locals.httpContext; })
+    .set(function (ctx: IHttpContext){ this.$locals.httpContext = ctx; })
 
 LocationSchema.index({
     'href': 'text',

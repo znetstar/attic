@@ -29,10 +29,16 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             else resolve();
         }));
 
-        let Driver = <Constructible<IDriverOfFull<IHTTPResponse>>>(location.getDriver());
+        location.httpContext = {
+            req,
+            res,
+            scopeContext: req.context
+        };
+
+        let Driver = <Constructible<IDriverOfFull<IHTTPResponse|null>>>(location.getDriver());
         let driver = new Driver();
 
-        let response: IHTTPResponse;
+        let response: IHTTPResponse|null;
         if (req.method === 'GET')
             response = await driver.get(location);
         else if (req.method === 'HEAD')
@@ -41,6 +47,8 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             response = await driver.put(location, req.body);
         else if (req.method === 'DELETE')
             response = await driver.delete(location);
+        else if (req.method === 'CONNECT')
+            response = await driver.proxy(location);
         else {
             response = {
                 method: req.method,
@@ -50,11 +58,7 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
         }
 
         if (!response) {
-            response =  {
-                method: req.method,
-                status: 404,
-                href: location.href
-            };
+            return;
         }
 
         res.status(response.status);
