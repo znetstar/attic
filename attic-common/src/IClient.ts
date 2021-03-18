@@ -3,7 +3,8 @@ import { default as IAccessToken } from "./IAccessToken";
 
 export enum IClientRole {
     provider = 'provider',
-    consumer = 'consumer'
+    consumer = 'consumer',
+    registration = 'registration'
 }
 
 export interface IClient {

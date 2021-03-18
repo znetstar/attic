@@ -16,9 +16,12 @@ export default <Config>{
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
-    unauthorizedScopes: [ '/rpc/', '/auth\.(.*)\.authorize/', 'auth.token' ],
+    unauthorizedScopes: [ 'rpc', 'auth\.(.*)\.authorize', 'auth\.token' ],
 
     enableWebResolver: true,
+
+    expireTokenIn: ( 1 * 60 * 60 * 1000 ),
+    expireRefreshTokenIn: (365 * 24 * 60 * 60 * 1000 ),
 
 
     shortUrlSize: 4,

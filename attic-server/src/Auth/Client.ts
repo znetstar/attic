@@ -2,7 +2,7 @@ import { Mongoose, Schema, Document } from 'mongoose';
 import mongoose from '../Database';
 import { ObjectId } from 'mongodb';
 import Config from "../Config";
-import IClientBase  from "@znetstar/attic-common/lib/IClient";
+import IClientBase, {IClientRole} from "@znetstar/attic-common/lib/IClient";
 import config from "../Config";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "../misc";
 import * as _ from 'lodash';
@@ -13,6 +13,7 @@ import {UserSchema} from "../User";
 import {IUser} from "../User";
 import {IAccessToken} from "./AccessToken";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
+import ApplicationContext from "../ApplicationContext";
 
 export interface IClientModel {
     id: ObjectId;
@@ -32,7 +33,7 @@ export const ClientSchema = <Schema<IClient>>(new (mongoose.Schema)({
     scope: {
         type: [String]
     },
-    role: { type: [String], required: true, enum: [ 'provider', 'consumer' ] }
+    role: { type: [String], required: true, enum: Object.keys(require('@znetstar/attic-common/lib/IClient').IClientRole) }
 }, {
     collection: 'clients'
 }));
@@ -119,3 +120,6 @@ Client.collection.createIndex({
 }, {
     unique: true
 });
+
+export const SERVICE_CLIENT = 'service';
+

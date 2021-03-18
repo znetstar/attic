@@ -1,17 +1,19 @@
-import { Mongoose, Schema, Document } from 'mongoose';
+import {Document, Schema} from 'mongoose';
 import mongoose from './Database';
-import { ObjectId } from 'mongodb';
-import Config from "./Config";
-import { default as IUserBase } from '@znetstar/attic-common/lib/IUser';
-import Location, {ILocation, LocationSchema} from "./Location";
+import {ObjectId} from 'mongodb';
+import config from "./Config";
+import {default as IUserBase} from '@znetstar/attic-common/lib/IUser';
 import RPCServer from "./RPC";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
-import {EntitySchema} from "./Entity";
-import { Chance } from 'chance';
+import {Chance} from 'chance';
 import * as _ from 'lodash';
 import {IIdentityModel} from "./Auth/Identity";
-import config from "./Config";
 import ApplicationContext from "./ApplicationContext";
+import AccessToken, {AccessTokenSchema, IAccessToken} from "./Auth/AccessToken";
+import {TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
+import {nanoid} from 'nanoid';
+import {SERVICE_CLIENT} from "./Auth/Client";
+
 const Sentencer = require('sentencer');
 
 interface IRegexQuery {
@@ -25,7 +27,8 @@ export interface IUserModel {
     scope?: (string)[];
     identities?:(IIdentityModel)[];
     username: string;
-    isAuthorizedToDo(scope: string): boolean;
+    isAuthorizedToDo(scope: string|string[]): boolean;
+    getToken(scope: string|string[]): AsyncGenerator<IGetTokenResponse>;
 }
 
 export type IUser = IUserBase&IUserModel;
@@ -35,7 +38,8 @@ export const UserSchema = <Schema<IUser>>(new (mongoose.Schema)({
         { ref: 'Identity', type: Schema.Types.ObjectId }
     ],
     scope: {
-        type: [String]
+        type: [String],
+        default: () =>  config.get('unauthorizedScopes').slice(0)
     },
     username: {
         type: String,
@@ -67,21 +71,113 @@ export function generateUsername() {
                             .trim());
 }
 
+export interface IGetTokenResponse {
+    token: IAccessToken & Document | null;
+    scope: string;
+}
 
-UserSchema.methods.isAuthorizedToDo = function (scope: string) {
+UserSchema.methods.getToken = async function* (scope: string[]|string): AsyncGenerator<IGetTokenResponse> {
+    let nonImplicitScopes: string[] = [];
+    scope = [].concat(scope);
+    let testScope: string;
+    let doneScopes = new Set();
+    while (testScope = scope.shift()) {
+        if (doneScopes.has(testScope)) continue;
+        if (this.isAuthorizedToDo(testScope)) {
+            doneScopes.add(testScope);
+            yield {
+                scope: testScope,
+                token: new AccessToken({
+                    tokenType: 'bearer',
+                    token: nanoid(),
+                    scope: [].concat(testScope),
+                    user: this.user,
+                    client: new ObjectId(),
+                    clientRole: 'consumer',
+                    clientName: SERVICE_CLIENT
+                })
+            }
+        } else {
+            nonImplicitScopes.push(testScope);
+        }
+    }
+
+    if (!nonImplicitScopes.length) return;
+
+    scope = nonImplicitScopes;
+
+    let pipeline = AccessToken.aggregate();
+
+    pipeline.match({
+        user: this._id
+    });
+
+    pipeline.sort({
+        expiresAt: -1
+    });
+
+    pipeline.addFields({
+        scopeQuery: [].concat(scope)
+    });
+
+    pipeline.unwind('scopeQuery');
+    pipeline.unwind('scope');
+
+    pipeline.addFields({
+        scopeMatch: {
+            $regexMatch: {
+                input: '$scope',
+                regex: '$scopeQuery'
+            }
+        }
+    });
+
+    pipeline.group({
+        _id: '$_id',
+        scope: { $addToSet: '$scope' },
+        doc: { $max: '$$ROOT' }
+    });
+
+    pipeline.replaceRoot({
+            $mergeObjects: [
+                '$doc',
+                '$$ROOT'
+            ]
+    });
+
+    pipeline.project({
+        doc: 0
+    });
+
+    let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
+    let cur =  pipeline.cursor({ batchSize: 500 }).exec();
+
+    // @ts-ignore
+    require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline,null ,4))
+    while (doc = await cur.next()) {
+        if (doc && doneScopes.has(doc.scopeQuery))
+            continue;
+        doneScopes.add(doc.scopeQuery);
+        if (!doc || !doc.scopeMatch) {
+            yield { token: null, scope: doc.scopeQuery }
+            continue;
+        }
+        if (doc.tokenType === TokenTypes.RefreshToken) {
+            let child = await AccessTokenSchema.methods.accessTokenFromRefresh.call(doc);
+            yield { token: child, scope: doc.scopeQuery };
+            continue;
+        }
+        yield { token: doc, scope: doc.scopeQuery };
+    }
+}
+
+UserSchema.methods.isAuthorizedToDo = function (scope: string|string[]) {
     let regexes = this.scope.map((x: string) => {
-        if (x[0] !== '/')
-            return new RegExp(x);
-
-        let regex = x.split('/');
-        let options = regex.slice(regex.length - 1)[0];
-        regex = regex.slice(1, regex.length - 1);
-
-        return new RegExp(regex.join('/'), options);
+        return new RegExp(x);
     })
 
     for (let regex of regexes) {
-        if (regex.test(scope)) return true;
+        if ([].concat(scope).map(x => regex.test(x)).includes(true)) return true;
     }
 
     return false;

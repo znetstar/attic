@@ -16,6 +16,8 @@ export default interface Config {
 
     redisUri?: string;
     authorizeGracePeriod?: number;
+    expireTokenIn?: number;
+    expireRefreshTokenIn?: number;
 
     /**
      * Port the RPC server will listen on

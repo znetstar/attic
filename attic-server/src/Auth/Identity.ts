@@ -18,7 +18,8 @@ export type IIdentity = IIdentityBase&IIdentityModel;
 
 export const IdentitySchema = <Schema<IIdentity>>(new (mongoose.Schema)({
     provider: {
-        type: String,
+        ref: 'Client',
+        type: Schema.Types.ObjectId,
         required: true
     },
     displayName: { type: String, required: false },
