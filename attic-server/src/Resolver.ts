@@ -13,7 +13,6 @@ import {ensureMountPoint} from "@znetstar/attic-common/lib";
 import {IMountPoint} from "@znetstar/attic-common/lib/IResolver";
 import Config from "./Config";
 import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
-import {createCacheItem, resolveFromCache} from "./CacheItem";
 
 export interface IResolverModel {
     id: ObjectId;
@@ -292,7 +291,7 @@ export async function resolve(location: ILocation|string, options: ResolveOption
     }
 
     if (!noCache) {
-        result = await resolveFromCache(location);
+        result = await require('./CacheItem').resolveFromCache(location);
     }
 
     if (!result) {
@@ -312,7 +311,7 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         }
 
         if (result) {
-            await createCacheItem(location, result);
+            await await require('./CacheItem').createCacheItem(location, result);
         }
     }
 

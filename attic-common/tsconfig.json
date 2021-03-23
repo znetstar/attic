@@ -16,7 +16,10 @@
   "files": [
     "src/index.ts",
     "src/IAccessToken.ts",
+    "src/IUser.ts",
     "src/Error/AccessToken.ts",
-    "src/Error/Auth.ts"
+    "src/Error/Auth.ts",
+    "src/Error/IError.ts",
+    "src/Error/GenericError.ts"
   ]
 }

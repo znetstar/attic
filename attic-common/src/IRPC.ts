@@ -2,8 +2,11 @@ import ILocation from "./ILocation";
 import {IDriver} from "./IDriver";
 import IResolver, {IMountPoint} from "./IResolver";
 import IEntity from "./IEntity";
-import IUser from "./IUser";
 import IClient from "./IClient";
+import {AccessTokenSet, FormalAccessTokenSet, IFormalAccessToken} from "./IAccessToken";
+import IUser from "./IUser";
+import {IAccessToken} from "./IAccessToken";
+import {IIdentity, IIdentityEntity} from "./IIdentity";
 
 
 export interface BasicTextSearchQueryOptions {
@@ -41,6 +44,40 @@ export interface CreateLocationResponse {
     href: string;
 }
 
+export interface OAuthTokenForm {
+    grantType: string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    originalState?: string;
+    code?: string;
+    refreshTokenCode?: string;
+    username?: string;
+    password?: string;
+    scope?: string|string[];
+}
+
+export interface OAuthTokenRequest {
+    grant_type: string;
+    client_id: string;
+    client_secret: string;
+    redirect_uri: string;
+    state?: string;
+    code?: string;
+    refresh_token?: string;
+    username?: string;
+    password?: string;
+    scope?: string|string[];
+}
+
+export interface IHTTPResponse {
+    href: string;
+    headers?: Map<string, string>;
+    status: number;
+    body?: Uint8Array;
+    method: string;
+}
+
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
     generateId(size?: number): Promise<string>;
@@ -76,6 +113,8 @@ export default interface IRPC {
     resolveLocation(location: ILocation): Promise<ILocation>;
     resolve(location: ILocation|string, options: ResolveOptions): Promise<ILocation>;
 
+    getHttpResponse(location: ILocation): Promise<IHTTPResponse>;
+
     findUsers(query: BasicFindOptions): Promise<IUser[]|number>;
     findUser(query: any): Promise<IUser>;
     searchUsers(query: BasicTextSearchOptions): Promise<IUser[]|number>;
@@ -92,4 +131,12 @@ export default interface IRPC {
     updateClient(id: string, fields: any): Promise<void>
     deleteClients(query: BasicFindQueryOptions): Promise<void>;
     deleteClient(query: any): Promise<void>;
+    getIdentityEntity(accessTokenId: string): Promise<IIdentityEntity>;
+    getSelfUser(): Promise<IUser|null>;
+
+    getAccessTokenForm(req: OAuthTokenRequest): Promise<OAuthTokenForm>;
+    getAccessToken(req: OAuthTokenRequest): Promise<IFormalAccessToken>;
+    getAccessTokensForScope(userId: string, scope: string[]|string): Promise<AccessTokenSet>;
+    getFormalAccessTokensForScope(userId: string, scope: string[]|string): Promise<FormalAccessTokenSet>;
+
 }

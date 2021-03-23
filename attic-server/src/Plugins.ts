@@ -8,7 +8,7 @@ export default plugins;
 export async function loadPlugins(){
     await ApplicationContext.emitAsync('loadPlugins.start');
     for (let pluginPath of Config.plugins) {
-        let plugin = require(path.join(__dirname, '..', pluginPath));
+        let plugin = require(path.join(pluginPath));
         let name = plugin.name || pluginPath;
         plugins.set(name, plugin);
         await plugin.init(ApplicationContext);

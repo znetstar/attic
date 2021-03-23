@@ -29,9 +29,9 @@ export default class UserCreate extends Create {
       required: false,
       default: false
     }),
-    expiresIn: flags.integer({
+    password: flags.string({
       required: false,
-      char: 'x'
+      char: 'p'
     }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
@@ -55,15 +55,14 @@ export default class UserCreate extends Create {
 
     let user: IUser = !_.isEmpty(argv[0]) ? JSON.parse(argv[0]) : {};
 
-    if (!_.isEmpty(flags.type)) {
-      user.type = flags.type;
-    }
+
     if (typeof(flags.disabled) !== 'undefined') {
       user.disabled = flags.disabled;
     }
-    if (flags.expiresIn) {
-      user.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
+    if (flags.password) {
+      user.password = flags.password;
     }
+
     if (!_.isEmpty(flags.username) && flags.username) {
       user.username = flags.username;
     } else {

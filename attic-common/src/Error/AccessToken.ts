@@ -1,6 +1,6 @@
 import GenericError from "./GenericError";
 import {IError} from "./IError";
-import {IGetTokenResponse} from "../IUser";
+import {AccessTokenSet, ScopeAccessTokenPair} from "../IAccessToken";
 
 export class MalformattedTokenRequestError extends GenericError {
     public static get code(): number {
@@ -89,7 +89,7 @@ export class CouldNotFindTokenForScopeError extends GenericError {
         return 403;
     }
 
-    constructor(public query: IGetTokenResponse, public message: string = 'Could not find a token for this scope') {
+    constructor(public query: ScopeAccessTokenPair, public message: string = 'Could not find a token for this scope') {
         super(message, CouldNotFindTokenForScopeError.code, CouldNotFindTokenForScopeError.httpCode);
     }
 
@@ -106,6 +106,37 @@ export class CouldNotLocateStateError extends GenericError {
 
     constructor(public message: string = 'Could not locate OAuth state, please check the authorization code') {
         super(message, CouldNotLocateStateError.code, CouldNotLocateStateError.httpCode);
+    }
+
+}
+
+export class NotAuthorizedToUseScopesError extends GenericError {
+    public static get code(): number {
+        return 1007;
+    }
+
+    public static get httpCode(): number {
+        return 403;
+    }
+
+    constructor(public scopes?: string[], public message: string = 'You are unauthorized to use the requested scopes') {
+        super(message, NotAuthorizedToUseScopesError.code, NotAuthorizedToUseScopesError.httpCode);
+        if (scopes) this.message = `You are unauthorized to use the requested scopes: ${scopes.join(', ')}`
+    }
+
+}
+
+export class InvalidAccessTokenError extends GenericError {
+    public static get code(): number {
+        return 108;
+    }
+
+    public static get httpCode(): number {
+        return 401;
+    }
+
+    constructor(public message: string = 'The provided token is invalid or has expired') {
+        super(message, InvalidAccessTokenError.code, InvalidAccessTokenError.httpCode);
     }
 
 }

@@ -1,14 +1,17 @@
-import { Server } from 'multi-rpc';
+import { Server, Request, HTTPTransportClientResponse, MethodExecutionContext  } from 'multi-rpc/lib';
 import { IRPC }  from '@znetstar/attic-common/lib';
 import Config from './Config';
 import { nanoid } from 'nanoid';
 
-export interface AtticRPCServer {
-    methods: IRPC;
+export interface AtticMethodExecutionContext {
+    clientRequest: HTTPTransportClientResponse;
 }
 
+export interface IAtticRPCServer {
+    methods: IRPC&AtticMethodExecutionContext;
+}
 
-export const RPCServer = <AtticRPCServer&Server>(new Server());
+export const RPCServer = <IAtticRPCServer&Server>(new Server());
 
 RPCServer.methods.generateId = async function (size?: number): Promise<string> {
     return nanoid(Number(size) ? size : Config.shortUrlSize);

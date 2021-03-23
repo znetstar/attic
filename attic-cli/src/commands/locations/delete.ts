@@ -82,7 +82,7 @@ export default class LocationDelete extends Delete {
       findOptions.query.driver = flags.driver;
     }
     if (!_.isEmpty(flags.hash)) {
-      location.hash = flags.hash;
+      location.hash = flags.hash as string;
     }
 
     await RPCProxy.deleteLocations(findOptions);

@@ -18,6 +18,8 @@ export interface IClient {
     tokenUri?: string;
     role: (IClientRole|string)[];
     scope: string[];
+    expireAccessTokenIn?: number;
+    expireRefreshTokenIn?: number;
 }
 
 export default IClient;

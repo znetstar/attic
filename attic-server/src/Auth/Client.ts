@@ -7,28 +7,34 @@ import config from "../Config";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "../misc";
 import * as _ from 'lodash';
 import RPCServer from "../RPC";
-import User, {IUserModel} from "../User";
+import User, {IUserModel, UNAUTHROIZED_USERNAME} from "../User";
 import Location from "../Location";
 import {UserSchema} from "../User";
 import {IUser} from "../User";
-import {IAccessToken} from "./AccessToken";
+import {IAccessToken, IFormalAccessToken} from "./AccessToken";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import ApplicationContext from "../ApplicationContext";
+import {IdentityEntity, IIdentityEntity} from "../Entities/IdentityEntity";
+import { IIdentityEntity as IIdentityEntityBase } from '@znetstar/attic-common/lib/IIdentity';
+import {AccessToken} from "./AccessToken";
 
 export interface IClientModel {
     id: ObjectId;
     _id: ObjectId;
     name: string;
+    getIdentityEntity(token: IAccessToken&Document): Promise<IIdentityEntity&Document>
 }
 
 export type IClient = IClientBase&IClientModel;
 
 export const ClientSchema = <Schema<IClient>>(new (mongoose.Schema)({
-    name: { type: String, unique: true, required: false, default: function () { return this.clientId;} },
-    clientId: { type: String, required: true },
+    name: { type: String, required: false, default: function () { return this.clientId;} },
+    clientId: { type: String, required: true, unique: true },
     clientSecret: { type: String, required: true },
     redirectUri: { type: String, required: false },
     authorizeUri: { type: String, required: false },
+    expireAccessTokenIn: { type: Number, required: false },
+    expireRefreshTokenIn: { type: Number, required: false },
     tokenUri: { type: String, required: false },
     scope: {
         type: [String]
@@ -88,6 +94,38 @@ RPCServer.methods.updateClient = async (id: string, fields: any) => {
     await doc.save();
 }
 
+export async function getIdentityEntity(accessToken: IAccessToken&Document): Promise<IIdentityEntity&Document> {
+    let [ identity ]: (IIdentityEntityBase|null)[] = await ApplicationContext.emitAsync(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
+
+    delete identity.id;
+    delete identity._id;
+
+    identity.clientName = accessToken.clientName;
+
+    let existingIdentity = await IdentityEntity.findOne({
+        externalId: identity.externalId,
+        type: identity.type
+    }).exec();
+
+    if (existingIdentity) {
+        for (let k in identity) {
+            if ([ 'user' ].includes(k))
+                continue;
+            // @ts-ignore
+            existingIdentity[k] = identity[k];
+        }
+    } else {
+        existingIdentity = new IdentityEntity(identity);
+    }
+
+    return existingIdentity as IIdentityEntity&Document;
+}
+
+RPCServer.methods.getIdentityEntity = async function(accessTokenId: string): Promise<IIdentityEntity> {
+    let accessToken = await AccessToken.findById(accessTokenId);
+    return (await getIdentityEntity(accessToken)).toObject({ virtuals: true }) as IIdentityEntity;
+}
+
 // RPCServer.methods.searchClients = async (query:  BasicTextSearchOptions) => {
 //     let clientsQuery = (Client.find({
 //         $text: {
@@ -114,12 +152,31 @@ const Client = mongoose.model<IClient&Document>('Client', ClientSchema);
 export default Client;
 
 Client.collection.createIndex({
-    clientId: 1,
-    redirectUri: 1,
-    name: 1
+    name: 1,
+    role: 1
 }, {
     unique: true
 });
 
-export const SERVICE_CLIENT = 'service';
+export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
+ApplicationContext.once('loadModels.complete', async () => {
+    if (config.serviceClientId && config.serviceClientSecret) {
+        await Client.updateOne({clientId: config.serviceClientId }, {
+            $setOnInsert: {
+                clientId: config.serviceClientId
+            },
+            $set: ({
+                name: config.serviceClientName || config.serviceClientId,
+                "clientSecret" : config.serviceClientSecret,
+                "redirectUri" : config.siteUri,
+                "scope" : [ '.*' ],
+                "role" : [
+                    "consumer"
+                ],
+                expireAccessTokenIn: null,
+                expireRefreshTokenIn: null
+            } as any)
+        }, {upsert: true});
+    }
+});

@@ -21,7 +21,7 @@ export interface ICacheItemModel {
 
 export type ICacheItem = ICacheItemBase&ICacheItemModel;
 
-export const CacheItemSchema = <Schema<ICacheItem>>(new (mongoose.Schema)({
+export const CacheItemSchema = <Schema<ICacheItem>>(new (require('mongoose').Schema)({
     source: {
         type: LocationSchema,
         required: true

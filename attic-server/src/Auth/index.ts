@@ -1,6 +1,2 @@
-export {
-   IBasicUser,
-    BasicUserSchema,
-    default as BasicUser,
-    IBasicUserModel
-} from './BasicUser';
+export { default as AccessToken } from './AccessToken';
+export { default as Client } from './Client';

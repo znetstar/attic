@@ -3,7 +3,8 @@ import { default as IRPC }  from '@znetstar/attic-common/lib/IRPC';
 import Config from './Config';
 
 let serializer = new JSONSerializer();
-let httpTransport = new HTTPClientTransport(serializer, Config.serverUri);
+let headers = new Map<string, string>();
+let httpTransport = new HTTPClientTransport(serializer, Config.serverUri+'/rpc', headers);
 
 export interface RawRPCError {
   message:  string;
@@ -15,6 +16,7 @@ export interface RawRPCError {
     code?: string
   }
 };
+
 
 export class RPCError extends Error {
   constructor(errorObj: any) {
@@ -30,6 +32,8 @@ export class RPCError extends Error {
 export const RPCClient = <Client>(new Client(httpTransport));
 export const RPCProxy = new Proxy(<IRPC>{}, {
     get: function (target, property: string) {
+        if (Config.accessToken)
+            headers.set('Authorization', `Bearer ${Config.accessToken}`);
         return async function (...args: any[]) {
           try {
             return await RPCClient.invoke(property, args);

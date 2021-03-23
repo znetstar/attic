@@ -12,7 +12,20 @@ export interface IAccessToken {
     token: string;
     scope: string[];
     client: IClient|string;
-    user: IUser|string;
+    user?: IUser|string;
 }
+
+export interface IFormalAccessToken {
+    access_token: string;
+    token_type: TokenTypes,
+    expires_in: number;
+    refresh_token?: string;
+    scope?: string;
+}
+
+export type ScopeAccessTokenPair = [ string, IAccessToken ];
+export type ScopeFormalAccessTokenPair = [ string, IFormalAccessToken ];
+export type FormalAccessTokenSet = ScopeFormalAccessTokenPair[];
+export type AccessTokenSet = ScopeAccessTokenPair[];
 
 export default IAccessToken;

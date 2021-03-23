@@ -10,7 +10,8 @@ import * as _ from 'lodash';
 import {IUser} from "../User";
 import {HTTPDriverBase} from "./HTTPDriverBase";
 import {Request, Response} from "express";
-import HTTPProxy, {ServerOptions} from 'http-proxy';
+import * as HTTPProxy from 'http-proxy';
+import { ServerOptions } from 'http-proxy';
 import * as URL from 'url';
 import {IDriverOfFull} from "../Driver";
 

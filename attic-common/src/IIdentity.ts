@@ -1,15 +1,18 @@
+import {IUser} from "./IUser";
+import {IHTTPResourceEntity} from "./IEntity";
+import IClient from "./IClient";
+
 export interface IIdentity {
-    provider: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone: string;
+    _id: string;
     id: string;
-    _id: string|any;
-    displayName?: string;
-    name: {
-        familyName: string,
-        givenName: string,
-        middleName?: string
-    },
-    emails?: { value: string, type?: string }[]
-    photos?: { value: string }[]
+    otherFields?: any;
+    externalId: any;
 }
+
+export type IIdentityEntity = IHTTPResourceEntity&IHTTPResourceEntity&{ clientName: string, client: string|IClient, user: string|IUser }&IIdentity;
 
 export default IIdentity;

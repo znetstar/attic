@@ -1,19 +1,37 @@
 import * as express from 'express';
-import { JSONSerializer } from 'multi-rpc';
+import { JSONSerializer, Response,  Transport, ClientRequest} from 'multi-rpc';
 import { ExpressTransport } from 'multi-rpc-express-transport';
 import ResolverMiddleware from './ResolverMiddleware';
 import { RPCServer } from '../RPC';
 import Config from '../Config';
-import { Server as HTTPServer } from 'http';
+import { Server as HTTPServer} from 'http';
 import {Router} from "express";
 import SessionMiddleware, {CookieMiddleware} from "./SessionMiddleware";
 import AuthMiddlewares, {AuthMiddleware, initalizePassport, restrictScopeMiddleware} from "./AuthMiddleware";
 import * as cookieParser from 'cookie-parser';
 import ApplicationContext from "../ApplicationContext";
 import {Application} from "typedoc";
-import {GenericError} from "../Error/GenericError";
+import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
+import {IError} from "@znetstar/attic-common/lib/Error/IError";
+import * as _ from 'lodash';
 
-export let RPCTransport: ExpressTransport;
+export class AtticExpressTransport extends ExpressTransport {
+
+    protected onRequest(req: any, res: any) {
+        const jsonData = (<Buffer>req.body);
+        const rawReq = new Uint8Array(jsonData);
+
+        const body = JSON.parse(jsonData.toString('utf8'));
+
+        return restrictScopeMiddleware(
+            `rpc.${body.method}`,
+        )(req, res, () => {
+            super.onRequest(req, res);
+        });
+    }
+}
+
+export let RPCTransport: AtticExpressTransport;
 export let WebRouter: Router;
 
 
@@ -29,23 +47,10 @@ export async function loadWebServer() {
 
     WebExpress.use(AuthMiddleware);
 
-    RPCTransport = new ExpressTransport(new JSONSerializer(), WebRouter);
+    RPCTransport = new AtticExpressTransport(new JSONSerializer(), WebRouter);
+
     RPCServer.addTransport(RPCTransport);
 
-    WebExpress.use('/rpc', require('body-parser').json(), (req: any, res: any, next: any) => {
-        if (req.body) {
-            let body = req.body;
-            if (body.method) {
-                restrictScopeMiddleware(
-                    `rpc.${body.method}`,
-                )(req, res, next);
-
-                return;
-            }
-        }
-
-        throw [ 403 ];
-    });
     WebExpress.post('/rpc', WebRouter);
 
     if (Config.enableWebResolver) {
@@ -56,18 +61,25 @@ export async function loadWebServer() {
         WebExpress.use(ResolverMiddleware);
     }
 
-    WebRouter.use((req: any, res: any, next: any, error: any) => {
+    WebExpress.use((error: any, req: any, res: any, next: any) => {
+        if (error) console.error(error.stack);
         delete error.stack;
-        if (error instanceof GenericError) {
-            res.status(error.httpCode).send({ error: JSON.stringify(error) });
-        } else if (error.message) {
-            res.status(error.httpCode || 500).send({ error: JSON.stringify(error) });
-        } else if (Array.isArray(error) && typeof(error[0]) === 'number') {
-            error = new GenericError(error[1] || 'An unknown error occurred', GenericError.code, error[0]);
-            res.status(error.httpCode).send({ error: JSON.stringify(error) });
+        let err: IError;
+        if (Array.isArray(error) && typeof(error[0]) === 'number') {
+             err = {
+                 code: 0,
+                 httpCode: error[0],
+                 message: error[1]
+             };
         } else {
-            res.status(500).end();
+             err = {
+                code: _.get(error, 'code') || _.get(error, '__proto__.constructor.code'),
+                httpCode: _.get(error, 'httpCode') || _.get(error, '__proto__.constructor.httpCode'),
+                message: _.get(error, 'message') || _.get(error, '__proto__.constructor.message')
+            }
         }
+
+        res.status(err.httpCode || 500).send({ error: err });
     });
 
     await ApplicationContext.emitAsync('loadWebServer.complete');

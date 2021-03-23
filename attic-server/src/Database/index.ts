@@ -12,11 +12,11 @@ export const redis = new Redis(config.redisUri);
 
 export async function loadModels() {
     await ApplicationContext.emitAsync('loadModels.start');
-    require('../Auth/Identity');
     require('../User');
     require('../Auth/Client');
     require('../Auth/AccessToken');
     require('../Location');
+    require('../Entities/IdentityEntity');
     require('../Entity');
     require('../Entities/HTTPResourceEntity');
     require('../Resolver');

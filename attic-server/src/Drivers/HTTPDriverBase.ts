@@ -9,7 +9,7 @@ import Driver from "./Driver";
 import * as _ from 'lodash';
 import {IUser} from "../User";
 
-export abstract class HTTPDriverBase extends Driver<IHTTPResourceEntity> {
+export abstract class HTTPDriverBase extends Driver<IHTTPResponse> {
     constructor(public user?: IUser) {
         super(user);
     }

@@ -1,35 +1,39 @@
 import {Express, RequestHandler, Router} from 'express';
 import config from "../Config";
-import User, {IUser, UNAUTHROIZED_USERNAME} from "../User";
+import User, {generateUsername, isAuthorizedToDo, IUser, UNAUTHROIZED_USERNAME} from "../User";
 import {Document} from "mongoose";
 import mongoose, {redis} from "../Database";
 import RPCServer from "../RPC";
-import Client, {IClient} from "../Auth/Client";
+import Client, {getIdentityEntity, IClient} from "../Auth/Client";
 import {nanoid} from 'nanoid';
 import fetch from 'node-fetch';
 import * as URL from 'url';
 import {
     AccessToken,
-    FormalAccessToken,
+    AccessTokenSchema, checkScopePermission,
     fromFormalToken,
     IAccessToken,
+    IFormalAccessToken,
     IScopeContext,
     toFormalToken
 } from "../Auth/AccessToken";
+import ApplicationContext from "../ApplicationContext";
 import {IClientRole} from "@znetstar/attic-common/lib/IClient";
 import * as _ from 'lodash';
-import {TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
+import {ScopeAccessTokenPair, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
 import {
     CouldNotFindTokenForScopeError,
     CouldNotLocateStateError,
-    ErrorGettingTokenFromProviderError,
+    ErrorGettingTokenFromProviderError, InvalidAccessTokenError,
     InvalidClientOrProviderError,
     InvalidResponseTypeError,
-    MalformattedTokenRequestError, ProviderDoesNotAllowRegistrationError
-} from "../../../attic-common/src/Error/AccessToken";
+    MalformattedTokenRequestError, NotAuthorizedToUseScopesError,
+    ProviderDoesNotAllowRegistrationError
+} from "@znetstar/attic-common/lib/Error/AccessToken";
 import {asyncMiddleware} from "./Common";
-import GenericError from "../../../attic-common/src/Error/GenericError";
-import {CouldNotLocateUserError} from "../../../attic-common/src/Error/Auth";
+import GenericError from "@znetstar/attic-common/lib/Error/GenericError";
+import {CouldNotLocateIdentityError, CouldNotLocateUserError} from "@znetstar/attic-common/lib/Error/Auth";
+import {OAuthTokenForm, OAuthTokenRequest} from "@znetstar/attic-common/lib/IRPC";
 
 export const AuthMiddleware = Router();
 
@@ -67,9 +71,14 @@ export function restrictScopeMiddleware(scope: string): RequestHandler {
             } else {
                 const context = req.scopeContext as IScopeContext;
                 let user: IUser = context.user = req.user;
-                context.currentScopeAccessToken = await (await user.getToken(scope)).next();
-                if (!req.scopeContext.currentScopeAccessToken) {
-                    throw new CouldNotFindTokenForScopeError({ scope, token: null });
+                let tknResponse = await (await user.getAccessTokensForScope(scope)).next();
+                let scopeTokenPair: ScopeAccessTokenPair = _.get(tknResponse, 'value');
+                let accessToken: IAccessToken&Document|null = _.get(scopeTokenPair, '1') as IAccessToken&Document|null;
+
+                if (!accessToken) {
+                    throw new CouldNotFindTokenForScopeError(scopeTokenPair);
+                } else {
+                    context.currentScopeAccessToken = accessToken;
                 }
             }
         })().then(() => next()).catch(err => next(err));
@@ -90,107 +99,275 @@ AuthMiddleware.use(asyncMiddleware(async function (req: any, res: any, next: any
 
         let token = context.accessToken = await mongoose.models.AccessToken.findOne( { tokenType, token: tokenStr } ).exec();
         if (token) {
-                req.user = context.user = await mongoose.models.User.findById(token.user);
-            }
+            req.user = context.user = await mongoose.models.User.findById(token.user);
+        } else {
+            throw new InvalidAccessTokenError();
         }
+    }
 
     if (!req.user) {
         req.user = context.user = unauthorizedUser = req.user || unauthorizedUser || await mongoose.models.User.findOne({ username: UNAUTHROIZED_USERNAME }).exec();
-        context.accessToken = { scope: req.user.scope.slice(0) };
+        context.accessToken = { scope: req.user.scope.slice(0) } as any;
     }
 
     return true;
 }));
 
+
+
+
+export function getAccessTokenForm(req: OAuthTokenRequest): OAuthTokenForm {
+    let getField = (f: string) => _.get(req, f);
+    let grantType = getField('grant_type');
+    let clientId = getField('client_id');
+    let clientSecret = getField('client_secret');
+    let redirectUri = getField('redirect_uri');
+    let originalState = getField('state');
+    let code = [].concat(getField('code'))[0];
+    let refreshTokenCode = getField('refresh_token');
+    let username = getField('username');
+    let password = getField('password');
+    let scope = Array.isArray(getField('scope')) ? getField('scope') : (getField('scope') || '').split(' ');
+
+    return {
+        grantType,
+        clientSecret,
+        clientId,
+        redirectUri,
+        originalState,
+        code,
+        refreshTokenCode,
+        username,
+        password,
+        scope
+    }
+}
+
+ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.authorization_code', async function (client: IClient&Document, req: OAuthTokenRequest) {
+    let accessToken: IAccessToken&Document,
+        refreshToken: IAccessToken&Document;
+    let {
+        password,
+        username,
+        refreshTokenCode,
+        originalState,
+        redirectUri,
+        clientId,
+        clientSecret,
+        grantType,
+        code
+    } = getAccessTokenForm(req);
+
+    if (!code) {
+        throw new MalformattedTokenRequestError();
+    }
+    let stateKey = `auth.token.${code}`;
+    let state = await redis.hgetall(stateKey);
+    if (!Object.keys(state).length || !state) {
+        throw new CouldNotLocateStateError();
+    }
+    await redis.del(stateKey);
+
+    let user = await User.findById(state.user).exec();
+
+    if (!user || state.client !== client.id || client.redirectUri !== redirectUri) {
+        throw new InvalidClientOrProviderError();
+        return ;
+    }
+
+
+    let scopes = checkScopePermission((state.scope || '').split(' '), client, user);
+
+    accessToken = new AccessToken({
+        tokenType: 'bearer',
+        token: nanoid(),
+        scope: scopes,
+        client: client._id,
+        clientRole:  IClientRole.consumer,
+        clientName: client.name,
+        redirectUri: client.redirectUri,
+        user: user
+    })
+
+    refreshToken = new AccessToken({
+        tokenType: 'refresh_token',
+        token: nanoid(),
+        linkedToken: accessToken._id,
+        scope: scopes,
+        client: client._id,
+        clientRole: IClientRole.consumer,
+        clientName: client.name,
+        redirectUri: client.redirectUri,
+        user: user
+    });
+
+    accessToken.linkedToken = refreshToken._id;
+    return {
+        accessToken,
+        refreshToken
+    }
+});
+
+async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessToken> {
+    let {
+        password,
+        username,
+        refreshTokenCode,
+        originalState,
+        redirectUri,
+        clientId,
+        clientSecret,
+        grantType,
+        code
+    } = getAccessTokenForm(form);
+
+    let grantEvent = `Web.AuthMiddleware.getAccessToken.grantTypes.${grantType || ''}`;
+
+    if (!grantType || !clientId || !clientSecret || !redirectUri || !(ApplicationContext).eventNames().includes(grantEvent)) {
+        throw new MalformattedTokenRequestError();
+    }
+
+    let client = await Client.findOne({
+        clientId,
+        clientSecret,
+        redirectUri,
+        role: 'consumer'
+    }).exec();
+
+
+    if (!client) {
+        throw new InvalidClientOrProviderError();
+    }
+
+    let output: { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document  }[] = await ApplicationContext.emitAsync(grantEvent, client, form);
+
+    output.reverse();
+    let { accessToken, refreshToken } = output.shift();
+    if (!accessToken) {
+        throw new GenericError(`An unknown error occurred, please try again`, 0, 500);
+        return;
+    }
+
+    await accessToken.save();
+    if (refreshToken)
+        await refreshToken.save();
+
+    return toFormalToken(accessToken);
+}
+
+RPCServer.methods.getAccessToken = getAccessToken;
+RPCServer.methods.getAccessTokenForm = async (form: OAuthTokenRequest) => getAccessTokenForm(form);
+
+ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.refresh_token', async function (client: IClient&Document, req: OAuthTokenRequest) {
+    let accessToken: IAccessToken&Document,
+        refreshToken: IAccessToken&Document;
+    let {
+        password,
+        username,
+        refreshTokenCode,
+        originalState,
+        redirectUri,
+        clientId,
+        clientSecret,
+        grantType,
+        code,
+        scope
+    } = getAccessTokenForm(req);
+
+    if (!refreshTokenCode) {
+        throw new MalformattedTokenRequestError();
+    }
+
+    refreshToken = await ( AccessToken.findOne({
+        tokenType: TokenTypes.RefreshToken,
+        client: client._id,
+        clientRole: IClientRole.consumer,
+        token: refreshTokenCode
+    })).exec();
+
+    await refreshToken.populate('user client').execPopulate();
+    checkScopePermission(refreshToken.scope, refreshToken.client, refreshToken.user);
+
+    if (refreshToken) {
+        accessToken = await AccessTokenSchema.methods.accessTokenFromRefresh.call(refreshToken);
+    }
+
+    return {
+        accessToken,
+        refreshToken
+    }
+});
+
+ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', async function (client: IClient&Document, req: OAuthTokenRequest) {
+    let accessToken: IAccessToken&Document,
+        refreshToken: IAccessToken&Document;
+    let {
+        password,
+        username,
+        refreshTokenCode,
+        originalState,
+        redirectUri,
+        clientId,
+        clientSecret,
+        grantType,
+        code,
+        scope
+    } = getAccessTokenForm(req);
+
+    if (!password || !username) {
+        throw new MalformattedTokenRequestError();
+    }
+
+    let user = await User.findOne({
+        username
+    });
+
+    if (!user) {
+        throw new CouldNotLocateUserError();
+    }
+
+    let scopes = checkScopePermission([].concat(scope), client, user);
+
+    accessToken = new AccessToken({
+        tokenType: 'bearer',
+        token: nanoid(),
+        expiresAt: (new Date()).getTime() + config.expireTokenIn,
+        scope: scopes,
+        client: client._id,
+        clientRole:  IClientRole.consumer,
+        clientName: client.name,
+        redirectUri: client.redirectUri,
+        user: user
+    })
+
+    refreshToken = new AccessToken({
+        tokenType: 'refresh_token',
+        token: nanoid(),
+        linkedToken: accessToken._id,
+        scope: scopes,
+        client: client._id,
+        clientRole: IClientRole.consumer,
+        clientName: client.name,
+        redirectUri: client.redirectUri,
+        user: user
+    });
+
+    accessToken.linkedToken = refreshToken._id;
+    return {
+        accessToken,
+        refreshToken
+    }
+});
+
+
 AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ type: 'application/x-www-form-urlencoded' }), require('body-parser').json({ type: 'application/json' }),restrictScopeMiddleware('auth.token'), asyncMiddleware(async function (req: any, res: any, next: any) {
-      const context = req.scopeContext as IScopeContext;
-      let getField = (f: string) => _.get(req.query, f) || _.get(req.body, f) || null;
-      let grantType = getField('grant_type');
-        let clientId = getField('client_id');
-        let clientSecret = getField('client_secret');
-        let redirectUri = getField('redirect_uri');
-        let originalState = getField('state');
-        let code = [].concat(getField('code'))[0];
-        let refreshTokenCode = getField('refresh_token');
+    let form = {
+        ...req.query,
+        ...req.body
+    };
 
-      if (!grantType || !clientId || !clientSecret || !redirectUri || !(code || refreshTokenCode)) {
-          throw new MalformattedTokenRequestError();
-      }
-
-      let client = await Client.findOne({
-          clientId,
-          clientSecret,
-          redirectUri,
-          role: 'consumer'
-      }).exec();
-
-      if (!client) {
-          throw new InvalidClientOrProviderError();
-      }
-
-      let accessToken: IAccessToken&Document,
-          refreshToken: IAccessToken&Document;
-        if (grantType === 'authorization_code') {
-            let stateKey = `auth.token.${code}`;
-            let state = await redis.hgetall(stateKey);
-            if (!Object.keys(state).length || !state) {
-                throw new CouldNotLocateStateError();
-            }
-            await redis.del(stateKey);
-
-            if (state.client !== client.id || client.redirectUri !== redirectUri) {
-                throw new InvalidClientOrProviderError();
-                return ;
-            }
-
-            let scopes = [].concat((getField('scope') || '').split(' '))
-
-            accessToken = new AccessToken({
-                tokenType: 'bearer',
-                token: nanoid(),
-                expiresAt: (new Date()).getTime() + config.expireTokenIn,
-                scope: scopes,
-                client: client._id,
-                clientRole:  IClientRole.consumer,
-                clientName: client.name,
-                redirectUri: client.redirectUri,
-                user: req.user
-            })
-
-            refreshToken = new AccessToken({
-                tokenType: 'refresh_token',
-                token: nanoid(),
-                linkedToken: accessToken._id,
-                scope: scopes,
-                client: client._id,
-                clientRole: IClientRole.consumer,
-                clientName: client.name,
-                redirectUri: client.redirectUri,
-                user: req.user
-            });
-
-            accessToken.linkedToken = refreshToken._id;
-        } else if (grantType === 'refresh_token') {
-            accessToken = (await AccessToken.findOne({
-                tokenType: TokenTypes.RefreshToken,
-                client: client._id,
-                clientRole: IClientRole.consumer,
-                token: refreshTokenCode
-            }));
-
-        }
-
-        if (!accessToken) {
-            throw new GenericError(`An unknown error occurred, please try again`, 0, 500);
-            return;
-        }
-
-        await accessToken.save();
-        if (refreshToken)
-            await refreshToken.save();
-
-        let formalToken = await toFormalToken(accessToken);
-        res.status(200).send(formalToken);
+    let formalToken = await getAccessToken(form);
+    res.status(200).send(formalToken);
 }));
 
 AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyncMiddleware(async function (req: any, res: any, next: any) {
@@ -261,26 +438,49 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
                 throw new ErrorGettingTokenFromProviderError(await tokenResp.json());
             }
 
-             let user = await User.findById(existingState.user).exec();
-            if (existingState.username === UNAUTHROIZED_USERNAME) {
+            let formalToken: IFormalAccessToken = await tokenResp.json();
+            let {accessToken, refreshToken} = await fromFormalToken(formalToken, null, provider, IClientRole.provider);
+            let identity = await getIdentityEntity(accessToken);
+
+            if (!identity) {
+                throw new CouldNotLocateIdentityError();
+            }
+
+            let user: IUser&Document;
+            if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
                 if (provider.role.includes(IClientRole.registration)) {
                     user = new User({
-                        username: nanoid(),
+                        username: generateUsername(),
                         scope: [
-                            ...config.get('unauthorizedScopes').slice(0),
-                            'identity.self'
-                        ]
+                            ...config.get('unauthorizedScopes').slice(0)
+                        ],
                     });
-
-                    await user.save();
                 } else {
                     throw new ProviderDoesNotAllowRegistrationError();
                 }
+            } else if (identity.user) {
+                user = await User.findById(identity.user).exec();
+            } else {
+                user = await User.findById(existingState.user).exec();
             }
 
-            let formalToken: FormalAccessToken = await tokenResp.json();
+            user.identities = user.identities || [];
+            if (!user.identities.map(x => x.toString()).includes(identity._id))
+                user.identities.push(identity._id);
 
-            let { refreshToken, accessToken } = await fromFormalToken(formalToken, user, provider, IClientRole.provider);
+            identity.user = user._id;
+
+            await user.save();
+            await identity.save();
+
+            accessToken.user = user;
+
+            req.user = user;
+            existingState.user = user._id;
+
+            accessToken.scope = [].concat(provider.scope);
+            refreshToken.scope = [].concat(provider.scope);
+
             accessToken.save();
             if (refreshToken) refreshToken.save();
 
@@ -289,7 +489,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
             let pipeline = redis.pipeline();
 
             for (let k in existingState) {
-                pipeline.hset(stateKey, k, (existingState as any)[k]);
+                pipeline.hset(stateKey, k, (existingState as any)[k].toString());
             }
 
             pipeline.pexpire(stateKey, config.authorizeGracePeriod);
@@ -332,13 +532,16 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
 
         let pipeline = redis.pipeline();
 
+        let scopes = checkScopePermission((req.query.scope || '').split(' '), client, req.user);
+
         let newState = {
             client: client.id,
             provider: provider.id,
             user: req.user.id,
             originalState: originalState,
             redirectUri: '',
-            username: req.user.username
+            username: req.user.username,
+            scope: scopes.join(' ')
         };
 
 

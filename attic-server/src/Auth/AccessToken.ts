@@ -1,8 +1,8 @@
 import {Document, Schema} from 'mongoose';
 import mongoose from '../Database';
 import {ObjectId} from 'mongodb';
-import IAccessTokenBase, {TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
-import User, {IUser, UNAUTHROIZED_USERNAME} from "../User";
+import IAccessTokenBase, {IFormalAccessToken, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
+import User, {isAuthorizedToDo, IUser} from "../User";
 import Client, {IClient} from "./Client";
 import * as _ from 'lodash';
 import {IClientRole} from "@znetstar/attic-common/lib/IClient";
@@ -10,18 +10,23 @@ import * as URL from "url";
 import fetch from "node-fetch";
 import {nanoid} from "nanoid";
 import config from "../Config";
-import {CouldNotFindTokenForScopeError} from "../../../attic-common/src/Error/AccessToken";
+import {
+    CouldNotFindTokenForScopeError,
+    NotAuthorizedToUseScopesError
+} from "@znetstar/attic-common/lib/Error/AccessToken";
+
+export {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 
 export interface IAccessTokenModel {
     id: ObjectId;
     _id: ObjectId;
-    user: IUser;
+    user?: IUser;
     client: IClient;
     updatedAt: Date,
     createdAt: Date,
     linkedToken: IAccessToken|ObjectId,
     isAuthorizedToDo(scope: string|Function): boolean;
-    toFormalToken(): Promise<FormalAccessToken>;
+    toFormalToken(): Promise<IFormalAccessToken>;
     accessTokenFromRefresh(): Promise<IAccessToken&Document>;
     clientRole: IClientRole;
     formalScope: string[];
@@ -29,13 +34,6 @@ export interface IAccessTokenModel {
     clientName?: string;
 }
 
-export interface FormalAccessToken {
-    access_token: string;
-    token_type: TokenTypes,
-    expires_in: number;
-    refresh_token?: string;
-    scope?: string;
-}
 
 export interface IScopeContext {
     currentScope?: string;
@@ -60,14 +58,7 @@ export const AccessTokenSchema = <Schema<IAccessToken>>(new (mongoose.Schema)({
         required: false
     },
     expiresAt: {
-        type: Date,
-        default: function () {
-            if (this.tokenType === 'bearer') {
-                return (new Date()).getTime() + config.expireTokenIn;
-            } else if (this.tokenType === 'refresh_token') {
-                return (new Date()).getTime() + config.expireRefreshTokenIn;
-            }
-        }
+        type: Date
     },
     scope: {
         type: [String]
@@ -75,7 +66,7 @@ export const AccessTokenSchema = <Schema<IAccessToken>>(new (mongoose.Schema)({
     user: {
         ref: 'User',
         type: Schema.Types.ObjectId,
-        required: true
+        required: false
     },
     client: {
         ref: 'Client',
@@ -104,15 +95,53 @@ AccessTokenSchema.pre<IAccessToken&Document>('save', async function (){
        this.scope = this.scope.map((s: string) => `${client.name}.${s}`);
    }
 
+    if (this.tokenType === 'bearer' && client.expireAccessTokenIn !== null) {
+        return (new Date()).getTime() + (typeof(client.expireAccessTokenIn) !== 'undefined' ? client.expireAccessTokenIn : config.expireTokenIn);
+    } else if (this.tokenType === 'refresh_token' && client.expireRefreshTokenIn !== null) {
+        return (new Date()).getTime() + (typeof(client.expireRefreshTokenIn) !== 'undefined' ? client.expireRefreshTokenIn : config.expireRefreshTokenIn);
+    }
+
+   if (!this.user)
+       return;
+
    let user = await User.findById(this.user).exec();
 
   if (this.clientRole === IClientRole.consumer) {
-      for await (let token of user.getToken(this.scope)) {
-        if (!token.token) {
+      let { unauthorizedScopes } = getValidInvalidScopes(this.scope, client, user);
+      for await (let token of user.getAccessTokensForScope(unauthorizedScopes)) {
+        if (!token || !token[1]) {
             throw new CouldNotFindTokenForScopeError(token);
         }
       }
   }
+});
+
+export function checkScopePermission(scopes: string[], client: IClient, user:IUser): string[] {
+    const { validScopes, unauthorizedScopes } = getValidInvalidScopes(scopes, client, user);
+    if (unauthorizedScopes.length) {
+        throw new NotAuthorizedToUseScopesError(unauthorizedScopes);
+    }
+    return validScopes;
+}
+
+export function getValidInvalidScopes(scopes: string[], client: IClient, user: IUser) {
+    let unauthorizedScopes: string[] = [], validScopes: string[] = [];
+    for (let singleScope of scopes) {
+        if (_.isEmpty(singleScope)) continue;
+        if (isAuthorizedToDo(user.scope, singleScope) || isAuthorizedToDo(client.scope, singleScope)) {
+            validScopes.push(singleScope);
+        } else {
+            unauthorizedScopes.push(singleScope);
+        }
+    }
+
+    return { unauthorizedScopes, validScopes };
+}
+
+AccessTokenSchema.post('save', async function (doc: IAccessToken&Document){
+    if (doc.tokenType === TokenTypes.Bearer && doc.linkedToken) {
+        await AccessToken.deleteMany({ tokenType: TokenTypes.Bearer, linkedToken: doc.linkedToken, _id: { $ne: doc._id } });
+    }
 });
 
 AccessTokenSchema.virtual('authorizationHeader')
@@ -141,7 +170,7 @@ AccessTokenSchema.methods.isAuthorizedToDo = function (scope: string|Function) {
     return this.scope.includes(scope);
 };
 
-AccessTokenSchema.methods.toFormalToken = function (): Promise<FormalAccessToken> {
+AccessTokenSchema.methods.toFormalToken = function (): Promise<IFormalAccessToken> {
     return toFormalToken(this);
 }
 
@@ -183,7 +212,7 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
 
         let user = await User.findById(self.user).exec();
 
-        let formalToken: FormalAccessToken = await tokenResp.json();
+        let formalToken: IFormalAccessToken = await tokenResp.json();
         let { accessToken, refreshToken: newRefreshToken } = await fromFormalToken(formalToken, user, client, IClientRole.provider);
         accessToken.save();
         if (newRefreshToken) {
@@ -193,6 +222,7 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
 
         return accessToken;
     } else if (self.clientRole === IClientRole.consumer) {
+
         let accessToken = new AccessToken({
             tokenType: 'bearer',
             token: nanoid(),
@@ -212,7 +242,7 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
     return null;
 }
 
-export function fromFormalToken(formalToken: FormalAccessToken, user: ObjectId|IUser, client: IClient, role: IClientRole): { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document } {
+export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|IUser|null, client: IClient, role: IClientRole): { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document } {
     let accessToken = new AccessToken({
         token: formalToken.access_token,
         expiresAt: formalToken.expires_in ? ((new Date().getTime()) + (formalToken.expires_in)*1e3) : void(0),
@@ -248,7 +278,7 @@ export function fromFormalToken(formalToken: FormalAccessToken, user: ObjectId|I
     }
 }
 
-export async function toFormalToken(accessTokenQuery: IAccessToken|ObjectId|string): Promise<FormalAccessToken> {
+export async function toFormalToken(accessTokenQuery: IAccessToken|ObjectId|string): Promise<IFormalAccessToken> {
     let token: IAccessToken;
     if (typeof(accessTokenQuery) === 'string' || !(accessTokenQuery as any)._id) {
         token = await AccessToken.findById(accessTokenQuery);
@@ -262,7 +292,7 @@ export async function toFormalToken(accessTokenQuery: IAccessToken|ObjectId|stri
     let refreshToken: IAccessToken = token.tokenType === TokenTypes.RefreshToken ? token : linkedToken;
     let accessToken: IAccessToken = token.tokenType !== TokenTypes.RefreshToken ? token : linkedToken;
 
-    let formalToken: FormalAccessToken = {
+    let formalToken: IFormalAccessToken = {
         access_token: _.get(accessToken, 'token'),
         refresh_token: _.get(refreshToken, 'token'),
         scope: token.formalScope.join(' '),

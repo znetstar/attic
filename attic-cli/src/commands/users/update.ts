@@ -24,18 +24,14 @@ export default class LocationUpdate extends Create {
       char: 'u',
       required: false
     }),
-    type: flags.string({
-      char: 't',
+    password: flags.string({
+      char: 'p',
       required: true
     }),
     disabled: flags.boolean({
       char: 'd',
       required: false,
       default: false
-    }),
-    expiresIn: flags.integer({
-      required: false,
-      char: 'x'
     }),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
@@ -53,14 +49,11 @@ export default class LocationUpdate extends Create {
 
     let user: IUser = !_.isEmpty(argv[0]) ? JSON.parse(argv[0]) : {};
 
-    if (!_.isEmpty(flags.type)) {
-      user.type = flags.type;
-    }
     if (typeof(flags.disabled) !== 'undefined') {
       user.disabled = flags.disabled;
     }
-    if (flags.expiresIn) {
-      user.expiresAt = new Date((new Date()).getTime() + flags.expiresIn);
+    if (flags.password) {
+      user.password = flags.password;
     }
     if (!_.isEmpty(flags.username) && flags.username) {
       user.username = flags.username;
