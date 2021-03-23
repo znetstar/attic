@@ -4,7 +4,7 @@ import User, {generateUsername, isAuthorizedToDo, IUser, UNAUTHROIZED_USERNAME} 
 import {Document} from "mongoose";
 import mongoose, {redis} from "../Database";
 import RPCServer from "../RPC";
-import Client, {getIdentityEntity, IClient} from "../Auth/Client";
+import Client, { getIdentityEntityByAccessToken, IClient} from "../Auth/Client";
 import {nanoid} from 'nanoid';
 import fetch from 'node-fetch';
 import * as URL from 'url';
@@ -32,7 +32,8 @@ import {
 } from "@znetstar/attic-common/lib/Error/AccessToken";
 import {asyncMiddleware} from "./Common";
 import GenericError from "@znetstar/attic-common/lib/Error/GenericError";
-import {CouldNotLocateIdentityError, CouldNotLocateUserError} from "@znetstar/attic-common/lib/Error/Auth";
+import { CouldNotLocateUserError } from '@znetstar/attic-common/lib/Error/Auth';
+import {CouldNotLocateIdentityError } from "@znetstar/attic-common/lib/Error/Auth";
 import {OAuthTokenForm, OAuthTokenRequest} from "@znetstar/attic-common/lib/IRPC";
 
 export const AuthMiddleware = Router();
@@ -71,15 +72,17 @@ export function restrictScopeMiddleware(scope: string): RequestHandler {
             } else {
                 const context = req.scopeContext as IScopeContext;
                 let user: IUser = context.user = req.user;
-                let tknResponse = await (await user.getAccessTokensForScope(scope)).next();
-                let scopeTokenPair: ScopeAccessTokenPair = _.get(tknResponse, 'value');
-                let accessToken: IAccessToken&Document|null = _.get(scopeTokenPair, '1') as IAccessToken&Document|null;
 
-                if (!accessToken) {
-                    throw new CouldNotFindTokenForScopeError(scopeTokenPair);
-                } else {
-                    context.currentScopeAccessToken = accessToken;
+                for await (let tknResponse of await user.getAccessTokensForScope(scope)) {
+                    let scopeTokenPair: ScopeAccessTokenPair = tknResponse;
+                    let accessToken: IAccessToken&Document|null = _.get(scopeTokenPair, '1') as IAccessToken&Document|null;
+                    if (accessToken) {
+                        context.currentScopeAccessToken = accessToken;
+
+                        return;
+                    }
                 }
+                throw new CouldNotFindTokenForScopeError([ scope, null ]);
             }
         })().then(() => next()).catch(err => next(err));
     }
@@ -107,6 +110,11 @@ AuthMiddleware.use(asyncMiddleware(async function (req: any, res: any, next: any
 
     if (!req.user) {
         req.user = context.user = unauthorizedUser = req.user || unauthorizedUser || await mongoose.models.User.findOne({ username: UNAUTHROIZED_USERNAME }).exec();
+
+        if (!req.user) {
+            throw new CouldNotLocateUserError();
+        }
+
         context.accessToken = { scope: req.user.scope.slice(0) } as any;
     }
 
@@ -285,6 +293,9 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.refresh_toke
         token: refreshTokenCode
     })).exec();
 
+    if (!refreshToken)
+        throw new CouldNotFindTokenForScopeError([ 'rpc.getAccessToken', null ]);
+
     await refreshToken.populate('user client').execPopulate();
     checkScopePermission(refreshToken.scope, refreshToken.client, refreshToken.user);
 
@@ -331,7 +342,6 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
     accessToken = new AccessToken({
         tokenType: 'bearer',
         token: nanoid(),
-        expiresAt: (new Date()).getTime() + config.expireTokenIn,
         scope: scopes,
         client: client._id,
         clientRole:  IClientRole.consumer,
@@ -440,14 +450,19 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
 
             let formalToken: IFormalAccessToken = await tokenResp.json();
             let {accessToken, refreshToken} = await fromFormalToken(formalToken, null, provider, IClientRole.provider);
-            let identity = await getIdentityEntity(accessToken);
+            let identity = await getIdentityEntityByAccessToken(accessToken);
 
             if (!identity) {
                 throw new CouldNotLocateIdentityError();
+            } else if (identity.user) {
+                await identity.populate('user').execPopulate();
             }
 
             let user: IUser&Document;
-            if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
+            if (identity.user && (identity.user as IUser&Document).username !== UNAUTHROIZED_USERNAME) {
+                user = identity.user as IUser&Document;
+            }
+            else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
                 if (provider.role.includes(IClientRole.registration)) {
                     user = new User({
                         username: generateUsername(),
@@ -458,8 +473,6 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
                 } else {
                     throw new ProviderDoesNotAllowRegistrationError();
                 }
-            } else if (identity.user) {
-                user = await User.findById(identity.user).exec();
             } else {
                 user = await User.findById(existingState.user).exec();
             }
@@ -573,11 +586,6 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
         return;
     }
 }));
-
-AuthMiddleware.get('/auth/logout', function (req: any, res: any) {
-    req.session.destory();
-    res.sendStatus(204);
-});
 
 
 export const AuthMiddlewares = new Map<string, any>();

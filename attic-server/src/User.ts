@@ -153,6 +153,10 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
         user: user._id
     });
 
+    pipeline.sort({
+        isBearer: -1,
+        createdAt: -1
+    });
 
     pipeline.addFields({
         scopeQuery: [].concat(scope)
@@ -165,15 +169,23 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
         scopeMatch: {
             $regexMatch: {
                 input: '$scope',
-                regex: '$scopeQuery'
+                regex: '$scopeQuery',
+                options: 'i'
             }
         }
+    });
+
+    pipeline.sort({
+        scopeMatch: -1,
+        isBearer: -1,
+        createdAt: -1
     });
 
     pipeline.group({
         _id: '$_id',
         scope: { $addToSet: '$scope' },
-        doc: { $max: '$$ROOT' }
+        doc: { $max: '$$ROOT' },
+        scopeMatch: { $max: '$scopeMatch' }
     });
 
     pipeline.replaceRoot({
@@ -187,30 +199,24 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
         doc: 0
     });
 
-    pipeline.sort({
-        expiresAt: 1
-    });
 
 
     let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
-    // @ts-ignore
-    require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
     let cur =  pipeline.cursor({ batchSize: 500 }).exec();
 
+    let isDone = new Set<string>();
     while (doc = await cur.next()) {
-        if (doc && doneScopes.has(doc.scopeQuery))
+        if (!doc)
             continue;
-        doneScopes.add(doc.scopeQuery);
         if (!doc || !doc.scopeMatch) {
             yield [doc.scopeQuery, null];
-            continue;
+        } else if (!isDone.has(doc.scopeQuery)) {
+            isDone.add(doc.scopeQuery);
+            if (doc.tokenType === TokenTypes.RefreshToken) {
+                let child = await AccessTokenSchema.methods.accessTokenFromRefresh.call(doc);
+                yield [doc.scopeQuery, child];
+            } else yield [doc.scopeQuery, doc];
         }
-        if (doc.tokenType === TokenTypes.RefreshToken) {
-            let child = await AccessTokenSchema.methods.accessTokenFromRefresh.call(doc);
-            yield [doc.scopeQuery, child];
-            continue;
-        }
-        yield [doc.scopeQuery, doc];
     }
 }
 

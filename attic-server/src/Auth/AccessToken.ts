@@ -32,6 +32,7 @@ export interface IAccessTokenModel {
     formalScope: string[];
     authorizationHeader: string|null;
     clientName?: string;
+    isBearer?: boolean;
 }
 
 
@@ -68,6 +69,7 @@ export const AccessTokenSchema = <Schema<IAccessToken>>(new (mongoose.Schema)({
         type: Schema.Types.ObjectId,
         required: false
     },
+    isBearer: { type: Boolean, required: false },
     client: {
         ref: 'Client',
         type: Schema.Types.ObjectId,
@@ -90,16 +92,20 @@ export const AccessTokenSchema = <Schema<IAccessToken>>(new (mongoose.Schema)({
 AccessTokenSchema.pre<IAccessToken&Document>('save', async function (){
    let client = await Client.findById(this.client).exec();
 
+   this.isBearer = this.tokenType === TokenTypes.Bearer;
+
    this.clientName = client.name;
    if (this.clientRole === IClientRole.provider && this.scope.length) {
        this.scope = this.scope.map((s: string) => `${client.name}.${s}`);
    }
 
-    if (this.tokenType === 'bearer' && client.expireAccessTokenIn !== null) {
-        return (new Date()).getTime() + (typeof(client.expireAccessTokenIn) !== 'undefined' ? client.expireAccessTokenIn : config.expireTokenIn);
-    } else if (this.tokenType === 'refresh_token' && client.expireRefreshTokenIn !== null) {
-        return (new Date()).getTime() + (typeof(client.expireRefreshTokenIn) !== 'undefined' ? client.expireRefreshTokenIn : config.expireRefreshTokenIn);
-    }
+   if (this.isNew) {
+       if (this.tokenType === 'bearer' && client.expireAccessTokenIn !== null) {
+           this.expiresAt = new Date((new Date()).getTime() + (typeof (client.expireAccessTokenIn) !== 'undefined' ? client.expireAccessTokenIn : config.expireTokenIn));
+       } else if (this.tokenType === 'refresh_token' && client.expireRefreshTokenIn !== null) {
+           this.expiresAt = new Date((new Date()).getTime() + (typeof (client.expireRefreshTokenIn) !== 'undefined' ? client.expireRefreshTokenIn : config.expireRefreshTokenIn));
+       }
+   }
 
    if (!this.user)
        return;
@@ -226,7 +232,6 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
         let accessToken = new AccessToken({
             tokenType: 'bearer',
             token: nanoid(),
-            expiresAt: (new Date()).getTime() + config.expireTokenIn,
             linkedToken: self._id,
             scope: self.scope,
             client: self.client,
@@ -327,4 +332,9 @@ AccessToken.collection.createIndex({
     expiresAt: 1
 }, {
     expireAfterSeconds: 0
+});
+
+AccessToken.collection.createIndex({
+    isBearer: -1,
+    createdAt: -1
 });

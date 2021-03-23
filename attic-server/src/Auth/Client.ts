@@ -94,7 +94,7 @@ RPCServer.methods.updateClient = async (id: string, fields: any) => {
     await doc.save();
 }
 
-export async function getIdentityEntity(accessToken: IAccessToken&Document): Promise<IIdentityEntity&Document> {
+export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&Document): Promise<IIdentityEntity&Document> {
     let [ identity ]: (IIdentityEntityBase|null)[] = await ApplicationContext.emitAsync(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
 
     delete identity.id;
@@ -121,10 +121,11 @@ export async function getIdentityEntity(accessToken: IAccessToken&Document): Pro
     return existingIdentity as IIdentityEntity&Document;
 }
 
-RPCServer.methods.getIdentityEntity = async function(accessTokenId: string): Promise<IIdentityEntity> {
+RPCServer.methods.getIdentityEntityByAccessToken = async function(accessTokenId: string): Promise<IIdentityEntity> {
     let accessToken = await AccessToken.findById(accessTokenId);
-    return (await getIdentityEntity(accessToken)).toObject({ virtuals: true }) as IIdentityEntity;
+    return (await getIdentityEntityByAccessToken(accessToken)).toObject({ virtuals: true }) as IIdentityEntity;
 }
+
 
 // RPCServer.methods.searchClients = async (query:  BasicTextSearchOptions) => {
 //     let clientsQuery = (Client.find({

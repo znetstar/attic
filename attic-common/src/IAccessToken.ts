@@ -12,6 +12,7 @@ export interface IAccessToken {
     token: string;
     scope: string[];
     client: IClient|string;
+    clientName: string;
     user?: IUser|string;
 }
 

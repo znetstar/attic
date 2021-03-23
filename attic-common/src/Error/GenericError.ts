@@ -25,4 +25,19 @@ export class GenericError extends Error implements IError {
     }
 }
 
+export class NotFoundError extends GenericError {
+    public static get code(): number {
+        return 1;
+    }
+
+    public static get httpCode(): number {
+        return 404;
+    }
+
+    constructor(public message: string = 'Could not find resource requested') {
+        super(message, NotFoundError.code, NotFoundError.httpCode);
+    }
+}
+
+
 export default GenericError;

@@ -78,6 +78,7 @@ export interface IHTTPResponse {
     method: string;
 }
 
+
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
     generateId(size?: number): Promise<string>;
@@ -99,6 +100,8 @@ export default interface IRPC {
     deleteResolver(query: any): Promise<void>;
     listResolverTypes(): Promise<string[]>;
 
+    // zoom.meeting:read
+
     findEntities(query: BasicFindOptions): Promise<IEntity[]|number>;
     findEntity(query: any): Promise<IEntity>;
     searchEntities(query: BasicTextSearchOptions): Promise<IEntity[]|number>;
@@ -107,6 +110,8 @@ export default interface IRPC {
     deleteEntities(query: BasicFindQueryOptions): Promise<void>;
     deleteEntity(query: any): Promise<void>;
     listEntityTypes(): Promise<string[]>;
+    findIdentityEntity(query: any): Promise<IEntity>;
+    getIdentityEntityRpc(query: any): Promise<IEntity>;
 
     getNextResolverPriority(mountPoint: IMountPoint): Promise<number>;
 
@@ -125,13 +130,14 @@ export default interface IRPC {
     listUserTypes(): Promise<string[]>;
     generateUsername(): Promise<string>;
 
+
     findClients(query: BasicFindOptions): Promise<IClient[]|number>;
     findClient(query: any): Promise<IClient>;
     createClient(Client: IClient): Promise<string>;
     updateClient(id: string, fields: any): Promise<void>
     deleteClients(query: BasicFindQueryOptions): Promise<void>;
     deleteClient(query: any): Promise<void>;
-    getIdentityEntity(accessTokenId: string): Promise<IIdentityEntity>;
+    getIdentityEntityByAccessToken(accessTokenId: string): Promise<IIdentityEntity>;
     getSelfUser(): Promise<IUser|null>;
 
     getAccessTokenForm(req: OAuthTokenRequest): Promise<OAuthTokenForm>;
