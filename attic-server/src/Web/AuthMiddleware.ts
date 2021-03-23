@@ -309,7 +309,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.refresh_toke
     }
 });
 
-ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', async function (client: IClient&Document, req: OAuthTokenRequest) {
+ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', async function (client: IClient&Document, req: OAuthTokenRequest, user?: IUser&Document) {
     let accessToken: IAccessToken&Document,
         refreshToken: IAccessToken&Document;
     let {
@@ -329,15 +329,21 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
         throw new MalformattedTokenRequestError();
     }
 
-    let user = await User.findOne({
-        username
-    });
-
     if (!user) {
-        throw new CouldNotLocateUserError();
+        user = await User.findOne({
+            username
+        });
+
+        let passwordIsValid = await user.checkPassword(password);
+
+        if (!user || !passwordIsValid) {
+            throw new CouldNotLocateUserError();
+        }
     }
 
     let scopes = checkScopePermission([].concat(scope), client, user);
+
+    if (user.isNew) await user.save();
 
     accessToken = new AccessToken({
         tokenType: 'bearer',
