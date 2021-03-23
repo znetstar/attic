@@ -19,7 +19,7 @@ $ npm install -g @znetstar/attic-cli-url-shortener
 $ oclif-example COMMAND
 running command...
 $ oclif-example (-v|--version|version)
-@znetstar/attic-cli-url-shortener/2.0.1 darwin-x64 node-v12.21.0
+@znetstar/attic-cli-url-shortener/2.0.2 darwin-x64 node-v12.21.0
 $ oclif-example --help [COMMAND]
 USAGE
   $ oclif-example COMMAND
@@ -48,7 +48,8 @@ OPTIONS
   -v, --verbose
   -x, --expiresIn=expiresIn
   --format=(text|json)       [default: text]
+  --quiet
 ```
 
-_See code: [src/commands/shortUrl.ts](https://github.com/znetstar/attic/blob/v2.0.1/src/commands/shortUrl.ts)_
+_See code: [src/commands/shortUrl.ts](https://github.com/znetstar/attic/blob/v2.0.2/src/commands/shortUrl.ts)_
 <!-- commandsstop -->
