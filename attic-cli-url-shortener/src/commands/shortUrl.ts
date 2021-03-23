@@ -34,6 +34,9 @@ export default class ShortUrl extends Command {
       char: 'x',
       required: false
     }),
+    quiet: flags.boolean(({
+      required: false
+    })),
     format: flags.enum<OutputFormat>({
       options: [ OutputFormat.text, OutputFormat.json ],
       default: Config.outputFormat
@@ -103,6 +106,7 @@ export default class ShortUrl extends Command {
 
     let outString = formatOutputFromFlags(outLocation, flags, [ 'id', 'href', 'entity' ])
 
-    console.log(outString);
+    if (!flags.quiet) console.log(outString);
+    return outString;
   }
 }
