@@ -32,8 +32,6 @@ export class RPCError extends Error {
 export const RPCClient = <Client>(new Client(httpTransport));
 export const RPCProxy = new Proxy(<IRPC>{}, {
     get: function (target, property: string) {
-        console.log(Config.accessToken); process.exit();
-        debugger
         if (Config.accessToken)
             headers.set('Authorization', `Bearer ${Config.accessToken}`);
         return async function (...args: any[]) {

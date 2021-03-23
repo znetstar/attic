@@ -26,6 +26,7 @@
      */
     const envWhitelist: any[] = [
         'MONGO_URI',
+        'REDIS_URI',
         'PORT',
         'HOST',
         'UNIX_SOCKET',
