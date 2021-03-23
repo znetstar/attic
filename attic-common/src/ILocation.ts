@@ -1,6 +1,5 @@
 
 import Constructible from "./Constructible";
-import {default as IUser} from "./IUser";
 import IEntity from "./IEntity";
 import IResolver from "./IResolver";
 

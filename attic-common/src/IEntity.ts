@@ -6,3 +6,12 @@ export default interface IEntity {
     source: ILocation;
     type: string;
 }
+
+export interface IHTTPResource {
+    headers?: [string, string][];
+    body?: Uint8Array;
+    method?: string;
+    status?: number;
+}
+
+export type IHTTPResourceEntity = IEntity&IHTTPResource;

@@ -10,7 +10,14 @@
         'VERBOSE',
         'OUTPUT_FORMAT',
         'LOG_RPC_STACK',
-        'LOG_RPC_PROTOCOL_ERRORS'
+        'LOG_RPC_PROTOCOL_ERRORS',
+        'USERNAME',
+        'PASSWORD',
+        'ACCESS_TOKEN',
+        'REFRESH_TOKEN',
+        'CLIENT_ID',
+        'CLIENT_SECRET',
+        'REDIRECT_URI'
     ];
 
     const noTransform: any[] = [

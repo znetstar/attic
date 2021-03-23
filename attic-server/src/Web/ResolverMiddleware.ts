@@ -7,9 +7,53 @@ import {IHTTPResponse} from "../Drivers/HTTPCommon";
 import Constructible from "../Constructible";
 import {resolve} from "../Resolver";
 import * as _ from 'lodash';
-import Config from "../Config";
-import {IUser} from "../User";
-import AuthMiddlewares from "./AuthMiddleware";
+import {  } from 'multi-rpc';
+import {IScopeContext} from "../Auth/AccessToken";
+import RPCServer from "../RPC";
+
+export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
+    let scopeContext: IScopeContext = req.scopeContext;
+
+    let scope = location.auth || 'rpc.getResponse';
+    let scopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
+    if (scope !== scopeContext.currentScope)
+        scopePair = (await (await scopeContext.user.getAccessTokensForScope(scope)).next()).value;
+
+    location.httpContext = {
+        req,
+        res,
+        scopeContext: req.context
+    };
+
+    let Driver = <Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>>>(location.getDriver());
+    let driver = new Driver();
+
+    let response: IHTTPResponse|null;
+    if (req.method === 'GET')
+        response = await driver.get(location);
+    else if (req.method === 'HEAD')
+        response = await driver.head(location);
+    else if (req.method === 'PUT')
+        response = await driver.put(location, req.body);
+    else if (req.method === 'DELETE')
+        response = await driver.delete(location);
+    else if (req.method === 'CONNECT')
+        response = await driver.proxy(location);
+    else {
+        response = {
+            method: req.method,
+            status: 405,
+            href: location.href
+        };
+    }
+
+    return response as O;
+}
+
+RPCServer.methods.getHttpResponse = async function getHttpResponseRpc<O extends IHTTPResponse, I>(location: ILocation): Promise<O> {
+    let { req, res } = this.clientRequest.additionalData;
+    return getHttpResponse<O,I>(req, res, location);
+}
 
 export default function ResolverMiddleware(req: any, res: any, next: any) {
     asyncMiddleware(async function (req: any, res: any) {
@@ -23,59 +67,10 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             return true;
         }
 
-        if (Config.webResolverAuthenticateRequests) {
-            if (!_.isEmpty(location.auth) && location.auth) {
-                // if (!location.user && (location as any).$parent)
-                //     await (location as any).$parent.populate('target.user').execPopulate();
-                // else
-                //     await location.populate('user').execPopulate();
-                if (Config.webResolverPromptLogin) {
-                    let middleware = AuthMiddlewares.get((location.user as IUser).type);
-
-                    await new Promise((resolve, reject) => {
-                        middleware(req, res, (err: any) => {
-                            if (err) reject(err);
-                            else resolve();
-                        })
-                    });
-                }
-
-                if (!req.user) {
-                    res.sendStatus(401);
-                    return;
-                } else if (req.user.username !== location.auth.toString()) {
-                    res.sendStatus(403);
-                    return;
-                }
-            }
-        }
-
-        let Driver = <Constructible<IDriverOfFull<IHTTPResponse>>>(location.getDriver());
-        let driver = new Driver();
-
-        let response: IHTTPResponse;
-        if (req.method === 'GET')
-            response = await driver.get(location);
-        else if (req.method === 'HEAD')
-            response = await driver.head(location);
-        else if (req.method === 'PUT')
-            response = await driver.put(location, req.body);
-        else if (req.method === 'DELETE')
-            response = await driver.delete(location);
-        else {
-            response = {
-                method: req.method,
-                status: 405,
-                href: location.href
-            };
-        }
+        const response = await getHttpResponse<IHTTPResponse, Buffer>(req, res, location);
 
         if (!response) {
-            response =  {
-                method: req.method,
-                status: 404,
-                href: location.href
-            };
+            return;
         }
 
         res.status(response.status);

@@ -1,6 +1,6 @@
 {
   "name": "@znetstar/attic-cli-common",
-  "version": "1.0.7",
+  "version": "2.0.0",
   "description": "",
   "main": "lib/index.js",
   "publishConfig": {
@@ -23,7 +23,18 @@
     "typedoc": "^0.18.0",
     "typescript": "^3.9.7"
   },
-  "author": "Zachary R.T. Boyd <zachary@zacharyboyd.nyc>",
+  "contributors": [
+    {
+      "name": "Zachary R.T. Boyd",
+      "email": "zachary@zacharyboyd.nyc",
+      "url": "https://zacharyboyd.nyc"
+    },
+    {
+      "name": "Etomon Team",
+      "email": "open-source@etomon.com",
+      "url": "https://etomon.com"
+    }
+  ],
   "homepage": "https://github.com/znetstar/attic",
   "bugs": "https://github.com/znetstar/attic/issues",
   "repository": {
@@ -37,13 +48,13 @@
     "@types/lodash": "^4.14.160",
     "@types/nconf": "^0.10.0",
     "@types/yargs": "^15.0.5",
-    "@znetstar/attic-common": "^1.0.7",
+    "@znetstar/attic-common": "^2.0.0",
     "cliff": "^0.1.10",
     "dotenv": "^8.2.0",
     "fs-extra": "^9.0.1",
     "lodash": "^4.17.20",
     "mongo-dot-notation": "^2.0.0",
-    "multi-rpc": "^1.5.7",
+    "multi-rpc": "^1.6.7",
     "nconf": "^0.10.0",
     "tslib": "^2.0.1",
     "yargs": "^15.4.1"

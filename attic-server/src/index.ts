@@ -1,7 +1,6 @@
 export * from './Location';
 export * from './Driver';
 export * from './Entity';
-export * from './Users';
 export * from './Config';
 export * from './Drivers';
 export * from './Entity';
@@ -11,3 +10,5 @@ export * from './CacheItem';
 export * from './Plugins';
 export * from './RPC';
 export * from './User';
+export * from './Auth';
+export { ApplicationContextBase  } from './ApplicationContext'

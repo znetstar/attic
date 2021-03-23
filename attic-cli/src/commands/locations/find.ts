@@ -88,6 +88,7 @@ export default class LocationFind extends Find {
       findOptions.query.driver = flags.driver;
     }
     if (!_.isEmpty(flags.hash)) {
+      // @ts-ignore
       location.hash = flags.hash;
     }
 

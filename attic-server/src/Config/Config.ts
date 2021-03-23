@@ -1,4 +1,28 @@
+/**
+ * This component is licensed separately from the main program
+ * @module attic-server/ApplicationContext
+ * @license LGPL-3.0
+ * Copyright (C) 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 export default interface Config {
+    /**
+     * Externally facing hostname
+     */
+    siteUri?: string;
+    hostname?: string;
     /**
      * A list of plugins to load, as paths
      */
@@ -8,6 +32,19 @@ export default interface Config {
      * URI to the MongoDB database used as a datastore
      */
     mongoUri?: string;
+
+    redisUri?: string;
+    authorizeGracePeriod?: number;
+    expireTokenIn?: number;
+    expireRefreshTokenIn?: number;
+
+    serviceClientId?: string;
+    serviceClientSecret?: string;
+    serviceClientName?: string;
+    unauthorizedUserName?: string;
+    rootUsername?: string;
+    rootPassword?: string;
+
 
     /**
      * Port the RPC server will listen on
@@ -38,36 +75,14 @@ export default interface Config {
      * Amount of time to wait before invalidating the entry
      */
     cacheExpireIn?: number;
-
+    /**
+     * Default scopes for unauthorized users
+     */
+    unauthorizedScopes?: string[];
     /**
      * Enable the HTTP Web Resolver
      */
     enableWebResolver?: boolean;
-    /**
-     * Port the web resolver will listen on
-     */
-    webResolverPort?: number;
-    /**
-     * Host the web resolver will listen on
-     */
-    webResolverHost?: string;
-    /**
-     * Unix socket the web resolver will listen on. Overrides `webResolverHost` and `webResolverPort`
-     */
-    webResolverUnixSocket?: string;
-    /**
-     * If enabled, the web resolver will share the same HTTP server as the RPC function.
-     */
-    webResolverShareRpcServer?: boolean;
-    /**
-     * Authenticate incoming resolve requests. Set to false to disable authentication
-     */
-    webResolverAuthenticateRequests?: boolean;
-    /**
-     * Prompt the user to login if authentication details fails for the location.
-     * If false will return a HTTP 403 or 401 instead of prompt.
-     */
-    webResolverPromptLogin?: boolean;
 
     /**
      * Size of each "short" url generated (in characters).
@@ -108,11 +123,6 @@ export default interface Config {
      * List of entities available
      */
     entityTypes: string[];
-    /**
-     * User types supported
-     */
-    userTypes: string[];
-
 
 }
 

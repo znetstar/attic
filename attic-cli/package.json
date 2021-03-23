@@ -1,7 +1,18 @@
 {
   "name": "@znetstar/attic-cli",
-  "version": "1.0.9",
-  "author": "Zachary Boyd <zachary@zacharyboyd.nyc>",
+  "version": "2.0.0",
+  "contributors": [
+    {
+      "name": "Zachary R.T. Boyd",
+      "email": "zachary@zacharyboyd.nyc",
+      "url": "https://zacharyboyd.nyc"
+    },
+    {
+      "name": "Etomon Team",
+      "email": "open-source@etomon.com",
+      "url": "https://etomon.com"
+    }
+  ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public"
@@ -19,9 +30,10 @@
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "@oclif/plugin-help": "^3.2.0",
-    "@znetstar/attic-cli-common": "^1.0.7",
-    "@znetstar/attic-cli-url-shortener": "^1.0.7",
-    "@znetstar/attic-common": "^1.0.7",
+    "@znetstar/attic-cli-common": "^2.0.0",
+    "@znetstar/attic-cli-url-shortener": "^2.0.0",
+    "@znetstar/attic-common": "^2.0.0",
+    "multi-rpc": "^1.6.7",
     "tslib": "^1.13.0"
   },
   "devDependencies": {

@@ -17,7 +17,7 @@ export default class UserSearch extends Search {
     let searchOptions: BasicTextSearchOptions = this.parseSearchOptions();
     let users = await RPCProxy.searchUsers(searchOptions);
 
-    let output: string = <string>formatOutputFromFlags(users, flags, [ 'id', 'type', 'disabled' ]);
+    let output: string = <string>formatOutputFromFlags(users, flags, [ 'id', 'username', 'disabled' ]);
 
     console.log(output);
   }
