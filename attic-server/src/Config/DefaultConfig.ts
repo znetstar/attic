@@ -24,8 +24,7 @@ import * as os from 'os';
 
 export default <Config>{
     plugins: [
-        '/Users/zachary/Projects/etomon/attic-server-etomon-app/src/Atticfile',
-        '/Users/zachary/Projects/etomon/attic-server-zoom/src/Atticfile'
+
     ],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
