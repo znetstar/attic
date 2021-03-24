@@ -23,9 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 export default <Config>{
-    plugins: [
-
-    ],
+    plugins: [],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
     redisUri: 'redis://localhost:6379/0',
