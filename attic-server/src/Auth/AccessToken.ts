@@ -114,10 +114,12 @@ AccessTokenSchema.pre<IAccessToken&Document>('save', async function (){
 
   if (this.clientRole === IClientRole.consumer) {
       let { unauthorizedScopes } = getValidInvalidScopes(this.scope, client, user);
-      for await (let token of user.getAccessTokensForScope(unauthorizedScopes)) {
-        if (!token || !token[1]) {
-            throw new CouldNotFindTokenForScopeError(token);
-        }
+      if (unauthorizedScopes && unauthorizedScopes.length) {
+          for await (let token of user.getAccessTokensForScope(unauthorizedScopes)) {
+              if (!token || !token[1]) {
+                  throw new CouldNotFindTokenForScopeError(token);
+              }
+          }
       }
   }
 });
@@ -150,6 +152,7 @@ AccessTokenSchema.post('save', async function (doc: IAccessToken&Document){
     }
 });
 
+
 AccessTokenSchema.virtual('authorizationHeader')
     .get(function () {
         if (this.tokenType === TokenTypes.Bearer) {
@@ -159,12 +162,18 @@ AccessTokenSchema.virtual('authorizationHeader')
         return null;
     });
 
-AccessTokenSchema.virtual('formalScope').get(function () {
-    if (this.clientRole === 'provider') {
-        return this.scope.map((s: string) => s.replace(new RegExp('$'+this.clientName), ''));
+
+
+
+
+function getFormalScope(self: IAccessToken) {
+    if (self.clientRole === 'provider') {
+        return self.scope.map((s: string) => s.replace(new RegExp('$'+self.clientName), ''));
     }
-    return this.scope;
-})
+    return self.scope;
+}
+
+AccessTokenSchema.virtual('formalScope').get(function () { return getFormalScope(this); })
 
 export const AccessToken = mongoose.model<IAccessToken&Document>('AccessToken', AccessTokenSchema);
 export default AccessToken;
@@ -300,7 +309,7 @@ export async function toFormalToken(accessTokenQuery: IAccessToken|ObjectId|stri
     let formalToken: IFormalAccessToken = {
         access_token: _.get(accessToken, 'token'),
         refresh_token: _.get(refreshToken, 'token'),
-        scope: token.formalScope.join(' '),
+        scope: getFormalScope(token).join(' '),
         expires_in: _.get(token, 'expiresAt') ? Math.round(((_.get(token, 'expiresAt').getTime() - (new Date()).getTime())/1e3)) : void(0),
         token_type: _.get(token, 'tokenType')
     }

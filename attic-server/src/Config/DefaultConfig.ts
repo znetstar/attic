@@ -24,6 +24,7 @@ import * as os from 'os';
 
 export default <Config>{
     plugins: [
+
     ],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
@@ -37,7 +38,7 @@ export default <Config>{
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
-    unauthorizedScopes: [ 'auth\.(.*)\.authorize', 'auth\.token', 'rpc\.getAccessToken' ],
+    unauthorizedScopes: [ 'auth\.authorize', 'auth\.token', 'rpc\.getAccessToken' ],
 
     enableWebResolver: true,
 

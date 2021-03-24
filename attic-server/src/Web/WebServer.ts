@@ -7,7 +7,7 @@ import Config from '../Config';
 import { Server as HTTPServer} from 'http';
 import {Router} from "express";
 import SessionMiddleware, {CookieMiddleware} from "./SessionMiddleware";
-import AuthMiddlewares, {AuthMiddleware, initalizePassport, restrictScopeMiddleware} from "./AuthMiddleware";
+import AuthMiddlewares, {AuthMiddleware, restrictScopeMiddleware} from "./AuthMiddleware";
 import * as cookieParser from 'cookie-parser';
 import ApplicationContext from "../ApplicationContext";
 import {Application} from "typedoc";
@@ -67,6 +67,7 @@ export async function loadWebServer() {
     WebRouter = express.Router();
 
 
+    WebExpress.use(SessionMiddleware);
     WebExpress.use(AuthMiddleware);
 
     RPCTransport = new AtticExpressTransport(new JSONSerializer(), WebRouter);
@@ -77,7 +78,6 @@ export async function loadWebServer() {
 
     if (Config.enableWebResolver) {
        WebExpress.use(CookieMiddleware);
-        initalizePassport(WebExpress);
         ApplicationContext.emit('Web.AuthMiddleware.loadAuthMiddleware', AuthMiddlewares);
         WebExpress.use(ResolverMiddleware);
     }

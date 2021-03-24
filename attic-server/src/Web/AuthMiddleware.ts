@@ -1,6 +1,6 @@
 import {Express, RequestHandler, Router} from 'express';
 import config from "../Config";
-import User, {generateUsername, isAuthorizedToDo, IUser, UNAUTHROIZED_USERNAME} from "../User";
+import User, {generateUsername, getAccessTokensForScope, isAuthorizedToDo, IUser, UNAUTHROIZED_USERNAME} from "../User";
 import {Document} from "mongoose";
 import mongoose, {redis} from "../Database";
 import RPCServer from "../RPC";
@@ -41,22 +41,6 @@ export const AuthMiddleware = Router();
 export const StaticScopes = new Set(...Object.keys(RPCServer.methods).map(str => `rpc.${str}`));
 export function registerStaticScope(scope: string) { StaticScopes.add(scope); }
 
-export function initalizePassport(app: Express) {
-    // app.use(passport.initialize());
-    // app.use(passport.session());
-    // passport.serializeUser(function (user: IUser, done) {
-    //     done(null, user.id);
-    // });
-    //
-    // passport.deserializeUser(function (userId: string, done) {
-    //     User.findById(userId)
-    //         .then((u: IUser&Document) => done(null, u))
-    //         .catch(done);
-    // });
-    //
-    // ApplicationContext.emit('Web.AuthMiddleware.configurePassport', passport);
-}
-
 let unauthorizedUser: IUser;
 
 AuthMiddleware.use((req: any, res, next) => {
@@ -73,7 +57,7 @@ export function restrictScopeMiddleware(scope: string): RequestHandler {
                 const context = req.scopeContext as IScopeContext;
                 let user: IUser = context.user = req.user;
 
-                for await (let tknResponse of await user.getAccessTokensForScope(scope)) {
+                for await (let tknResponse of await getAccessTokensForScope(user._id, scope)) {
                     let scopeTokenPair: ScopeAccessTokenPair = tknResponse;
                     let accessToken: IAccessToken&Document|null = _.get(scopeTokenPair, '1') as IAccessToken&Document|null;
                     if (accessToken) {
@@ -96,14 +80,28 @@ function restrictOauth(fn: string) {
 
 AuthMiddleware.use(asyncMiddleware(async function (req: any, res: any, next: any) {
     const context = req.scopeContext as IScopeContext;
-    if (req.headers.authorization) {
-        let [tokenType, tokenStr] = req.headers.authorization.split(' ');
-        tokenType = tokenType.toLowerCase();
+    let tempToken = req.query.atticAccessToken || req.session.atticAccessToken;
+    if (req.headers.authorization || tempToken) {
+        let tokenType, tokenStr;
+        if (tempToken) {
+            tokenType = 'bearer';
+            tokenStr = tempToken;
+        } else {
+            let [_tokenType, _tokenStr] = req.headers.authorization.split(' ');
+            tokenType = _tokenType.toLowerCase();
+            tokenStr = _tokenStr;
+        }
 
         let token = context.accessToken = await mongoose.models.AccessToken.findOne( { tokenType, token: tokenStr } ).exec();
         if (token) {
+            let tDate = new Date(((new Date()).getTime() + ( 60e3 * 60 )));
+            if (tempToken && ( !token.expiresAt || token.expiresAt.getTime() > tDate.getTime())) {
+                token.expiresAt = tDate;
+                req.session.atticAccessToken = tempToken;
+            }
             req.user = context.user = await mongoose.models.User.findById(token.user);
-        } else {
+            if (token.isModified) await token.save();
+        } else if (!tempToken) {
             throw new InvalidAccessTokenError();
         }
     }
@@ -325,11 +323,12 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
         scope
     } = getAccessTokenForm(req);
 
-    if (!password || !username) {
-        throw new MalformattedTokenRequestError();
-    }
-
     if (!user) {
+        if (!password || !username) {
+            throw new MalformattedTokenRequestError();
+        }
+
+
         user = await User.findOne({
             username
         });
@@ -386,7 +385,7 @@ AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ type: 'ap
     res.status(200).send(formalToken);
 }));
 
-AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyncMiddleware(async function (req: any, res: any, next: any) {
+AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.authorize'), asyncMiddleware(async function (req: any, res: any, next: any) {
     let state: string;
     let originalState: string;
     if (req.query.code && req.query.state)
@@ -493,6 +492,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
             await identity.save();
 
             accessToken.user = user;
+            if (refreshToken) refreshToken.user = user;
 
             req.user = user;
             existingState.user = user._id;
@@ -526,6 +526,8 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
             return;
         }
     } else {
+        if (req.query.atticAccessToken)
+            req.session.atticAccessToken = req.query.atticAccessToken;
         if (req.query.response_type !== 'code') {
             throw new InvalidResponseTypeError();
         }
@@ -563,6 +565,8 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictOauth('authorize'), asyn
             scope: scopes.join(' ')
         };
 
+        if (req.query.atticAccessToken)
+            req.session.atticAccessToken = req.query.atticAccessToken;
 
         let redirectUri = URL.parse(provider.redirectUri || config.siteUri, true);
         redirectUri.path = `/auth/${provider.name}/authorize`;

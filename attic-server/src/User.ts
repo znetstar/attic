@@ -182,7 +182,10 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
     });
 
     pipeline.group({
-        _id: '$_id',
+        _id: {
+            scopeQuery: '$scopeQuery',
+            tokenType: '$tokenType'
+        },
         scope: { $addToSet: '$scope' },
         doc: { $max: '$$ROOT' },
         scopeMatch: { $max: '$scopeMatch' }
@@ -195,14 +198,22 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
         ]
     });
 
+    pipeline.addFields({
+        _id: '$doc._id'
+    })
+
     pipeline.project({
         doc: 0
     });
 
-
+    pipeline.sort({
+        scopeMatch: -1,
+        isBearer: -1,
+        createdAt: -1
+    });
 
     let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
-    let cur =  pipeline.cursor({ batchSize: 500 }).exec();
+   let cur =  pipeline.cursor({ batchSize: 500 }).exec();
 
     let isDone = new Set<string>();
     while (doc = await cur.next()) {
@@ -220,7 +231,24 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
     }
 }
 
+export function userFromRpcContext(rpcContext: any): { context: IScopeContext&{ user: IUser&Document; }, user: IUser&Document, req: any, res:any  }{
+    let { req, res } = rpcContext.context.clientRequest.additionalData;
+
+    if (!req.scopeContext || !req.scopeContext.user)
+        return null;
+
+    let scopeContext: IScopeContext = req.scopeContext;
+
+    return {
+        user: scopeContext.user as  IUser&Document,
+        context: scopeContext as  IScopeContext&{ user: IUser&Document; },
+        req,
+        res
+    }
+}
+
 export async function* getFormalAccessTokensForScope (user: IUser&Document|ObjectId|string, scope: string[]|string): AsyncGenerator<ScopeFormalAccessTokenPair> {
+
     for await ( let [ scopeQuery, token ] of getAccessTokensForScope(user, scope) ) {
         let formalToken = token ? await toFormalToken(token as IAccessToken&Document) : null;
 
@@ -235,16 +263,46 @@ UserSchema.methods.getAccessTokensForScope = function (scope: string[]|string) {
 RPCServer.methods.getAccessTokensForScope = async function (user: string, scope: string[]|string) {
     let result: AccessTokenSet = [];
     for await ( let pair of getAccessTokensForScope(user, scope) ) {
-        result.push(pair);
+        if (pair && pair[1]) result.push(pair);
     }
 
     return result;
 }
 
+export async function deleteAccessTokens(query: any, deleteLinked: boolean = false) {
+    let tokens = await AccessToken.find(query).exec();
+
+    for (let token of tokens) {
+        let toDelete = [ token ];
+        if (deleteLinked) {
+            toDelete.push(...(await AccessToken.find({ linkedToken: token.linkedToken }).exec()));
+        }
+
+        for (let tokenInner of toDelete)
+            await tokenInner.remove();
+    }
+}
+
+export async function deleteSelfAccessTokens(userId: string|ObjectId, query: any, deleteLinked: boolean = false) {
+    query = query || {};
+    query.user = new ObjectId(userId);
+
+    return deleteAccessTokens(query);
+}
+
+RPCServer.methods.deleteAccessTokens = async function (query: any, deleteLinked: boolean) {
+    return deleteAccessTokens(query, deleteLinked);
+}
+
+RPCServer.methods.deleteSelfAccessTokens = async function (query: any, deleteLinked: boolean) {
+    let { user } = userFromRpcContext(this);
+    return deleteSelfAccessTokens(user._id, query, deleteLinked);
+}
+
 RPCServer.methods.getFormalAccessTokensForScope = async function (user: string, scope: string[]|string) {
     let result: FormalAccessTokenSet = [];
     for await ( let pair of getFormalAccessTokensForScope(user, scope) ) {
-        result.push(pair);
+        if (pair && pair[1]) result.push(pair);
     }
 
     return result;
@@ -374,14 +432,7 @@ User.collection.createIndex({
 });
 
 RPCServer.methods.getSelfUser = async function getSelfUserRpc(): Promise<IUserBase|null> {
-    let { req, res } = this.context.clientRequest.additionalData;
-
-    if (!req.scopeContext || !req.scopeContext.user)
-        return null;
-
-    let scopeContext: IScopeContext = req.scopeContext;
-
-    let user: IUser&Document = scopeContext.user as IUser&Document;
+    let { user } = userFromRpcContext(this);
     await user.populate('identities').execPopulate();
 
     // @ts-ignore
