@@ -129,6 +129,8 @@ export default interface IRPC {
     deleteUser(query: any): Promise<void>;
     listUserTypes(): Promise<string[]>;
     generateUsername(): Promise<string>;
+    deleteAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
+    deleteSelfAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
 
 
     findClients(query: BasicFindOptions): Promise<IClient[]|number>;

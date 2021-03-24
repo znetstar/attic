@@ -119,5 +119,6 @@ export async function findIdentityEntity  (query: any): Promise<IIdentityEntity&
 }
 
 
+
 export const IdentityEntity = Entity.discriminator('IdentityEntity', IdentityEntitySchema)
 export default IdentityEntity;
