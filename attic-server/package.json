@@ -66,7 +66,7 @@
         "@types/passport-http": "^0.3.8",
         "@types/winston": "^2.4.4",
         "@types/yargs": "^15.0.5",
-        "@znetstar/attic-common": "^2.0.3",
+        "@znetstar/attic-common": "^2.0.4",
         "body-parser": "^1.19.0",
         "chance": "^1.1.7",
         "connect-mongodb-session": "^2.4.1",
