@@ -15,7 +15,8 @@ import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import * as _ from 'lodash';
 
-async function handleError(error: any, req: any, res: any) {
+type WebError =  IError&{stack?: string};
+function prepareWebError(error: WebError|Error, url?: string): { err: IError, stack?: string } {
     let stack: string;
     if (error) {
         stack = error.stack.toString();
@@ -27,21 +28,36 @@ async function handleError(error: any, req: any, res: any) {
             code: 0,
             httpCode: error[0],
             message: error[1],
-            url: req.originalUrl
+            url
         };
     } else {
         err = {
             code: _.get(error, 'code') || _.get(error, '__proto__.constructor.code'),
             httpCode: _.get(error, 'httpCode') || _.get(error, '__proto__.constructor.httpCode'),
             message: _.get(error, 'message') || _.get(error, '__proto__.constructor.message'),
-            url: req.originalUrl
+            url
         }
     }
 
-    ApplicationContext.logs.error({
-        stack,
-        ...err
-    });
+    return {err, stack};
+}
+
+function processWebError(error: WebError, url?: string): IError {
+    let err = prepareWebError(error, url);
+
+    let finalError: WebError = {
+        ...err.err,
+        stack: err.stack
+    }
+
+    ApplicationContext.emit(`Error.WebServer.error`, finalError);
+
+
+    return err.err;
+}
+
+async function handleError(error: any, req: any, res: any) {
+    let err = processWebError(error, req.originalUrl);
 
     res.status(err.httpCode || 500).send({ error: err });
 }
@@ -58,7 +74,33 @@ export class AtticExpressTransport extends ExpressTransport {
             `rpc.${body.method}`,
         )(req, res, (err: any) => {
             if (err) handleError(err, req ,res);
-            else super.onRequest(req, res);
+            else {
+                const jsonData = (<Buffer>req.body);
+                const rawReq = new Uint8Array(jsonData);
+                const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
+                    const headers: any = {};
+
+                    if (response) {
+                        if (response.error) {
+                            let rpcError = {
+                                ...response.error,
+                                httpCode: 500
+                            };
+
+                            processWebError(rpcError, req.originalUrl);
+                        }
+                        headers["Content-Type"] = this.serializer.content_type;
+
+                        res.writeHead(200, headers);
+                        res.end(this.serializer.serialize(response));
+                    } else {
+                        res.writeHead(204, headers);
+                        res.end();
+                    }
+                }, { req, res });
+
+                this.receive(rawReq, clientRequest);
+            }
         });
     }
 }

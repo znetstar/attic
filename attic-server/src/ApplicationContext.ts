@@ -41,9 +41,19 @@ export class ApplicationContextBase extends EventEmitter {
         if (this.config.autoLogEvents) {
             this.onAny(this.onAutoLog);
         }
+        if (this.config.logErrors) {
+            this.on('Errors.*', this.onErrorLog);
+        }
     }
 
     onAutoLog = (...args: any[]) => {
+        if (!args.length) return;
+
+        let delta = { method: args[0], params: args.slice(1) };
+        this.logger.debug(delta);
+    }
+
+    onErrorLog = (error: WebErr) => {
         if (!args.length) return;
 
         let delta = { method: args[0], params: args.slice(1) };

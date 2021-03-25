@@ -8,15 +8,17 @@ import {loadPlugins} from "./Plugins";
 (async () => {
     try {
         process.stdin.resume();
-        await ApplicationContext.emitAsync('launchStart');
+        await ApplicationContext.emitAsync('launch.start');
         await loadPlugins();
         await loadModels();
         await loadDrivers();
         await loadWebServer();
         await webServerListen();
-        await ApplicationContext.emitAsync('launchComplete');
+        await ApplicationContext.emitAsync('launch.complete');
     } catch (err) {
         console.error(err.stack);
         process.exit(1);
     }
-})();
+})().catch(err => {
+    ApplicationContext.logs.
+});

@@ -1,6 +1,7 @@
 export interface IError {
     message: string;
     code: number;
-    httpCode: number;
+    httpCode?: number;
     innerError?: Error|IError;
+    stack?: string;
 }
