@@ -50,7 +50,8 @@
         'SERVICE_CLIENT_SECRET',
         'UNAUTHROIZED_USERNAME',
         'ROOT_USERNAME',
-        'ROOT_PASSWORD'
+        'ROOT_PASSWORD',
+        'LOG_LEVEL'
     ];
 
     const noTransform: any[] = [

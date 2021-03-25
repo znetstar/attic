@@ -17,6 +17,15 @@
  *  You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+export enum LogLevels {
+    silly = 'silly',
+    debug = 'debug',
+    verbose = 'verbose',
+    info = 'info',
+    warn = 'warn',
+    error = 'error'
+}
+
 export default interface Config {
     /**
      * Externally facing hostname
@@ -123,6 +132,9 @@ export default interface Config {
      * List of entities available
      */
     entityTypes: string[];
+    debugLogs?: boolean;
 
+    logLevel?: LogLevels;
+    autoLogEvents?: boolean;
 }
 
