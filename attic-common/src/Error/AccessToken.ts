@@ -50,6 +50,7 @@ export class InvalidClientOrProviderError extends GenericError {
 }
 
 
+
 export class ErrorGettingTokenFromProviderError extends GenericError {
     public static get code(): number {
         return 1003;
@@ -128,7 +129,7 @@ export class NotAuthorizedToUseScopesError extends GenericError {
 
 export class InvalidAccessTokenError extends GenericError {
     public static get code(): number {
-        return 108;
+        return 1008;
     }
 
     public static get httpCode(): number {
@@ -137,6 +138,21 @@ export class InvalidAccessTokenError extends GenericError {
 
     constructor(public message: string = 'The provided token is invalid or has expired') {
         super(message, InvalidAccessTokenError.code, InvalidAccessTokenError.httpCode);
+    }
+
+}
+
+export class InvalidGrantTypeError extends GenericError {
+    public static get code(): number {
+        return 1009;
+    }
+
+    public static get httpCode(): number {
+        return 400;
+    }
+
+    constructor(public message: string = 'Invalid grant type') {
+        super(message, InvalidClientOrProviderError.code, InvalidClientOrProviderError.httpCode);
     }
 
 }

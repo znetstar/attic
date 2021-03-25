@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 import {  } from 'multi-rpc';
 import {IScopeContext} from "../Auth/AccessToken";
 import RPCServer from "../RPC";
+import ApplicationContext from "../ApplicationContext";
 
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
     let scopeContext: IScopeContext = req.scopeContext;
@@ -61,7 +62,9 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             return true;
         let href = ((req.headers && req.headers['x-forwarded-proto']) || req.protocol) + '://' + req.get('host') + req.originalUrl;
 
+
         const location = await resolve({ href });
+
 
         if (_.isEmpty(location) || !location) {
             return true;
