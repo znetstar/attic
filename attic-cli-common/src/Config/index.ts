@@ -10,7 +10,7 @@ import Config from './Config';
 let nconf: Provider&Config = (new Provider()) as any;
 const pkg: any = JSON.parse(fs.readFileSync(__dirname+'/../../package.json', 'utf8')) ;
 
-const overrides = {};
+const overrides = (global as any).atticConfig || {};
 
 nconf.overrides(overrides);
 
