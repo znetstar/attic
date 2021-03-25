@@ -2,4 +2,8 @@
 
 process.stdin.resume();
 
-require('../lib/launch');
+let libSrc = process.argv[0].indexOf(`ts-node`) !== -1 ? 'src' : 'lib';
+
+require(`../${libSrc}/launch`).launch().catch(err => {
+    process.exit(1);
+});

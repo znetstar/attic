@@ -130,7 +130,7 @@ export let WebHTTPServer: HTTPServer;
 export let WebExpress: any;
 
 export async function loadWebServer() {
-    await ApplicationContext.emitAsync('Web.loadWebServer.start');
+    await ApplicationContext.emitAsync('launch.loadWebServer.start');
     WebExpress = express();
     WebHTTPServer = new HTTPServer(WebExpress);
     WebRouter = express.Router();
@@ -155,7 +155,7 @@ export async function loadWebServer() {
         handleError(error, req, res);
     });
 
-    await ApplicationContext.emitAsync('Web.loadWebServer.start');
+    await ApplicationContext.emitAsync('launch.loadWebServer.start');
 }
 
 

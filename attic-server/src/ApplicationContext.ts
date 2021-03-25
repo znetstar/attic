@@ -27,6 +27,8 @@ import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import plugins from "./Plugins";
 import {createLogger} from "./Logs";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
+import  * as fs from 'fs-extra';
+import * as path from 'path';
 
 export interface ListenStatus {
     urls: string[];
@@ -51,10 +53,23 @@ export class ApplicationContextBase extends EventEmitter {
         }
         if (this.config.logListening)
             this.on('Web.webServerListen.complete', this.onWebServerListen);
+
+        this.once('launch.complete', () => {
+            this.logs.verbose({
+                method: 'launch.complete',
+                params: [
+                    {
+                        name: this.package.name,
+                        version: this.package.version,
+                        contributors: this.package.contributors.map((c: any) => `${c.name} <${c.email}>`)
+                    }
+                ]
+            })
+        });
     }
 
     onWebServerListen = (status: ListenStatus) => {
-        this.logger.info({
+        this.logger.verbose({
             method: 'Web.webServerListen',
             params: [ status ]
         });
@@ -104,6 +119,10 @@ export class ApplicationContextBase extends EventEmitter {
 
     get plugins() {
         return plugins;
+    }
+
+    get package() {
+        return fs.readJSONSync(path.join(__dirname, '..', 'package.json'));
     }
 }
 
