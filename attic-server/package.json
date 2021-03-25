@@ -3,6 +3,7 @@
     "version": "2.1.10",
     "description": "",
     "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "homepage": "https://github.com/znetstar/attic",
     "bugs": "https://github.com/znetstar/attic/issues",
     "repository": {
