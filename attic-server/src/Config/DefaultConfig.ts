@@ -62,5 +62,7 @@ export default <Config>{
         'IdentityEntity'
     ],
     logLevel: LogLevels.info,
-    autoLogEvents: true
+    autoLogEvents: true,
+    logErrors: true,
+    logListening: true
 };

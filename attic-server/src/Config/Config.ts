@@ -136,5 +136,7 @@ export default interface Config {
 
     logLevel?: LogLevels;
     autoLogEvents?: boolean;
+    logErrors?: boolean;
+    logListening?: boolean;
 }
 
