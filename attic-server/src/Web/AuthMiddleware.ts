@@ -375,7 +375,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
 });
 
 
-AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ type: 'application/x-www-form-urlencoded' }), require('body-parser').json({ type: 'application/json' }),restrictScopeMiddleware('auth.token'), asyncMiddleware(async function (req: any, res: any, next: any) {
+AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ extended: true, type: 'application/x-www-form-urlencoded' }), require('body-parser').json({ type: 'application/json' }),restrictScopeMiddleware('auth.token'), asyncMiddleware(async function (req: any, res: any, next: any) {
     let form = {
         ...req.query,
         ...req.body
