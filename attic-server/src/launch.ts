@@ -20,5 +20,5 @@ import {loadPlugins} from "./Plugins";
         process.exit(1);
     }
 })().catch(err => {
-    ApplicationContext.logs.
+    process.exit(1);
 });

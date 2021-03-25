@@ -26,6 +26,7 @@ import {drivers} from "./Drivers";
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import plugins from "./Plugins";
 import {createLogger} from "./Logs";
+import {IError} from "@znetstar/attic-common/lib/Error/IError";
 
 export class ApplicationContextBase extends EventEmitter {
     protected logger = createLogger();
@@ -42,7 +43,7 @@ export class ApplicationContextBase extends EventEmitter {
             this.onAny(this.onAutoLog);
         }
         if (this.config.logErrors) {
-            this.on('Errors.*', this.onErrorLog);
+            this.on('Error.*', this.onErrorLog);
         }
     }
 
@@ -53,11 +54,8 @@ export class ApplicationContextBase extends EventEmitter {
         this.logger.debug(delta);
     }
 
-    onErrorLog = (error: WebErr) => {
-        if (!args.length) return;
-
-        let delta = { method: args[0], params: args.slice(1) };
-        this.logger.debug(delta);
+    onErrorLog = (error: IError) => {
+        this.logs.error({ error });
     }
 
     get mongoose() {

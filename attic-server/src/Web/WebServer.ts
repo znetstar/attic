@@ -15,45 +15,35 @@ import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import * as _ from 'lodash';
 
-type WebError =  IError&{stack?: string};
-function prepareWebError(error: WebError|Error, url?: string): { err: IError, stack?: string } {
-    let stack: string;
-    if (error) {
-        stack = error.stack.toString();
-        delete error.stack;
-    }
+function prepareWebError(error: IError|Error, url?: string): IError {
     let err: IError&{ url: string };
     if (Array.isArray(error) && typeof(error[0]) === 'number') {
         err = {
             code: 0,
-            httpCode: error[0],
+            httpCode: error[0] || 500,
             message: error[1],
-            url
+            url,
+            stack: _.get(error, 'stack')
         };
     } else {
         err = {
             code: _.get(error, 'code') || _.get(error, '__proto__.constructor.code'),
-            httpCode: _.get(error, 'httpCode') || _.get(error, '__proto__.constructor.httpCode'),
+            httpCode: _.get(error, 'httpCode') || _.get(error, '__proto__.constructor.httpCode') || 500,
             message: _.get(error, 'message') || _.get(error, '__proto__.constructor.message'),
-            url
+            url,
+            stack: _.get(error, 'stack')
         }
     }
 
-    return {err, stack};
+    return err;
 }
 
-function processWebError(error: WebError, url?: string): IError {
+function processWebError(error: IError|Error, url?: string): IError {
     let err = prepareWebError(error, url);
 
-    let finalError: WebError = {
-        ...err.err,
-        stack: err.stack
-    }
+    ApplicationContext.emit(`Error.WebServer`, err);
 
-    ApplicationContext.emit(`Error.WebServer.error`, finalError);
-
-
-    return err.err;
+    return err;
 }
 
 async function handleError(error: any, req: any, res: any) {
