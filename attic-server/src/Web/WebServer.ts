@@ -73,6 +73,14 @@ export class AtticExpressTransport extends ExpressTransport {
 
         const body = JSON.parse(jsonData.toString('utf8'));
 
+
+        ApplicationContext.logs.silly({
+            method: `rpc.${body.method}.start`,
+            params: [
+                body
+            ]
+        });
+
         return restrictScopeMiddleware(
             `rpc.${body.method}`,
         )(req, res, (err: any) => {
@@ -98,6 +106,14 @@ export class AtticExpressTransport extends ExpressTransport {
                         res.writeHead(204, headers);
                         res.end();
                     }
+
+                    if (!response || !response.error)
+                        ApplicationContext.logs.silly({
+                            method: `rpc.${body.method}.complete`,
+                            params: [
+                                response ? response : void(0)
+                            ]
+                        });
                 }, { req, res });
 
                 this.receive(rawReq, clientRequest);
