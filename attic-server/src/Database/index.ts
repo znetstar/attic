@@ -11,7 +11,7 @@ mongoose.connect(config.mongoUri, { useNewUrlParser: true, useUnifiedTopology: t
 export const redis = new Redis(config.redisUri);
 
 export async function loadModels() {
-    await ApplicationContext.emitAsync('loadModels.start');
+    await ApplicationContext.emitAsync('launch.loadModels.start');
     require('../User');
     require('../Auth/Client');
     require('../Auth/AccessToken');
@@ -22,7 +22,7 @@ export async function loadModels() {
     require('../Resolver');
     require('../Resolvers/RootResolver');
     require('../CacheItem');
-    await ApplicationContext.emitAsync('loadModels.complete');
+    await ApplicationContext.emitAsync('launch.loadModels.complete');
 
 }
 

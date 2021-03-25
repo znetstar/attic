@@ -6,7 +6,7 @@ export const plugins = new Map();
 export default plugins;
 
 export async function loadPlugins(){
-    await ApplicationContext.emitAsync('loadPlugins.start');
+    await ApplicationContext.emitAsync('launch.loadPlugins.start');
     for (let pluginPath of Config.plugins) {
         let plugin = require(path.join(pluginPath));
         let name = plugin.name || pluginPath;
@@ -15,5 +15,5 @@ export async function loadPlugins(){
 
         await ApplicationContext.emitAsync(`Plugins.${name}.init`, plugin);
     }
-    await ApplicationContext.emitAsync('loadPlugins.complete');
+    await ApplicationContext.emitAsync('launch.loadPlugins.complete');
 }
