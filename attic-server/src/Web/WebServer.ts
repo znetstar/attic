@@ -16,22 +16,32 @@ import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import * as _ from 'lodash';
 
 async function handleError(error: any, req: any, res: any) {
-    if (error) console.error(error.stack);
-    delete error.stack;
-    let err: IError;
+    let stack: string;
+    if (error) {
+        stack = error.stack.toString();
+        delete error.stack;
+    }
+    let err: IError&{ url: string };
     if (Array.isArray(error) && typeof(error[0]) === 'number') {
         err = {
             code: 0,
             httpCode: error[0],
-            message: error[1]
+            message: error[1],
+            url: req.originalUrl
         };
     } else {
         err = {
             code: _.get(error, 'code') || _.get(error, '__proto__.constructor.code'),
             httpCode: _.get(error, 'httpCode') || _.get(error, '__proto__.constructor.httpCode'),
-            message: _.get(error, 'message') || _.get(error, '__proto__.constructor.message')
+            message: _.get(error, 'message') || _.get(error, '__proto__.constructor.message'),
+            url: req.originalUrl
         }
     }
+
+    ApplicationContext.logs.error({
+        stack,
+        ...err
+    });
 
     res.status(err.httpCode || 500).send({ error: err });
 }

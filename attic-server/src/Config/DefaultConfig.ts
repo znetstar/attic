@@ -17,9 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Config from './Config';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import Config, {LogLevels} from './Config';
 import * as os from 'os';
 
 export default <Config>{
@@ -62,5 +60,7 @@ export default <Config>{
     entityTypes: [
         'HTTPResourceEntity',
         'IdentityEntity'
-    ]
+    ],
+    logLevel: LogLevels.info,
+    autoLogEvents: true
 };

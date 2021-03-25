@@ -25,8 +25,10 @@ import * as passport from "passport";
 import {drivers} from "./Drivers";
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import plugins from "./Plugins";
+import {createLogger} from "./Logs";
 
 export class ApplicationContextBase extends EventEmitter {
+    protected logger = createLogger();
     constructor() {
         super({
             wildcard: true,
@@ -35,6 +37,17 @@ export class ApplicationContextBase extends EventEmitter {
             removeListener: true,
             verboseMemoryLeak: false
         });
+
+        if (this.config.autoLogEvents) {
+            this.onAny(this.onAutoLog);
+        }
+    }
+
+    onAutoLog = (...args: any[]) => {
+        if (!args.length) return;
+
+        let delta = { method: args[0], params: args.slice(1) };
+        this.logger.debug(delta);
     }
 
     get mongoose() {
@@ -47,6 +60,9 @@ export class ApplicationContextBase extends EventEmitter {
         return Config as any;
     }
 
+    get logs() {
+        return this.logger;
+    }
 
     get rpcServer() {
         return RPCServer;
