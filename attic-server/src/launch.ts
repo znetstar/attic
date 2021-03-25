@@ -7,6 +7,7 @@ import {loadPlugins} from "./Plugins";
 
 (async () => {
     try {
+        process.stdin.resume();
         await ApplicationContext.emitAsync('launchStart');
         await loadPlugins();
         await loadModels();
