@@ -62,6 +62,7 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             return true;
         let href = ((req.headers && req.headers['x-forwarded-proto']) || req.protocol) + '://' + req.get('host') + req.originalUrl;
 
+
         const location = await resolve({ href });
 
 

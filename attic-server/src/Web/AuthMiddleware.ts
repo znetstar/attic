@@ -24,6 +24,7 @@ import {ScopeAccessTokenPair, TokenTypes} from "@znetstar/attic-common/lib/IAcce
 import {
     CouldNotFindTokenForScopeError,
     CouldNotLocateStateError,
+    InvalidGrantTypeError,
     ErrorGettingTokenFromProviderError, InvalidAccessTokenError,
     InvalidClientOrProviderError,
     InvalidResponseTypeError,
@@ -247,11 +248,14 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
 
     let output: { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document  }[] = await ApplicationContext.emitAsync(grantEvent, client, form);
 
+    if (!output || !output.length) {
+        throw new InvalidGrantTypeError();
+    }
+
     output.reverse();
     let { accessToken, refreshToken } = output.shift();
     if (!accessToken) {
-        throw new GenericError(`An unknown error occurred, please try again`, 0, 500);
-        return;
+        throw new InvalidGrantTypeError();
     }
 
     await accessToken.save();

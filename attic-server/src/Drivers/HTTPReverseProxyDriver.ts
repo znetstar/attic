@@ -49,13 +49,17 @@ export default class HTTPReverseProxyDriver extends HTTPDriverBase implements ID
                 method: req.method
             };
         } else {
-            let targetUrl = URL.parse(entity.source.getHref(), false);
-            delete targetUrl.query;
+            let targetUrl = URL.parse(entity.source.getHref(), true);
+            targetUrl.query = req.query as any;
 
             let targetUrlFormatted = URL.format(targetUrl);
 
             this.httpProxy.web(req, res, {
-                target: targetUrlFormatted
+                target: targetUrlFormatted,
+                changeOrigin: true,
+                secure: false,
+                autoRewrite: true,
+                ignorePath: true
             });
 
         }

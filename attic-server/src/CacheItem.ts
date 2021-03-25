@@ -8,6 +8,7 @@ import config from "./Config";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema, IEntity} from "./Entity";
 import * as _ from 'lodash';
+import ApplicationContext from "./ApplicationContext";
 const { xxhash64 } = require('hash-wasm');
 
 export interface ICacheItemModel {
@@ -69,68 +70,78 @@ CacheItemSchema.pre(([ 'find', 'findOne' ] as  any),  function () {
 
 });
 
-export async function resolveFromCache(source: ILocation): Promise<ILocation&Document> {
-    let location: ILocation&Document;
+async function getCacheKey(source: ILocation) {
     let cacheKey = await xxhash64(JSON.stringify(source));
     cacheKey = `resolverCache.${cacheKey}`;
+    return cacheKey;
+}
+
+export async function resolveFromCache(source: ILocation): Promise<ILocation&Document> {
+    ApplicationContext.logs.silly({
+        method: 'CacheItem.resolveFromCache.start',
+        params: [
+            source
+        ]
+    });
+    let location: ILocation&Document;
+    let cacheKey = await getCacheKey(source);
 
     let locTmp = await redis.get(cacheKey);
-    if (locTmp)
-        location = Location.hydrate(JSON.parse(locTmp));
-
-    if (!location) {
-        // let items: Array<ICacheItem & Document> = await (CacheItem.find({
-        //     disabled: {$ne: true},
-        //     expiresAt: {$gt: new Date()},
-        //     'source.href': source.href
-        // })
-        //     .sort({
-        //         disabled: 1,
-        //         expiresAt: -1,
-        //         'source.href': 1
-        //     }).limit(1).exec());
-        //
-        // if (_.isEmpty(items) || !items)
-        //     return null as any;
-        //
-        // location = items[0].target as Document & ILocation;
-        //
-        // await redis.set(cacheKey, JSON.stringify(location.toJSON()));
-        // await redis.pexpire(cacheKey, config.cacheExpireIn);
+    if (locTmp) {
+        let locTempParse = JSON.parse(locTmp);
+        locTempParse.entity = locTempParse.entity._id;
+            location = Location.hydrate(locTempParse);
     }
 
     if (location)
-        await location.populate('target.entity target.entity.source target.user').execPopulate();
+        await location.populate('entity entity.source').execPopulate();
 
+    ApplicationContext.logs.silly({
+        method: 'CacheItem.resolveFromCache.complete',
+        params: [
+            location
+        ]
+    });
     return location;
 }
 
 export async function invalidateCacheItem(source: ILocation): Promise<void> {
-    let cacheCursor = CacheItem.find({ 'source.href': source.href }).sort({ _id: -1, 'source.href': 1 }).cursor();
-    let cacheItem: ICacheItem&Document;
-    while (cacheItem = await cacheCursor.next()) {
-        cacheItem.disabled = true;
-        await cacheItem.save();
-    }
+    ApplicationContext.logs.silly({
+        method: 'CacheItem.invalidateCacheItem.start',
+        params: [
+            source
+        ]
+    });
+    await redis.del(await getCacheKey(source));
+    ApplicationContext.logs.silly({
+        method: 'CacheItem.invalidateCacheItem.complete',
+        params: [
+            source
+        ]
+    });
 }
 
 export async function createCacheItem(source: ILocation, target: ILocation) {
-    let cacheItem = new CacheItem({
-        source,
-        target
-    });
-
     (async () => {
-        let cacheKey = await xxhash64(JSON.stringify(source));
-        cacheKey = `resolverCache.${cacheKey}`;
+        ApplicationContext.logs.silly({
+            method: 'CacheItem.createCacheItem.start',
+            params: [
+                source, target
+            ]
+        });
 
-        await redis.set(cacheKey, JSON.stringify(target));
+        let cacheKey = await getCacheKey(source)
+        await redis.set(cacheKey, JSON.stringify((target as ILocation&Document).toJSON()));
         await redis.pexpire(cacheKey, config.cacheExpireIn);
+        ApplicationContext.logs.silly({
+            method: 'CacheItem.createCacheItem.complete',
+            params: [
+                source, target
+            ]
+        });
 
         // await cacheItem.save();
     })().catch((err) => console.error(err.stack));
-
-    return cacheItem;
 }
 
 
