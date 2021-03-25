@@ -46,7 +46,7 @@ export class ApplicationContextBase extends EventEmitter {
     onAutoLog = (...args: any[]) => {
         if (!args.length) return;
 
-        let delta = { method: args[0], params: args.slice(0) };
+        let delta = { method: args[0], params: args.slice(1) };
         this.logger.debug(delta);
     }
 
