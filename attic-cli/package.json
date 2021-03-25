@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "contributors": [
         {
             "name": "Zachary R.T. Boyd",
@@ -32,7 +32,7 @@
         "@oclif/plugin-help": "^3.2.0",
         "@znetstar/attic-cli-common": "^2.0.3",
         "@znetstar/attic-cli-url-shortener": "^2.0.5",
-        "@znetstar/attic-common": "^2.0.2",
+        "@znetstar/attic-common": "^2.0.3",
         "multi-rpc": "^1.6.7",
         "tslib": "^1.13.0"
     },

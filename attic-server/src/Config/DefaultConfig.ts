@@ -63,5 +63,6 @@ export default <Config>{
     ],
     logLevel: LogLevels.info,
     autoLogEvents: true,
-    logErrors: true
+    logErrors: true,
+    logListening: true
 };

@@ -28,6 +28,10 @@ import plugins from "./Plugins";
 import {createLogger} from "./Logs";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
 
+export interface ListenStatus {
+    urls: string[];
+}
+
 export class ApplicationContextBase extends EventEmitter {
     protected logger = createLogger();
     constructor() {
@@ -45,6 +49,15 @@ export class ApplicationContextBase extends EventEmitter {
         if (this.config.logErrors) {
             this.on('Error.*', this.onErrorLog);
         }
+        if (this.config.logListening)
+            this.on('Web.webServerListen.complete', this.onWebServerListen);
+    }
+
+    onWebServerListen = (status: ListenStatus) => {
+        this.logger.info({
+            method: 'Web.webServerListen',
+            params: [ status ]
+        });
     }
 
     onAutoLog = (...args: any[]) => {
