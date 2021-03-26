@@ -54,7 +54,7 @@ function prepareWebError(error: IError|Error|RPCError, httpOpts?: HTTPErrorOpts)
 function processWebError(error: IError|Error|RPCError, httpOpts?: HTTPErrorOpts): IError {
     let err = prepareWebError(error, httpOpts);
 
-    ApplicationContext.emit(`Error.WebServer`, err);
+    ApplicationContext.logs.error(err);
 
     return err;
 }
