@@ -119,6 +119,12 @@ RPCServer.methods.updateClient = async (id: string, fields: any) => {
 }
 
 export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&Document): Promise<IIdentityEntity&Document> {
+    ApplicationContext.logs.silly({
+        method: `Client.getIdentityEntityByAccessToken.start`,
+        params: [
+            accessToken
+        ]
+    });
     let identity = await ApplicationContext.triggerHookSingle<IIdentityEntityBase|null>(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
 
     delete identity.id;
@@ -141,6 +147,13 @@ export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&D
     } else {
         existingIdentity = new IdentityEntity(identity);
     }
+
+    ApplicationContext.logs.silly({
+        method: `Client.getIdentityEntityByAccessToken.complete`,
+        params: [
+            existingIdentity
+        ]
+    });
 
     return existingIdentity as IIdentityEntity&Document;
 }

@@ -47,7 +47,7 @@ export default interface Config {
     expireTokenIn?: number;
     defaultScopeJoin?: string;
     expireRefreshTokenIn?: number;
-
+    updateIdentityUponTokenRefresh?: boolean;
     serviceClientId?: string;
     serviceClientSecret?: string;
     serviceClientName?: string;

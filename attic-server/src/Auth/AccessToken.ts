@@ -2,8 +2,8 @@ import {Document, Schema} from 'mongoose';
 import mongoose from '../Database';
 import {ObjectId} from 'mongodb';
 import IAccessTokenBase, {IFormalAccessToken, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
-import User, {isAuthorizedToDo, IUser} from "../User";
-import Client, {IClient} from "./Client";
+import User, {isAuthorizedToDo, IUser, userFromRpcContext} from "../User";
+import Client, {getIdentityEntityByAccessToken, IClient} from "./Client";
 import * as _ from 'lodash';
 import {IClientRole} from "@znetstar/attic-common/lib/IClient";
 import * as URL from "url";
@@ -12,8 +12,10 @@ import {nanoid} from "nanoid";
 import config from "../Config";
 import {
     CouldNotFindTokenForScopeError,
-    NotAuthorizedToUseScopesError
+    NotAuthorizedToUseScopesError,
+    AccessTokenNotFoundError
 } from "@znetstar/attic-common/lib/Error/AccessToken";
+import RPCServer from "../RPC";
 
 export {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 
@@ -194,8 +196,7 @@ AccessTokenSchema.methods.toFormalToken = function (): Promise<IFormalAccessToke
     return toFormalToken(this);
 }
 
-AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IAccessToken&Document|null> {
-    let self: IAccessToken&Document = this;
+export async function accessTokenFromRefresh(self: IAccessToken&Document): Promise<IAccessToken&Document|null> {
     let refreshToken = self.tokenType === TokenTypes.RefreshToken ? self : (self.linkedToken ? (await AccessToken.findById(self.linkedToken)) : null);
 
     if (!refreshToken) return null;
@@ -242,6 +243,11 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
             await newRefreshToken.save();
         }
 
+        if (config.updateIdentityUponTokenRefresh) {
+            let identity = await getIdentityEntityByAccessToken(accessToken);
+            await identity.save();
+        }
+
         return accessToken;
     } else if (self.clientRole === IClientRole.consumer) {
 
@@ -261,6 +267,27 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
     }
 
     return null;
+}
+
+AccessTokenSchema.methods.accessTokenFromRefresh = async function () {
+    return accessTokenFromRefresh(this);
+}
+
+RPCServer.methods.accessTokenFromRefresh = async function (id: string) {
+    let token = await AccessToken.findById(id).exec();
+
+    if (!token) throw new AccessTokenNotFoundError();
+
+    return accessTokenFromRefresh(token);
+}
+
+RPCServer.methods.selfAccessTokenFromRefresh = async function (id: string) {
+    let { user } = userFromRpcContext(this);
+    let token = await AccessToken.findOne({ _id: new ObjectId(id), user: user._id }).exec();
+
+    if (!token) throw new AccessTokenNotFoundError();
+
+    return accessTokenFromRefresh(token);
 }
 
 export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|IUser|null, client: IClient, role: IClientRole): { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document } {

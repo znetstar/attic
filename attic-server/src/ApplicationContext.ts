@@ -134,10 +134,22 @@ export class ApplicationContextBase extends EventEmitter {
     }
 
     async triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>> {
+        this.logs.silly({
+            method: `ApplicationContext.triggerHook.start`,
+            params: [
+                method, ...params
+            ]
+        });
         let result = (await this.emitAsync(method, ...params) || []).filter(Boolean) as Array<T>;
 
         result.reverse();
 
+        this.logs.silly({
+            method: `ApplicationContext.triggerHook.complete`,
+            params: [
+                result
+            ]
+        });
         return result;
     }
 

@@ -154,5 +154,19 @@ export class InvalidGrantTypeError extends GenericError {
     constructor(public message: string = 'Invalid grant type') {
         super(message, InvalidClientOrProviderError.code, InvalidClientOrProviderError.httpCode);
     }
+}
+
+export class AccessTokenNotFoundError extends GenericError {
+    public static get code(): number {
+        return 1010;
+    }
+
+    public static get httpCode(): number {
+        return 404;
+    }
+
+    constructor(public message: string = 'The access token requested could not be found') {
+        super(message, InvalidAccessTokenError.code, InvalidAccessTokenError.httpCode);
+    }
 
 }

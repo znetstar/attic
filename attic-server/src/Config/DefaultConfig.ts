@@ -32,6 +32,7 @@ export default <Config>{
     defaultScopeJoin: ' ',
     unauthorizedUserName: 'guest',
     enableCache: true,
+    updateIdentityUponTokenRefresh: true,
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
