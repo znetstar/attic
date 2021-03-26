@@ -25,7 +25,6 @@ export interface IClientModel {
     getIdentityEntity(token: IAccessToken&Document): Promise<IIdentityEntity&Document>;
     uriSubstitutions?: Map<string, string>;
     applyUriSubstitutions(qs: any): any;
-    scopeJoin?: string
 }
 
 export type IClient = IClientBase&IClientModel;
@@ -45,7 +44,8 @@ export const ClientSchema = <Schema<IClient>>(new (mongoose.Schema)({
         type: [String]
     },
     role: { type: [String], required: true, enum: Object.keys(require('@znetstar/attic-common/lib/IClient').IClientRole) },
-    scopeJoin: { type: [String], required: false  }
+    scopeJoin: { type: String, required: false  },
+    sendStateWithRedirectUri: { type: Boolean, required: false }
 }, {
     collection: 'clients'
 }));

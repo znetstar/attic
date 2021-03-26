@@ -40,4 +40,5 @@ export class NotFoundError extends GenericError {
 }
 
 
+
 export default GenericError;
