@@ -14,6 +14,7 @@ export interface IAccessToken {
     client: IClient|string;
     clientName: string;
     user?: IUser|string;
+    otherFields?: any;
 }
 
 export interface IFormalAccessToken {

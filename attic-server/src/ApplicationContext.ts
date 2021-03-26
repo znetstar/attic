@@ -132,6 +132,34 @@ export class ApplicationContextBase extends EventEmitter {
     get package() {
         return fs.readJSONSync(path.join(__dirname, '..', 'package.json'));
     }
+
+    async triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>> {
+        this.logs.silly({
+            method: `ApplicationContext.triggerHook.start`,
+            params: [
+                method, ...params
+            ]
+        });
+        let result = (await this.emitAsync(method, ...params) || []).filter(Boolean) as Array<T>;
+
+        result.reverse();
+
+        this.logs.silly({
+            method: `ApplicationContext.triggerHook.complete`,
+            params: [
+                result
+            ]
+        });
+        return result;
+    }
+
+    async triggerHookSingle<T>(method: string, ...params: any[]): Promise<T|undefined> {
+        return (await this.triggerHook<T>(method, ...params))[0];
+    }
+
+    registerHook(method: string, fn: Function): void {
+        this.on(method, fn as any);
+    }
 }
 
 export const ApplicationContext = new ApplicationContextBase();

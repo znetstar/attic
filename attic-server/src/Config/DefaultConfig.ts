@@ -29,8 +29,10 @@ export default <Config>{
     host: '127.0.0.1',
     hostname: os.hostname(),
     authorizeGracePeriod: 5*60e3,
+    defaultScopeJoin: ' ',
     unauthorizedUserName: 'guest',
     enableCache: true,
+    updateIdentityUponTokenRefresh: true,
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 

@@ -146,5 +146,6 @@ export default interface IRPC {
     getAccessToken(req: OAuthTokenRequest): Promise<IFormalAccessToken>;
     getAccessTokensForScope(userId: string, scope: string[]|string): Promise<AccessTokenSet>;
     getFormalAccessTokensForScope(userId: string, scope: string[]|string): Promise<FormalAccessTokenSet>;
-
+    accessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
+    selfAccessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
 }
