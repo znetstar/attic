@@ -247,15 +247,14 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
     }
 
     let output: { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document  }[] = await ApplicationContext.emitAsync(grantEvent, client, form);
-
-    if (!output || !output.length) {
-        throw new InvalidGrantTypeError();
+    if (!output || !output.filter(Boolean).length ) {
+        throw new InvalidGrantTypeError(`Invalid Grant Type ${grantType}`);
     }
 
     output.reverse();
     let { accessToken, refreshToken } = output.shift();
     if (!accessToken) {
-        throw new InvalidGrantTypeError();
+        throw new InvalidGrantTypeError(`Invalid Grant Type ${grantType}`);
     }
 
     await accessToken.save();
@@ -332,14 +331,11 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
             throw new MalformattedTokenRequestError();
         }
 
-
         user = await User.findOne({
             username
         });
 
-        let passwordIsValid = await user.checkPassword(password);
-
-        if (!user || !passwordIsValid) {
+        if (!user || !await user.checkPassword(password)) {
             throw new CouldNotLocateUserError();
         }
     }
