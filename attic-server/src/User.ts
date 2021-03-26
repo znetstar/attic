@@ -87,7 +87,9 @@ export function generateUsername() {
                             .trim());
 }
 
-UserSchema.methods.checkPassword = function (password: string): Promise<boolean> {
+UserSchema.methods.checkPassword = async function (password: string): Promise<boolean> {
+    if (!this.password)
+        return false;
     return bcryptVerify({
         hash: this.password,
         password
