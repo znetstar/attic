@@ -29,6 +29,7 @@ import {createLogger} from "./Logs";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import  * as fs from 'fs-extra';
 import * as path from 'path';
+import {  Notification } from 'multi-rpc';
 
 export interface ListenStatus {
     urls: string[];
@@ -48,9 +49,10 @@ export class ApplicationContextBase extends EventEmitter {
         if (this.config.autoLogEvents) {
             this.onAny(this.onAutoLog);
         }
-        if (this.config.logErrors) {
-            this.on('Error.*', this.onErrorLog);
-        }
+
+        this.logs.on('data', this.onLog);
+
+
         if (this.config.logListening)
             this.on('Web.webServerListen.complete', this.onWebServerListen);
 
@@ -76,10 +78,16 @@ export class ApplicationContextBase extends EventEmitter {
     }
 
     onAutoLog = (...args: any[]) => {
-        if (!args.length) return;
+        if (!args.length || (args[0] && args[0].indexOf('log.') !== -1))
+            return;
 
         let delta = { method: args[0], params: args.slice(1) };
         this.logger.debug(delta);
+    }
+
+    onLog = (log: any) => {
+        this.emit(`log.${log.level}`, log);
+        // this.rpcServer.sendTo(new Notification(`log.${log.level}`, log)).catch(err => { console.error(err.stack) });
     }
 
     onErrorLog = (error: IError) => {

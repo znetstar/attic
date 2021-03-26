@@ -386,6 +386,12 @@ AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ extended:
 }));
 
 AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.authorize'), asyncMiddleware(async function (req: any, res: any, next: any) {
+    ApplicationContext.logs.silly({
+        method: `AuthMiddleware.auth.${req.params.provider}.authorize.start`,
+        params: [
+            req.query
+        ]
+    });
     let state: string;
     let originalState: string;
     if (req.query.code && req.query.state)
@@ -406,6 +412,13 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         req.query.code
     ) {
         let existingState: any = req.query.state && await redis.hgetall(stateKey);
+
+        ApplicationContext.logs.silly({
+            method: `AuthMiddleware.auth.${req.params.provider}.authorize.existingState`,
+            params: [
+                { stateKey, existingState }
+            ]
+        });
 
         if (typeof(existingState) === 'object' && existingState !== null && !Object.keys(existingState).length)
             existingState = void(0);
@@ -523,9 +536,9 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             let finalUriFormatted = URL.format(finalUri);
 
             res.redirect(finalUriFormatted);
-            return;
         }
     } else {
+
         if (req.query.atticAccessToken)
             req.session.atticAccessToken = req.query.atticAccessToken;
         if (req.query.response_type !== 'code') {
@@ -565,6 +578,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             scope: scopes.join(' ')
         };
 
+
         if (req.query.atticAccessToken)
             req.session.atticAccessToken = req.query.atticAccessToken;
 
@@ -580,6 +594,12 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         pipeline.pexpire(stateKey, config.authorizeGracePeriod);
         await pipeline.exec();
 
+        ApplicationContext.logs.silly({
+            method: `AuthMiddleware.auth.${req.params.provider}.authorize.newState`,
+            params: [
+                { stateKey, newState }
+            ]
+        });
 
         let finalUri = URL.parse(provider.authorizeUri, true);
         finalUri.query = {
@@ -592,9 +612,22 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         };
 
         let finalFormatted = URL.format(finalUri);
+
+        ApplicationContext.logs.silly({
+            method: `AuthMiddleware.auth.${req.params.provider}.authorize.redirect`,
+            params: [
+                { redirectUri: finalFormatted }
+            ]
+        });
+
         res.redirect(finalFormatted);
-        return;
     }
+    ApplicationContext.logs.silly({
+        method: `AuthMiddleware.auth.${req.params.provider}.authorize.complete`,
+        params: [
+            req.query
+        ]
+    });
 }));
 
 

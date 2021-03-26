@@ -95,7 +95,9 @@ RPCServer.methods.updateClient = async (id: string, fields: any) => {
 }
 
 export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&Document): Promise<IIdentityEntity&Document> {
-    let [ identity ]: (IIdentityEntityBase|null)[] = await ApplicationContext.emitAsync(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
+    let identities: (IIdentityEntityBase|null)[] = await ApplicationContext.emitAsync(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
+
+    let identity = identities.filter(Boolean)[0];
 
     delete identity.id;
     delete identity._id;

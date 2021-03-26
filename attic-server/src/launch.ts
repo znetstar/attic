@@ -15,4 +15,3 @@ export async function launch() {
     await ApplicationContext.emitAsync('launch.complete');
 }
 
-export default launch;
