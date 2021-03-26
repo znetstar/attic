@@ -22,7 +22,10 @@ export interface IClientModel {
     id: ObjectId;
     _id: ObjectId;
     name: string;
-    getIdentityEntity(token: IAccessToken&Document): Promise<IIdentityEntity&Document>
+    getIdentityEntity(token: IAccessToken&Document): Promise<IIdentityEntity&Document>;
+    uriSubstitutions?: Map<string, string>;
+    applyUriSubstitutions(qs: any): any;
+    scopeJoin?: string
 }
 
 export type IClient = IClientBase&IClientModel;
@@ -36,13 +39,34 @@ export const ClientSchema = <Schema<IClient>>(new (mongoose.Schema)({
     expireAccessTokenIn: { type: Number, required: false },
     expireRefreshTokenIn: { type: Number, required: false },
     tokenUri: { type: String, required: false },
+    uriSubstitutions: { type: Map, required: false },
+    refreshTokenUri: { type: String, required: false },
     scope: {
         type: [String]
     },
-    role: { type: [String], required: true, enum: Object.keys(require('@znetstar/attic-common/lib/IClient').IClientRole) }
+    role: { type: [String], required: true, enum: Object.keys(require('@znetstar/attic-common/lib/IClient').IClientRole) },
+    scopeJoin: { type: [String], required: false  }
 }, {
     collection: 'clients'
 }));
+
+export function applyUriSubstitutions(provider: IClient, qs: any) {
+    if (!provider.uriSubstitutions || !provider.uriSubstitutions.size)
+        return qs;
+
+    for (let [ from, to ] of provider.uriSubstitutions) {
+        if (qs[from]) {
+            qs[to] = qs[from];
+            delete qs[from];
+        }
+    }
+
+    return qs;
+}
+
+ClientSchema.methods.applyUriSubstitutions = function (qs: any): any  {
+    return applyUriSubstitutions(this, qs);
+}
 
 
 RPCServer.methods.findClient = async (query: any) => {
@@ -95,9 +119,7 @@ RPCServer.methods.updateClient = async (id: string, fields: any) => {
 }
 
 export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&Document): Promise<IIdentityEntity&Document> {
-    let identities: (IIdentityEntityBase|null)[] = await ApplicationContext.emitAsync(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
-
-    let identity = identities.filter(Boolean)[0];
+    let identity = await ApplicationContext.triggerHookSingle<IIdentityEntityBase|null>(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
 
     delete identity.id;
     delete identity._id;

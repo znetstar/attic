@@ -45,6 +45,7 @@ export default interface Config {
     redisUri?: string;
     authorizeGracePeriod?: number;
     expireTokenIn?: number;
+    defaultScopeJoin?: string;
     expireRefreshTokenIn?: number;
 
     serviceClientId?: string;

@@ -20,6 +20,7 @@ export interface IClient {
     scope: string[];
     expireAccessTokenIn?: number;
     expireRefreshTokenIn?: number;
+    refreshTokenUri?: string;
 }
 
 export default IClient;

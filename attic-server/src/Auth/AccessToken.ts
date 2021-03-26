@@ -33,6 +33,7 @@ export interface IAccessTokenModel {
     authorizationHeader: string|null;
     clientName?: string;
     isBearer?: boolean;
+    otherFields?: any;
 }
 
 
@@ -82,6 +83,10 @@ export const AccessTokenSchema = <Schema<IAccessToken>>(new (mongoose.Schema)({
     },
     clientName: {
         type: String,
+        required: false
+    },
+    otherFields: {
+        type: Schema.Types.Mixed,
         required: false
     }
 }, {
@@ -208,11 +213,13 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
             client_secret: client.clientSecret
         }
 
+        q = client.applyUriSubstitutions(q);
+
         const params = new URL.URLSearchParams();
 
         for (let k in q) params.append(k, (q as any)[k]);
 
-        let tokenUri: any = URL.parse(client.tokenUri, true);
+        let tokenUri: any = URL.parse(client.refreshTokenUri || client.tokenUri, true);
         tokenUri.query = q;
         tokenUri = URL.format(tokenUri);
 
@@ -257,6 +264,19 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function (): Promise<IA
 }
 
 export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|IUser|null, client: IClient, role: IClientRole): { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document } {
+    let otherFields: any = {};
+    let standardFields = [
+        'access_token',
+        'refresh_token',
+        'expires_in',
+        'scope',
+        'redirect_uri'
+    ];
+    for (let k in formalToken) {
+      if (!standardFields.includes(k)) {
+          otherFields[k] = (formalToken as any)[k];
+      }
+    }
     let accessToken = new AccessToken({
         token: formalToken.access_token,
         expiresAt: formalToken.expires_in ? ((new Date().getTime()) + (formalToken.expires_in)*1e3) : void(0),
@@ -265,7 +285,8 @@ export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|
         client,
         tokenType: 'bearer',
         clientRole: role,
-        clientName: client.name
+        clientName: client.name,
+        otherFields
     });
 
     let refreshToken;
@@ -279,7 +300,8 @@ export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|
             tokenType: 'refresh_token',
             linkedToken: accessToken._id,
             clientRole: role,
-            clientName: client.name
+            clientName: client.name,
+            otherFields
         });
 
         accessToken.linkedToken = refreshToken._id;

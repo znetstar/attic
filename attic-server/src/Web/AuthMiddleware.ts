@@ -246,13 +246,12 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
         throw new InvalidClientOrProviderError();
     }
 
-    let output: { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document  }[] = await ApplicationContext.emitAsync(grantEvent, client, form);
-    if (!output || !output.filter(Boolean).length ) {
+    let output = await ApplicationContext.triggerHookSingle<{ accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document  }>(grantEvent, client, form);
+    if (!output) {
         throw new InvalidGrantTypeError(`Invalid Grant Type ${grantType}`);
     }
 
-    output.reverse();
-    let { accessToken, refreshToken } = output.shift();
+    let { accessToken, refreshToken } = output;
     if (!accessToken) {
         throw new InvalidGrantTypeError(`Invalid Grant Type ${grantType}`);
     }
@@ -392,6 +391,9 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             req.query
         ]
     });
+
+
+
     let state: string;
     let originalState: string;
     if (req.query.code && req.query.state)
@@ -448,6 +450,8 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
                 client_id: provider.clientId,
                 client_secret: provider.clientSecret
             }
+
+            q = provider.applyUriSubstitutions(q);
 
             let tokenUri: any = URL.parse(provider.tokenUri, true);
             tokenUri.query = q;
@@ -601,15 +605,32 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             ]
         });
 
-        let finalUri = URL.parse(provider.authorizeUri, true);
-        finalUri.query = {
-            client_id: provider.clientId,
-            client_secret: provider.clientSecret,
-            redirect_uri: newState.redirectUri,
-            state: state,
-            scope: [].concat(client.scope).join(' '),
-            response_type: 'code'
-        };
+
+        let authorizeEvent = `Web.AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`;
+        let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, {
+            stateKey,
+            newState,
+            provider,
+            client,
+            req,
+            res,
+            scopes,
+            context: req.context
+        });
+
+        let finalUri = URL.parse(authorizeUri||provider.authorizeUri, true);
+        if (!authorizeUri) {
+            finalUri.query = {
+                client_id: provider.clientId,
+                client_secret: provider.clientSecret,
+                redirect_uri: newState.redirectUri,
+                state: state,
+                scope: [].concat(provider.scope).join(provider.scopeJoin || config.defaultScopeJoin),
+                response_type: 'code'
+            };
+
+            finalUri.query = provider.applyUriSubstitutions(finalUri.query);
+        }
 
         let finalFormatted = URL.format(finalUri);
 
