@@ -297,7 +297,8 @@ export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|
         'refresh_token',
         'expires_in',
         'scope',
-        'redirect_uri'
+        'redirect_uri',
+        'token_type'
     ];
     for (let k in formalToken) {
       if (!standardFields.includes(k)) {
