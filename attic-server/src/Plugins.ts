@@ -47,6 +47,15 @@ export async function loadPlugins(){
                         else resolve();
                     })
                 });
+                let cfg: any = {
+                    ...(Config.npmOptions || {}),
+                    save: false,
+                    loglevel: 'warn'
+                };
+                for (let k in cfg) {
+                    npm.config.set(k, cfg[k]);
+                }
+
                 npmLoaded = true;
             }
             ApplicationContext.logs.silly({
@@ -58,7 +67,17 @@ export async function loadPlugins(){
 
             await new Promise((resolve, reject) => npm.commands.install([pluginPath], (err:any) => err ? reject(err):resolve()));
 
-            pluginModule = require(pluginPath);
+            try {
+                pluginModule = require(pluginPath);
+            } catch (err) {
+                if (err.code !== 'MODULE_NOT_FOUND')
+                    throw err;
+            }
+
+            if (!pluginModule) {
+                pluginModule = require(pluginPath+'/lib/Atticfile');
+            }
+
             ApplicationContext.logs.silly({
                 method: `launch.loadPlugins.loadPlugin.npmInstall.complete`,
                 params: [

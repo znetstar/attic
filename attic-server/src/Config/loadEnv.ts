@@ -51,7 +51,8 @@
         'UNAUTHROIZED_USERNAME',
         'ROOT_USERNAME',
         'ROOT_PASSWORD',
-        'LOG_LEVEL'
+        'LOG_LEVEL',
+        'PLUGINS'
     ];
 
     const noTransform: any[] = [

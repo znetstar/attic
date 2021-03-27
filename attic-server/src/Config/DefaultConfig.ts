@@ -32,9 +32,7 @@ export default <Config>{
     defaultScopeJoin: ' ',
     unauthorizedUserName: 'guest',
     enableCache: false,
-    npmOptions: {
-        loaded: false
-    },
+    npmOptions: {},
     updateIdentityUponTokenRefresh: true,
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),

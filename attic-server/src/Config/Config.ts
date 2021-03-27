@@ -44,7 +44,7 @@ export default interface Config {
      * URI to the MongoDB database used as a datastore
      */
     mongoUri?: string;
-    npmOptions?: unknown,
+    npmOptions?: any,
     redisUri?: string;
     authorizeGracePeriod?: number;
     expireTokenIn?: number;
