@@ -533,6 +533,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
             let finalUri = URL.parse(client.redirectUri, true);
             finalUri.query = {
+                ...(finalUri.query || {}),
                 code: authCode,
                 state: existingState.originalState
             }
@@ -588,7 +589,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
         let redirectUri = URL.parse(provider.redirectUri || config.siteUri, true);
         redirectUri.path = `/auth/${provider.name}/authorize`;
-        redirectUri.query.state = state;
+        if (provider.sendStateWithRedirectUri) redirectUri.query.state = state;
         newState.redirectUri =  URL.format(redirectUri);
 
         for (let k in newState) {
@@ -621,8 +622,9 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         let finalUri = URL.parse(authorizeUri||provider.authorizeUri, true);
         if (!authorizeUri) {
             finalUri.query = {
+                ...(finalUri.query || {}),
                 client_id: provider.clientId,
-                client_secret: provider.clientSecret,
+                // client_secret: provider.clientSecret,
                 redirect_uri: newState.redirectUri,
                 state: state,
                 scope: [].concat(provider.scope).join(provider.scopeJoin || config.defaultScopeJoin),
@@ -630,6 +632,8 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             };
 
             finalUri.query = provider.applyUriSubstitutions(finalUri.query);
+            delete finalUri.search;
+            finalUri.path = finalUri.path.split('?').shift();
         }
 
         let finalFormatted = URL.format(finalUri);

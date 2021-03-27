@@ -222,6 +222,7 @@ export async function accessTokenFromRefresh(self: IAccessToken&Document): Promi
 
         let tokenUri: any = URL.parse(client.refreshTokenUri || client.tokenUri, true);
         tokenUri.query = q;
+        delete tokenUri.search;
         tokenUri = URL.format(tokenUri);
 
         let tokenResp = await fetch(tokenUri, {

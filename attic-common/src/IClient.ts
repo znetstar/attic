@@ -21,6 +21,9 @@ export interface IClient {
     expireAccessTokenIn?: number;
     expireRefreshTokenIn?: number;
     refreshTokenUri?: string;
+    uriSubstitutions?: [string,string][];
+    scopeJoin?: string
+    sendStateWithRedirectUri?: boolean;
 }
 
 export default IClient;
