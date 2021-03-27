@@ -17,6 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 export enum LogLevels {
     silly = 'silly',
     debug = 'debug',
@@ -25,6 +26,8 @@ export enum LogLevels {
     warn = 'warn',
     error = 'error'
 }
+
+export type PluginPath = [ string, string ]|string;
 
 export default interface Config {
     /**
@@ -35,13 +38,13 @@ export default interface Config {
     /**
      * A list of plugins to load, as paths
      */
-    plugins?: string[];
+    plugins?: PluginPath[];
 
     /**
      * URI to the MongoDB database used as a datastore
      */
     mongoUri?: string;
-
+    npmOptions?: any,
     redisUri?: string;
     authorizeGracePeriod?: number;
     expireTokenIn?: number;

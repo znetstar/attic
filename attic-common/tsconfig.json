@@ -9,17 +9,11 @@
     "target": "es2018",
     "rootDir": "src",
     "outDir": "lib",
-    "lib": [ "es2017" ],
+    "lib": [ "es2017", "es2015" ],
     "experimentalDecorators": true,
     "importHelpers": true
   },
-  "files": [
-    "src/index.ts",
-    "src/IAccessToken.ts",
-    "src/IUser.ts",
-    "src/Error/AccessToken.ts",
-    "src/Error/Auth.ts",
-    "src/Error/IError.ts",
-    "src/Error/GenericError.ts"
+  "include": [
+    "**/*"
   ]
 }

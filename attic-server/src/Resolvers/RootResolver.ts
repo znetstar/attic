@@ -1,4 +1,4 @@
-import Location, {ILocation, LocationSchema} from '../Location';
+ import Location, {ILocation, LocationSchema} from '../Location';
 import { IEntity, default as Entity } from '../Entity';
 import { Mongoose, Schema, Document } from 'mongoose';
 import config from '../Config';

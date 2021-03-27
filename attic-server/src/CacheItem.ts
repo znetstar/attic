@@ -77,6 +77,8 @@ async function getCacheKey(source: ILocation) {
 }
 
 export async function resolveFromCache(source: ILocation): Promise<ILocation&Document> {
+    if (!config.enableCache)
+        return null;
     ApplicationContext.logs.silly({
         method: 'CacheItem.resolveFromCache.start',
         params: [
@@ -122,6 +124,8 @@ export async function invalidateCacheItem(source: ILocation): Promise<void> {
 }
 
 export async function createCacheItem(source: ILocation, target: ILocation) {
+    if (!config.enableCache)
+        return
     (async () => {
         ApplicationContext.logs.silly({
             method: 'CacheItem.createCacheItem.start',
