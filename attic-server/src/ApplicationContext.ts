@@ -30,12 +30,13 @@ import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import  * as fs from 'fs-extra';
 import * as path from 'path';
 import {  Notification } from 'multi-rpc';
+import {IApplicationContext} from "@znetstar/attic-common/lib/Server";
 
 export interface ListenStatus {
     urls: string[];
 }
 
-export class ApplicationContextBase extends EventEmitter {
+export class ApplicationContextBase extends EventEmitter implements IApplicationContext{
     protected logger = createLogger();
     constructor() {
         super({
@@ -157,8 +158,8 @@ export class ApplicationContextBase extends EventEmitter {
         return (await this.triggerHook<T>(method, ...params))[0];
     }
 
-    registerHook(method: string, fn: Function): void {
-        this.on(method, fn as any);
+    registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void {
+        this.on(method, fn);
     }
 }
 

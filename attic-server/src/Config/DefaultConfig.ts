@@ -31,7 +31,10 @@ export default <Config>{
     authorizeGracePeriod: 5*60e3,
     defaultScopeJoin: ' ',
     unauthorizedUserName: 'guest',
-    enableCache: true,
+    enableCache: false,
+    npmOptions: {
+        loaded: false
+    },
     updateIdentityUponTokenRefresh: true,
     cacheSize: 2e7,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
