@@ -509,16 +509,30 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             await identity.save();
 
             accessToken.user = user;
-            if (refreshToken) refreshToken.user = user;
+            accessToken.scope = [].concat(provider.scope);
+            await accessToken.save();
+
+            if (refreshToken) {
+                refreshToken.user = user;
+                refreshToken.scope = [].concat(provider.scope);
+                await refreshToken.save();
+                ApplicationContext.logs.silly({
+                    method: `AuthMiddleware.auth.${req.params.provider}.authorize.saveRefreshToken`,
+                    params: [
+                        { refreshToken: refreshToken.toObject() }
+                    ]
+                });
+            } else {
+                ApplicationContext.logs.silly({
+                    method: `AuthMiddleware.auth.${req.params.provider}.authorize.saveRefreshToken`,
+                    params: [
+                        { refreshToken: null }
+                    ]
+                });
+            }
 
             req.user = user;
             existingState.user = user._id;
-
-            accessToken.scope = [].concat(provider.scope);
-            refreshToken.scope = [].concat(provider.scope);
-
-            accessToken.save();
-            if (refreshToken) refreshToken.save();
 
             let authCode = nanoid();
             stateKey = `auth.token.${authCode}`;
