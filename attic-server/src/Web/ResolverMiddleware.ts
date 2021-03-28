@@ -29,22 +29,28 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
     let Driver = <Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>>>(location.getDriver());
     let driver = new Driver();
 
+    let allowedMethods = [
+        'get', 'head', 'put', 'delete', 'proxy'
+    ].filter(m => typeof((driver as any)[m]) !== 'undefined');
+
+
     let response: IHTTPResponse|null;
-    if (req.method === 'GET')
+    if (req.method === 'GET' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.get(location);
-    else if (req.method === 'HEAD')
+    else if (req.method === 'HEAD' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.head(location);
-    else if (req.method === 'PUT')
+    else if (req.method === 'PUT' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.put(location, req.body);
-    else if (req.method === 'DELETE')
+    else if (req.method === 'DELETE' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.delete(location);
-    else if (req.method === 'CONNECT')
-        response = await driver.proxy(location);
+    else if (req.method === 'CONNECT' && allowedMethods.includes(req.method.toLowerCase()))
+        response = await driver.connect(location);
     else {
         response = {
             method: req.method,
             status: 405,
-            href: location.href
+            href: location.href,
+            headers: new Map<string, string>([ [ 'Allowed', allowedMethods.map(m => m.toUpperCase()).join(' ') ] ])
         };
     }
 
