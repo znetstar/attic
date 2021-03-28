@@ -1,16 +1,18 @@
 import {IDriver} from "../IDriver";
 import {IPlugin} from "./IPlugin";
 import Constructible from "../Constructible";
+import IConfig from "./IConfig";
+import IRPC from "../IRPC";
 
 
 export interface IApplicationContext {
     on(event: string, handler: (...args: unknown[]) => Promise<unknown>): void;
     emit(event: string, ...args: unknown[]): void;
     emitAsync(event: string, ...args: unknown[]): Promise<unknown[]>;
-    config: unknown;
+    config: IConfig;
     logs: unknown;
     redis: unknown;
-    rpcServer: unknown;
+    rpcServer: unknown&{methods:IRPC};
     webExpress: unknown;
     passport: unknown;
     drivers: Map<string, Constructible<IDriver>>,
