@@ -23,7 +23,6 @@ import * as os from 'os';
 export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     puppeteerOptions: { headless: false },
     plugins: [
-        '@znetstar/attic-puppeteer-proxy'
     ],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',

@@ -481,6 +481,10 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             }
 
             let user: IUser&Document;
+
+            if (identity.user)
+                await identity.populate('user').execPopulate();
+
             if (identity.user && (identity.user as IUser&Document).username !== UNAUTHROIZED_USERNAME) {
                 user = identity.user as IUser&Document;
             }

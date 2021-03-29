@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.1.4",
+    "version": "3.1.6",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -95,6 +95,7 @@
         "node-fetch": "^2.6.1",
         "npm": "^7.7.5",
         "object-hash": "^2.1.1",
+        "passport": "^0.4.1",
         "sentencer": "^0.2.1",
         "tslib": "^2.0.1",
         "winston": "^3.3.3"
