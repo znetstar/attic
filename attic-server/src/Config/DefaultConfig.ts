@@ -22,7 +22,6 @@ import * as os from 'os';
 
 export default <Config>{
     plugins: [
-        [ '@znetstar/attic-server-puppeteer-proxy', '/Users/zachary/Projects/attic/attic-server-puppeteer-proxy/src/Atticfile' ]
     ],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
