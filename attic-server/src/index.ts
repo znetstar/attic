@@ -6,7 +6,7 @@ export * from './Drivers';
 export * from './Entity';
 export * from './Resolvers';
 export * from './Web';
-export * from './CacheItem';
+export * from './ItemCache';
 export * from './Plugins';
 export * from './RPC';
 export * from './User';

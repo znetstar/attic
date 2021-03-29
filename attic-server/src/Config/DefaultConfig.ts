@@ -1,6 +1,6 @@
 /**
  * This component is licensed separately from the main program
- * @module attic-server/ApplicationContext
+ * @module attic-server/Config/DefaultConfig
  * @license LGPL-3.0
  * Copyright (C) 2021 Zachary R.T. Boyd <zachary@zacharyboyd.nyc>
  *
@@ -21,7 +21,9 @@ import Config, {LogLevels} from './Config';
 import * as os from 'os';
 
 export default <Config>{
-    plugins: [],
+    plugins: [
+        [ '@znetstar/attic-server-puppeteer-proxy', '/Users/zachary/Projects/attic/attic-server-puppeteer-proxy/src/Atticfile' ]
+    ],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
     redisUri: 'redis://localhost:6379/0',
@@ -31,10 +33,10 @@ export default <Config>{
     authorizeGracePeriod: 5*60e3,
     defaultScopeJoin: ' ',
     unauthorizedUserName: 'guest',
-    enableCache: false,
     npmOptions: {},
     updateIdentityUponTokenRefresh: true,
     cacheSize: 2e7,
+    enableCache: true,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
     unauthorizedScopes: [ 'auth\.authorize', 'auth\.token', 'rpc\.getAccessToken' ],
@@ -53,10 +55,6 @@ export default <Config>{
     expressSessionMaxAge: ( 24 * 60 * 60 * 1000 ),
     expressSessionSecret: null as any,
     expressSessionSecretSize: 512,
-
-    drivers: [
-        'HTTPRedirectDriver'
-    ],
     resolverTypes: [
         'RootResolver'
     ],

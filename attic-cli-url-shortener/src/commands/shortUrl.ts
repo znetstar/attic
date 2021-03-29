@@ -34,6 +34,11 @@ export default class ShortUrl extends Command {
       char: 'x',
       required: false
     }),
+    driver: flags.string({
+      char: 'd',
+      required: true,
+      default: 'HTTPRedirectDriver'
+    }),
     quiet: flags.boolean(({
       required: false
     })),
@@ -93,7 +98,7 @@ export default class ShortUrl extends Command {
       location = {
         href,
         entity: entityId,
-        driver: 'HTTPRedirectDriver'
+        driver: flags.driver.trim()
       };
 
       if (flags.expiresIn) {

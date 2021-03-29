@@ -17,12 +17,10 @@
  *  You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import mongoose, { redis } from './Database';
 import Config, { ConfigType } from "./Config";
+import mongoose, { redis } from './Database';
 import RPCServer from "./RPC";
 import {WebExpress} from "./Web";
-import * as passport from "passport";
-import {drivers} from "./Drivers";
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import plugins from "./Plugins";
 import {createLogger} from "./Logs";
@@ -31,10 +29,15 @@ import  * as fs from 'fs-extra';
 import * as path from 'path';
 import {  Notification } from 'multi-rpc';
 import {IApplicationContext} from "@znetstar/attic-common/lib/Server";
+import Constructible from "./Constructible";
+import {IDriver} from "@znetstar/attic-common/lib/IDriver";
+
 
 export interface ListenStatus {
     urls: string[];
 }
+
+export const drivers: Map<string, Constructible<IDriver>> = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export class ApplicationContextBase extends EventEmitter implements IApplicationContext{
     protected logger = createLogger();
@@ -118,10 +121,6 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
         return WebExpress();
     }
 
-    get passport() {
-        return passport;
-    }
-
     get drivers() {
         return drivers;
     }
@@ -161,8 +160,14 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void {
         this.on(method, fn);
     }
+
+    async loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void> {
+        name = name || driver.name;
+        this.drivers.set(name, driver);
+        await this.emitAsync(`Drivers.${name}.init`, driver);
+    }
 }
 
-export const ApplicationContext = new ApplicationContextBase();
+export const ApplicationContext = (global as any).ApplicationContext = new ApplicationContextBase();
 
 export default ApplicationContext;

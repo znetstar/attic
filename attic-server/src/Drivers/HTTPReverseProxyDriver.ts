@@ -82,7 +82,7 @@ export default class HTTPReverseProxyDriver extends HTTPDriverBase implements ID
     public async list(location: ILocation&Document): Promise<IHTTPResponse|null> {
         return this.proxyRequest(location);
     }
-    public async proxy(location: ILocation&Document): Promise<IHTTPResponse|null> {
+    public async connect(location: ILocation&Document): Promise<IHTTPResponse|null> {
         return this.proxyRequest(location);
     }
 }
