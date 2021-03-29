@@ -1,4 +1,4 @@
-import { Mongoose, Schema, Document } from 'mongoose';
+import {Mongoose, Schema, Document, Model} from 'mongoose';
 import { ObjectId } from 'mongodb';
 import * as url  from 'url';
 import Config from './Config';
@@ -16,6 +16,7 @@ import {EntitySchema} from "./Entity";
 import {IUser} from "./User";
 import {IAccessToken} from "./Auth/AccessToken";
 import {IHttpContext} from "./Drivers/HTTPCommon";
+import ItemCache, {DocumentItemCache} from "./ItemCache";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export interface ILocationModel {
@@ -28,6 +29,7 @@ export interface ILocationModel {
     getDriver?(): Constructible<IDriver>;
     entity?: IEntity|ObjectId;
     httpContext?: IHttpContext;
+    driverOptions?: any;
 }
 
 export type ILocation = ILocationModel&ILocationBase;
@@ -83,6 +85,10 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     },
     expiresAt: {
         type: Date,
+        required: false
+    },
+    driverOptions: {
+        type: Schema.Types.Mixed,
         required: false
     }
 }, {
@@ -236,7 +242,7 @@ RPCServer.methods.searchLocations = async (query:  BasicTextSearchOptions) => {
     return locations.map(l => l.toJSON({ virtuals: true }));
 }
 
-const Location = mongoose.model<ILocation&Document>('Location', LocationSchema);
+export const Location = mongoose.model<ILocation&Document>('Location', LocationSchema);
 
 Location.collection.createIndex({ 'href': 1 }, { unique: true });
 
@@ -252,5 +258,8 @@ Location.collection.createIndex({
 }, {
     expireAfterSeconds: 0
 });
+
+// export const ResolverCache = new DocumentItemCache<ILocation, ILocation, Model<any>>(Location);
+export const ResolverCache = new ItemCache<ILocation, ILocation>('Location');
 
 export default Location;

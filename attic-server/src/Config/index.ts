@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -68,8 +69,13 @@ const configHandler = {
     get: function (obj: any, prop: any) {
         const { nconf } = obj;
 
+        if (prop === 'drivers') {
+            return Array.from((global as any).ApplicationContext.drivers.keys());
+        }
+
         if (prop === 'nconf' || prop === 'config')
             return nconf;
+
 
         if (prop in nconf)
             return nconf[prop];
@@ -79,6 +85,10 @@ const configHandler = {
     set: function (obj: any, prop: any, value: any) {
         const { nconf } = obj;
 
+        if (prop === 'drivers') {
+            return false;
+        }
+
         if (prop === 'nconf' || prop === 'config' || (prop in nconf))
             return;
 
@@ -87,9 +97,24 @@ const configHandler = {
     has: function (obj: any, prop: any) {
         const { nconf } = obj;
 
+        if (prop === 'drivers') {
+            return true
+        }
+
         return (prop === 'nconf' || prop === 'config' || (prop in nconf) || Boolean(nconf.get(prop)));
     },
+    deleteProperty(obj: any, prop: any): boolean {
+        const { nconf } = obj;
 
+        if (prop === 'drivers') {
+            return false;
+        }
+
+        if (prop === 'nconf' || prop === 'config' || (prop in nconf))
+            return false;
+
+        return nconf.set(prop, void(0));
+    }
 };
 
 interface nconfHolder { nconf: Provider; }

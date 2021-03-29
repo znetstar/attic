@@ -1,4 +1,4 @@
-import Location, {ILocation, LocationSchema} from "./Location";
+import Location, {ILocation, LocationSchema, ResolverCache} from "./Location";
 import { Document, Schema } from 'mongoose';
 import Constructible from "./Constructible";
 import { ObjectId } from 'mongodb';
@@ -280,10 +280,13 @@ export interface ResolveOptionsModel {
 
 export type ResolveOptions = ResolveOptionsBase&ResolveOptionsModel;
 
-export async function resolve(location: ILocation|string, options: ResolveOptions = { noCache: false }) {
+export async function resolve(location: ILocation|string, options: ResolveOptions = { noCache: false }): Promise<ILocation> {
     let resolver;
-    let result: Document&ILocation;
+    let result: ILocation;
     let { id, noCache } = options;
+
+    // @ts-ignore
+    if (location && location.populate) { await location.populate('entity').execPopulate(); }
 
     ApplicationContext.logs.silly({
         method: 'Resolver.resolve.start',
@@ -299,7 +302,7 @@ export async function resolve(location: ILocation|string, options: ResolveOption
     }
 
     if (!noCache) {
-        result = await require('./CacheItem').resolveFromCache(location);
+        result = await ResolverCache.getObject(location);
     }
 
     if (!result) {
@@ -318,8 +321,11 @@ export async function resolve(location: ILocation|string, options: ResolveOption
             result = (await rootResolverResolve(location)) as ILocation & Document;
         }
 
+        // @ts-ignore
+        if (result && result.toJSON) { result = result.toJSON({ virtuals: true }); }
+
         if (result) {
-            await require('./CacheItem').createCacheItem(location, result);
+            await ResolverCache.setObject(location, result);
         }
     }
 
@@ -330,15 +336,13 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         ]
     });
 
+
     return result;
 }
 
 RPCServer.methods.resolve = async function (location: ILocation|string, options: ResolveOptionsBase) {
     let doc = await resolve(location, options);
 
-    if (doc) {
-        return doc.toJSON({ virtuals: true }) as any;
-    }
     return doc;
 }
 

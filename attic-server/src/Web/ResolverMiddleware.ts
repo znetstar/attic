@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {asyncMiddleware} from "./Common";
 import {RootResolverSchema} from "../Resolvers/RootResolver";
-import {ILocation} from "../Location";
+import {ILocation, Location} from "../Location";
 import {IDriverFull,IDriverOfFull} from "../Driver";
 import {IHTTPResponse} from "../Drivers/HTTPCommon";
 import Constructible from "../Constructible";
@@ -11,14 +11,37 @@ import {  } from 'multi-rpc';
 import {IScopeContext} from "../Auth/AccessToken";
 import RPCServer from "../RPC";
 import ApplicationContext from "../ApplicationContext";
+import ItemCache from "../ItemCache";
+import { Document } from 'mongoose';
+
+
+export interface SerializedHTTPResponseExt {
+    headers: [string, string][]
+}
+
+export type SerializedHTTPResponse = IHTTPResponse&SerializedHTTPResponseExt;
+
+const HTTPResponseCache = new ItemCache<ILocation, SerializedHTTPResponse>('HTTPResponse');
 
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
     let scopeContext: IScopeContext = req.scopeContext;
+
+    let inLoc = _.cloneDeep(location);
 
     let scope = location.auth || 'rpc.getResponse';
     let scopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
     if (scope !== scopeContext.currentScope)
         scopePair = (await (await scopeContext.user.getAccessTokensForScope(scope)).next()).value;
+
+
+    let cachedResult = await HTTPResponseCache.getObject(inLoc);
+    if (cachedResult) {
+        let response: O = {
+            ...(cachedResult as any),
+            headers: new Map<string, string>(cachedResult.headers)
+        };
+        return response as O;
+    }
 
     location.httpContext = {
         req,
@@ -26,11 +49,11 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
         scopeContext: req.context
     };
 
-    let Driver = <Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>>>(location.getDriver());
+    let Driver: Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>> = ApplicationContext.drivers.get(location.driver) as Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>>;
     let driver = new Driver();
 
     let allowedMethods = [
-        'get', 'head', 'put', 'delete', 'proxy'
+        'get', 'head', 'put', 'delete', 'connect'
     ].filter(m => typeof((driver as any)[m]) !== 'undefined');
 
 
@@ -54,12 +77,20 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
         };
     }
 
+    let outResp: SerializedHTTPResponse = {
+        ...(response as any),
+        headers: Array.from(response.headers.entries())
+    };
+
+    await HTTPResponseCache.setObject(inLoc, outResp);
+
     return response as O;
 }
 
-RPCServer.methods.getHttpResponse = async function getHttpResponseRpc<O extends IHTTPResponse, I>(location: ILocation): Promise<O> {
+RPCServer.methods.getHttpResponse = async function Rpc<O extends IHTTPResponse, I>(location: ILocation): Promise<O> {
     let { req, res } = this.clientRequest.additionalData;
-    return getHttpResponse<O,I>(req, res, location);
+
+    return getHttpResponse<O,I>(req, res, Location.hydrate(location));
 }
 
 export default function ResolverMiddleware(req: any, res: any, next: any) {

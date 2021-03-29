@@ -3,7 +3,7 @@ import Constructible from "../Constructible";
 import { default as HTTPRedirectDriver } from "./HTTPRedirectDriver";
 import ApplicationContext from "../ApplicationContext";
 import HTTPReverseProxyDriver from "./HTTPReverseProxyDriver";
-export const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
+export const drivers: Map<string, Constructible<IDriver>> = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export async function loadDriver (driver: Constructible<IDriver>, name?: string) {
     name = name || driver.name;

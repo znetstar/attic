@@ -1,4 +1,4 @@
-9import Location, { LocationSchema, ILocation } from '../Location';
+import Location, { LocationSchema, ILocation } from '../Location';
 import Entity, {IEntity} from '../Entity';
 import { IDriver} from "@znetstar/attic-common/lib/IDriver";
 import { IHTTPResourceEntity } from '../Entities/HTTPResourceEntity'

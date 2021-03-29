@@ -8,7 +8,6 @@ import {getIdentityEntityByAccessToken, IClientModel} from "../Auth/Client";
 import {IUser, IUserModel} from "../User";
 import {IIdentityEntity as IIdentityEntityBase} from "@znetstar/attic-common/lib/IIdentity";
 import {IHTTPResourceEntity, IHTTPResourceEntityModel} from "./HTTPResourceEntity";
-import {CacheItemSchema} from "../CacheItem";
 import {RPCServer} from "../RPC";
 import {ScopeAccessTokenPair} from "@znetstar/attic-common/lib/IAccessToken";
 import {IAccessToken} from "../Auth/AccessToken";

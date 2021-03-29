@@ -21,7 +21,6 @@ export async function loadModels() {
     require('../Entities/HTTPResourceEntity');
     require('../Resolver');
     require('../Resolvers/RootResolver');
-    require('../CacheItem');
     await ApplicationContext.emitAsync('launch.loadModels.complete');
 
 }
