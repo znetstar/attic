@@ -98,7 +98,7 @@ export default class ShortUrl extends Command {
       location = {
         href,
         entity: entityId,
-        driver: flags.driver
+        driver: flags.driver.trim()
       };
 
       if (flags.expiresIn) {

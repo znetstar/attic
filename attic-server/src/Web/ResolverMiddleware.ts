@@ -13,7 +13,7 @@ import RPCServer from "../RPC";
 import ApplicationContext from "../ApplicationContext";
 import ItemCache from "../ItemCache";
 import { Document } from 'mongoose';
-
+import Config from '../Config';
 
 export interface SerializedHTTPResponseExt {
     headers: [string, string][]
@@ -82,7 +82,8 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
         headers: Array.from(response.headers.entries())
     };
 
-    await HTTPResponseCache.setObject(inLoc, outResp);
+    if (outResp.status === 200 || (outResp.status !== 200 && Config.cacheNon200HTTPResponses))
+        await HTTPResponseCache.setObject(inLoc, outResp);
 
     return response as O;
 }

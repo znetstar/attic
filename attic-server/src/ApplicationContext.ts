@@ -21,7 +21,6 @@ import Config, { ConfigType } from "./Config";
 import mongoose, { redis } from './Database';
 import RPCServer from "./RPC";
 import {WebExpress} from "./Web";
-import {drivers, loadDriver} from "./Drivers";
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import plugins from "./Plugins";
 import {createLogger} from "./Logs";
@@ -37,6 +36,8 @@ import {IDriver} from "@znetstar/attic-common/lib/IDriver";
 export interface ListenStatus {
     urls: string[];
 }
+
+export const drivers: Map<string, Constructible<IDriver>> = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export class ApplicationContextBase extends EventEmitter implements IApplicationContext{
     protected logger = createLogger();
@@ -161,7 +162,9 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     }
 
     async loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void> {
-        await loadDriver(driver, name);
+        name = name || driver.name;
+        this.drivers.set(name, driver);
+        await this.emitAsync(`Drivers.${name}.init`, driver);
     }
 }
 

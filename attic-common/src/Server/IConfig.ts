@@ -123,6 +123,7 @@ export interface IConfig {
     autoLogEvents?: boolean;
     logErrors?: boolean;
     logListening?: boolean;
+    cacheNon200HTTPResponses?: boolean;
 }
 
 export default IConfig;

@@ -404,7 +404,7 @@ const User = mongoose.model<IUser&Document>('User', UserSchema);
 
 export const UNAUTHROIZED_USERNAME = config.get('unauthorizedUserName');
 
-ApplicationContext.once('loadModels.complete', async () => {
+ApplicationContext.once('launch.loadModels.complete', async () => {
     await User.updateOne({ username: UNAUTHROIZED_USERNAME }, {
         $setOnInsert: {
             username: UNAUTHROIZED_USERNAME,

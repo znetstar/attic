@@ -19,7 +19,7 @@ $ npm install -g @znetstar/attic-cli
 $ attic-cli COMMAND
 running command...
 $ attic-cli (-v|--version|version)
-@znetstar/attic-cli/3.1.0 darwin-x64 node-v12.21.0
+@znetstar/attic-cli/3.1.1 darwin-x64 node-v12.21.0
 $ attic-cli --help [COMMAND]
 USAGE
   $ attic-cli COMMAND
@@ -86,7 +86,7 @@ ALIASES
   $ attic-cli login
 ```
 
-_See code: [src/commands/auth/login.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/auth/login.ts)_
+_See code: [src/commands/auth/login.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/auth/login.ts)_
 
 ## `attic-cli drivers:listTypes`
 
@@ -102,7 +102,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/drivers/listTypes.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/drivers/listTypes.ts)_
+_See code: [src/commands/drivers/listTypes.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/drivers/listTypes.ts)_
 
 ## `attic-cli entities:create [FIELDS]`
 
@@ -120,7 +120,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/entities/create.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/entities/create.ts)_
+_See code: [src/commands/entities/create.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/entities/create.ts)_
 
 ## `attic-cli entities:delete [QUERY]`
 
@@ -139,7 +139,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/entities/delete.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/entities/delete.ts)_
+_See code: [src/commands/entities/delete.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/entities/delete.ts)_
 
 ## `attic-cli entities:find [QUERY]`
 
@@ -158,7 +158,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/entities/find.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/entities/find.ts)_
+_See code: [src/commands/entities/find.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/entities/find.ts)_
 
 ## `attic-cli entities:listTypes`
 
@@ -174,7 +174,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/entities/listTypes.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/entities/listTypes.ts)_
+_See code: [src/commands/entities/listTypes.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/entities/listTypes.ts)_
 
 ## `attic-cli entities:search [TERMS]`
 
@@ -193,7 +193,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/entities/search.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/entities/search.ts)_
+_See code: [src/commands/entities/search.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/entities/search.ts)_
 
 ## `attic-cli entities:update`
 
@@ -212,7 +212,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/entities/update.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/entities/update.ts)_
+_See code: [src/commands/entities/update.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/entities/update.ts)_
 
 ## `attic-cli help [COMMAND]`
 
@@ -252,7 +252,7 @@ OPTIONS
   --format=(text|json)       [default: text]
 ```
 
-_See code: [src/commands/locations/create.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/locations/create.ts)_
+_See code: [src/commands/locations/create.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/locations/create.ts)_
 
 ## `attic-cli locations:delete [QUERY]`
 
@@ -277,7 +277,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/locations/delete.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/locations/delete.ts)_
+_See code: [src/commands/locations/delete.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/locations/delete.ts)_
 
 ## `attic-cli locations:find [QUERY]`
 
@@ -302,7 +302,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/locations/find.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/locations/find.ts)_
+_See code: [src/commands/locations/find.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/locations/find.ts)_
 
 ## `attic-cli locations:search [TERMS]`
 
@@ -321,7 +321,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/locations/search.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/locations/search.ts)_
+_See code: [src/commands/locations/search.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/locations/search.ts)_
 
 ## `attic-cli locations:update`
 
@@ -345,7 +345,7 @@ OPTIONS
   --format=(text|json)       [default: text]
 ```
 
-_See code: [src/commands/locations/update.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/locations/update.ts)_
+_See code: [src/commands/locations/update.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/locations/update.ts)_
 
 ## `attic-cli plugins`
 
@@ -502,7 +502,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/resolve/entity.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolve/entity.ts)_
+_See code: [src/commands/resolve/entity.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolve/entity.ts)_
 
 ## `attic-cli resolve:location [LOCATION]`
 
@@ -521,7 +521,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/resolve/location.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolve/location.ts)_
+_See code: [src/commands/resolve/location.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolve/location.ts)_
 
 ## `attic-cli resolvers:create [FIELDS]`
 
@@ -540,7 +540,7 @@ OPTIONS
   --format=(text|json)         [default: text]
 ```
 
-_See code: [src/commands/resolvers/create.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolvers/create.ts)_
+_See code: [src/commands/resolvers/create.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolvers/create.ts)_
 
 ## `attic-cli resolvers:delete [QUERY]`
 
@@ -563,7 +563,7 @@ OPTIONS
   --format=(text|json)         [default: text]
 ```
 
-_See code: [src/commands/resolvers/delete.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolvers/delete.ts)_
+_See code: [src/commands/resolvers/delete.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolvers/delete.ts)_
 
 ## `attic-cli resolvers:find [QUERY]`
 
@@ -586,7 +586,7 @@ OPTIONS
   --format=(text|json)         [default: text]
 ```
 
-_See code: [src/commands/resolvers/find.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolvers/find.ts)_
+_See code: [src/commands/resolvers/find.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolvers/find.ts)_
 
 ## `attic-cli resolvers:listTypes`
 
@@ -602,7 +602,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/resolvers/listTypes.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolvers/listTypes.ts)_
+_See code: [src/commands/resolvers/listTypes.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolvers/listTypes.ts)_
 
 ## `attic-cli resolvers:search [TERMS]`
 
@@ -621,7 +621,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/resolvers/search.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolvers/search.ts)_
+_See code: [src/commands/resolvers/search.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolvers/search.ts)_
 
 ## `attic-cli resolvers:update`
 
@@ -641,7 +641,7 @@ OPTIONS
   --format=(text|json)         [default: text]
 ```
 
-_See code: [src/commands/resolvers/update.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/resolvers/update.ts)_
+_See code: [src/commands/resolvers/update.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/resolvers/update.ts)_
 
 ## `attic-cli shortUrl`
 
@@ -665,7 +665,7 @@ OPTIONS
   --quiet
 ```
 
-_See code: [@znetstar/attic-cli-url-shortener](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/shortUrl.ts)_
+_See code: [@znetstar/attic-cli-url-shortener](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/shortUrl.ts)_
 
 ## `attic-cli users:create [FIELDS]`
 
@@ -685,7 +685,7 @@ OPTIONS
   --format=(text|json)     [default: text]
 ```
 
-_See code: [src/commands/users/create.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/users/create.ts)_
+_See code: [src/commands/users/create.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/users/create.ts)_
 
 ## `attic-cli users:delete [QUERY]`
 
@@ -707,7 +707,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/users/delete.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/users/delete.ts)_
+_See code: [src/commands/users/delete.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/users/delete.ts)_
 
 ## `attic-cli users:find [QUERY]`
 
@@ -729,7 +729,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/users/find.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/users/find.ts)_
+_See code: [src/commands/users/find.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/users/find.ts)_
 
 ## `attic-cli users:search [TERMS]`
 
@@ -748,7 +748,7 @@ OPTIONS
   --format=(text|json)  [default: text]
 ```
 
-_See code: [src/commands/users/search.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/users/search.ts)_
+_See code: [src/commands/users/search.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/users/search.ts)_
 
 ## `attic-cli users:update`
 
@@ -768,5 +768,5 @@ OPTIONS
   --format=(text|json)     [default: text]
 ```
 
-_See code: [src/commands/users/update.ts](https://github.com/znetstar/attic/blob/v3.1.0/src/commands/users/update.ts)_
+_See code: [src/commands/users/update.ts](https://github.com/znetstar/attic/blob/v3.1.1/src/commands/users/update.ts)_
 <!-- commandsstop -->

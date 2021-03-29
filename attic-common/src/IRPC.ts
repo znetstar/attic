@@ -149,5 +149,5 @@ export default interface IRPC {
     accessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
     selfAccessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
 
-
+    redisFlushAll(): Promise<void>;
 }
