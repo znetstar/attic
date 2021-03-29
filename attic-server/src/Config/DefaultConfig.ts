@@ -20,9 +20,10 @@
 import Config, {LogLevels} from './Config';
 import * as os from 'os';
 
-export default <Config>{
+export default <Config&{ puppeteerOptions: { headless: boolean } }>{
+    puppeteerOptions: { headless: false },
     plugins: [
-        [ '@znetstar/attic-server-puppeteer-proxy', '/Users/zachary/Projects/attic/attic-server-puppeteer-proxy/src/Atticfile' ]
+        '@znetstar/attic-puppeteer-proxy'
     ],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',
