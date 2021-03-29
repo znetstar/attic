@@ -26,7 +26,7 @@ const HTTPResponseCache = new ItemCache<ILocation, SerializedHTTPResponse>('HTTP
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
     let scopeContext: IScopeContext = req.scopeContext;
 
-    let inLoc = _.cloneDeep(location);
+    let inLoc = _.cloneDeep({ href: location.href, auth: location.auth });
 
     let scope = location.auth || 'rpc.getResponse';
     let scopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
