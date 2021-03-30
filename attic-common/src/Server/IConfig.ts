@@ -16,6 +16,7 @@ export interface IConfig {
      */
     siteUri?: string;
     hostname?: string;
+    emailHostname?: string;
     /**
      * A list of plugins to load, as paths
      */
