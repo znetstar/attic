@@ -21,7 +21,7 @@ import Config, {LogLevels} from './Config';
 import * as os from 'os';
 
 export default <Config&{ puppeteerOptions: { headless: boolean } }>{
-    puppeteerOptions: { headless: false },
+    puppeteerOptions: { headless: true },
     plugins: [
     ],
     siteUri: 'http://localhost:7373',
