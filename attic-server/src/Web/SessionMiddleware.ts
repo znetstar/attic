@@ -1,13 +1,14 @@
 import * as express from 'express';
 import * as session from 'express-session';
-const MongoDBStoreBase = require('connect-mongodb-session');
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import Config from "../Config";
 import * as cookieParser from "cookie-parser";
 import {WebExpress} from "./WebServer";
-const MongoDBExpressSessionStore = MongoDBStoreBase(session);
+import {redis} from "../Database";
+
+export const RedisStore = require('connect-redis')(session)
 
 if (!Config.expressSessionSecret) {
     try {
@@ -19,14 +20,7 @@ if (!Config.expressSessionSecret) {
     }
 }
 
-export const ExpressSessionStore = new MongoDBExpressSessionStore({
-    uri: Config.mongoUri,
-    collection: 'sessions',
-    connectionOptions: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    }
-});
+export const ExpressSessionStore = new RedisStore({ client: redis });
 
 export const SessionMiddleware = session({
     cookie: {
