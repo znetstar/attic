@@ -26,7 +26,7 @@ const HTTPResponseCache = new ItemCache<ILocation, SerializedHTTPResponse>('HTTP
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
     let scopeContext: IScopeContext = req.scopeContext;
 
-    let inLoc = _.cloneDeep({ href: location.href, auth: location.auth });
+    let inLoc = _.cloneDeep({ href: location.href, auth: location.auth, headers: { 'user-agent': req.headers['user-agent'] } });
 
     let scope = location.auth || 'rpc.getResponse';
     let scopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
@@ -100,7 +100,7 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
             return true;
         let href = ((req.headers && req.headers['x-forwarded-proto']) || req.protocol) + '://' + req.get('host') + req.originalUrl;
 
-        href = href.replace('http://localhost:7337', 'https://zb.gy');
+        // href = href.replace('http://localhost:7337', 'https://zb.gy');
 
 
         const location = await resolve({ href });
