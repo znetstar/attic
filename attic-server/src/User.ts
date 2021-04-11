@@ -186,7 +186,8 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
     pipeline.group({
         _id: {
             scopeQuery: '$scopeQuery',
-            tokenType: '$tokenType'
+            tokenType: '$tokenType',
+            client: '$client'
         },
         scope: { $addToSet: '$scope' },
         doc: { $max: '$$ROOT' },
@@ -215,6 +216,8 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
     });
 
     let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
+    // @ts-ignore
+    require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
    let cur =  pipeline.cursor({ batchSize: 500 }).exec();
 
     let isDone = new Set<string>();
@@ -272,7 +275,6 @@ RPCServer.methods.getAccessTokensForScope = async function (user: string, scope:
     for await ( let pair of getAccessTokensForScope(user, scope) ) {
         if (pair && pair[1]) result.push(pair);
     }
-
 
     return result;
 }
