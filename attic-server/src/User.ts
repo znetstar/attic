@@ -272,6 +272,11 @@ export async function* getFormalAccessTokensForScope (user: IUser&Document|Objec
     }
 }
 
+RPCServer.methods.getSelfAccessTokensForScope = async function getSelfAccessTokensForScope(scope: string[]|string) {
+    let { user } = userFromRpcContext(this);
+    return RPCServer.methods.getAccessTokensForScope(user.id, scope);
+}
+
 UserSchema.methods.getAccessTokensForScope = function (scope: string[]|string) {
     return getAccessTokensForScope(this, scope);
 }
@@ -282,11 +287,13 @@ RPCServer.methods.getAccessTokensForScope = async function (user: string, scope:
         if (pair && pair[1]) result.push(pair);
     }
 
+
     return result;
 }
 
 export async function deleteAccessTokens(query: any, deleteLinked: boolean = false) {
     let tokens = await AccessToken.find(query).exec();
+
 
     for (let token of tokens) {
         let toDelete = [ token ];
