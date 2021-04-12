@@ -36,6 +36,7 @@ export interface ILocationModel {
     authenticateLocation?(user: IUser): Promise<boolean>;
     // @ts-ignore
     getUserByLocationAuth?(): AsyncGenerator<IUser&Document>;
+    preferredAuthProvider?: string;
 }
 
 
@@ -97,6 +98,10 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     driverOptions: {
         type: Schema.Types.Mixed,
         required: false
+    },
+    preferredAuthProvider: {
+        type: String,
+        required: false
     }
 }, {
     timestamps: true
@@ -139,7 +144,8 @@ LocationSchema.methods.getHref = LocationSchema.methods.toString = function () {
     let clone = this.toJSON();
     let auth;
     if (clone.auth) {
-        clone.auth = [].concat(clone.auth).join(' ');
+        // clone.auth = [].concat(clone.auth).join(' ');
+        delete clone.auth;
     }
     return url.format(clone);
 }
@@ -151,6 +157,8 @@ LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): 
     if (val.auth) {
         let [auth] = val.auth.split(':');
         this.auth = auth.split(' ');
+
+        delete val.auth;
     }
 
     for (let k in val) {
@@ -160,6 +168,8 @@ LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): 
             continue;
         this[<any>k] = (<any>val)[<any>k];
     }
+
+    this.href = url.format(val);
 }
 
 LocationSchema.pre(['save', 'init', 'create'] as any, function () {

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {asyncMiddleware} from "./Common";
 import {RootResolverSchema} from "../Resolvers/RootResolver";
-import {ILocation, Location} from "../Location";
+import {authenticateLocation, ILocation, Location} from "../Location";
 import {IDriverFull,IDriverOfFull} from "../Driver";
 import {IHTTPResponse} from "../Drivers/HTTPCommon";
 import Constructible from "../Constructible";
@@ -27,7 +27,7 @@ const HTTPResponseCache = new ItemCache<ILocation, SerializedHTTPResponse>('HTTP
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
     let scopeContext: IScopeContext = req.scopeContext;
 
-    let userIsAuth = await location.authenticateLocation(scopeContext.user);
+    let userIsAuth = await authenticateLocation(location, scopeContext.user);
 
     if (!userIsAuth) {
         if (scopeContext.user.username === Config.unauthorizedUserName) {
@@ -115,7 +115,6 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
 
         const location = await resolve({ href });
 
-
         if (_.isEmpty(location) || !location) {
             return true;
         }
@@ -125,6 +124,13 @@ export default function ResolverMiddleware(req: any, res: any, next: any) {
         if (!response) {
             return;
         }
+
+        // if (response.status === 401 && Config.promptUnauthenticatedToLogin) {
+        //     if (location.preferredAuthProvider) {
+        //         req.session.navigateAfterLogin = req.originalUrl;
+        //         res.redirect(`/auth/${location.preferredAuthProvider}/authorize?`)
+        //     };
+        // }
 
         res.status(response.status);
         if (response.headers) {

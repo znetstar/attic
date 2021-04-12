@@ -40,6 +40,7 @@ export interface IConfig {
     unauthorizedGroups?: string[];
     rootUsername?: string;
     rootPassword?: string;
+    promptUnauthenticatedToLogin?: boolean;
     rootGroups?: string[];
 
 

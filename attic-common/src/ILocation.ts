@@ -14,7 +14,7 @@ export default interface ILocation {
     pathname?: string;
     path?: string;
     href: string;
-    auth?: string[];
+    auth?: string[]|string;
     entity?: IEntity|string;
     driver?: string;
     search?: string;

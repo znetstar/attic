@@ -16,18 +16,8 @@ export default class Login extends Command {
     // flag with a value (-n, --name=VALUE)
     username: flags.string({
       char: 'u',
-      required: false,
-      dependsOn: [ 'password' ]
-    }),
-    password: flags.string({
-      char: 'p',
-      required: false,
-      dependsOn: [ 'username' ]
-    }),
-    refreshToken: flags.string({
-      char: 'r',
-      required: false,
-      default: Config.refreshToken
+      default: Config.username,
+      required: false
     }),
     clientId: flags.string({
       char: 'i',
@@ -60,30 +50,16 @@ export default class Login extends Command {
   async run() {
     const {argv, flags} = this.parse(Login);
 
+    debugger
     let redirectUri = Config.redirectUri ? Config.redirectUri : ( Config.serverUri );
     let tokenRequest: OAuthTokenRequest = {
-      client_id: flags.clientId,
-      client_secret: flags.clientSecret,
-      redirect_uri: redirectUri
+      client_id: flags.clientId || process.env.CLIENT_ID,
+      client_secret: flags.clientSecret || process.env.CLIENT_SECRET,
+      redirect_uri: redirectUri || process.env.REDIRECT_URI || process.env.SERVER_URI,
+      username: flags.username || process.env.USERNAME,
+      grant_type: 'client_credentials',
+      scope: flags.scope,
     } as any as OAuthTokenRequest;
-
-    if (flags.username && flags.password) {
-      tokenRequest = {
-        ...tokenRequest,
-        grant_type: 'password',
-        username: flags.username,
-        password: flags.password,
-        scope: flags.scope
-      }
-    } else if (flags.refreshToken) {
-      tokenRequest = {
-        ...tokenRequest,
-        grant_type: 'refresh_token',
-        refresh_token: flags.refreshToken
-      }
-    } else {
-      throw new Error(`Must provide refresh token or username/password`);
-    }
 
     let token = await RPCProxy.getAccessToken(tokenRequest);
 
