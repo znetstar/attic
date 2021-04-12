@@ -7,7 +7,7 @@ import config from "../Config";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "../misc";
 import * as _ from 'lodash';
 import RPCServer from "../RPC";
-import User, {IUserModel, UNAUTHROIZED_USERNAME} from "../User";
+import User, {IUserModel, UNAUTHROIZED_USERNAME, userFromRpcContext} from "../User";
 import Location from "../Location";
 import {UserSchema} from "../User";
 import {IUser} from "../User";
@@ -157,6 +157,21 @@ export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&D
 
     return existingIdentity as IIdentityEntity&Document;
 }
+
+async function getSelfIdentityEntityByAccessToken(user: string|ObjectId, accessTokenId: string|ObjectId): Promise<IIdentityEntity&Document> {
+    let accessToken = await AccessToken.findOne({
+        user: user as any,
+        accessTokenId
+    }).exec();
+    return getIdentityEntityByAccessToken(accessToken);
+}
+
+RPCServer.methods.getSelfIdentityEntityByAccessToken = async function(accessTokenId: string): Promise<IIdentityEntity> {
+    let { user } = userFromRpcContext(this);
+
+    return getSelfIdentityEntityByAccessToken(user._id, accessTokenId);
+}
+
 
 RPCServer.methods.getIdentityEntityByAccessToken = async function(accessTokenId: string): Promise<IIdentityEntity> {
     let accessToken = await AccessToken.findById(accessTokenId);

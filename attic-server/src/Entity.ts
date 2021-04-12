@@ -13,6 +13,7 @@ import * as _ from "lodash";
 
 import { HTTPResourceEntity } from './Entities';
 import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
+import {userFromRpcContext} from "./User";
 
 export interface IEntityModel {
     id: ObjectId;
@@ -95,11 +96,24 @@ RPCServer.methods.createEntity = async (fields: any) => {
     return entity.id;
 }
 
+
 RPCServer.methods.deleteEntity = async (query: any) => {
     await RPCServer.methods.deleteEntities({ limit: 1, query })
 }
 
 RPCServer.methods.deleteEntities = async (query: BasicFindQueryOptions) => {
+    let ents: Array<IEntity&Document> = (await findEntityInner(query)) as Array<IEntity&Document>;
+    for (let ent of ents) {
+        await ent.remove();
+    }
+
+}
+
+RPCServer.methods.deleteSelfEntities = async (query: BasicFindQueryOptions) => {
+    let { user } = userFromRpcContext(this);
+
+    query.query.user = user._id;
+
     let ents: Array<IEntity&Document> = (await findEntityInner(query)) as Array<IEntity&Document>;
     for (let ent of ents) {
         await ent.remove();

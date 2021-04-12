@@ -110,10 +110,11 @@ export default interface IRPC {
     createEntity(Entity: IEntity): Promise<string>;
     updateEntity(id: string, fields: any): Promise<void>
     deleteEntities(query: BasicFindQueryOptions): Promise<void>;
+    deleteSelfEntities(query: BasicFindQueryOptions): Promise<void>;
     deleteEntity(query: any): Promise<void>;
     listEntityTypes(): Promise<string[]>;
     findIdentityEntity(query: any): Promise<IEntity>;
-    getIdentityEntityRpc(query: any): Promise<IEntity>;
+    getIdentityEntity(query: any): Promise<IEntity>;
 
     getNextResolverPriority(mountPoint: IMountPoint): Promise<number>;
 
@@ -136,10 +137,11 @@ export default interface IRPC {
 
     findClients(query: BasicFindOptions): Promise<IClient[]|number>;
     findClient(query: any): Promise<IClient>;
-    createClient(Client: IClient): Promise<string>;
+    createClient(Cliengt: IClient): Promise<string>;
     updateClient(id: string, fields: any): Promise<void>
     deleteClients(query: BasicFindQueryOptions): Promise<void>;
     deleteClient(query: any): Promise<void>;
+    getSelfIdentityEntityByAccessToken(accessTokenId: string): Promise<IIdentityEntity>;
     getIdentityEntityByAccessToken(accessTokenId: string): Promise<IIdentityEntity>;
     getSelfUser(): Promise<IUser|null>;
 

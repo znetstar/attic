@@ -231,7 +231,7 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
 
     let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
     // @ts-ignore
-    // require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
+    require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
    let cur =  pipeline.cursor({ batchSize: 500 }).exec();
 
     let isDone = new Set<string>();
@@ -312,7 +312,7 @@ export async function deleteSelfAccessTokens(userId: string|ObjectId, query: any
     query = query || {};
     query.user = new ObjectId(userId);
 
-    return deleteAccessTokens(query);
+    return deleteAccessTokens(query, deleteLinked);
 }
 
 RPCServer.methods.deleteAccessTokens = async function (query: any, deleteLinked: boolean) {
