@@ -1,16 +1,17 @@
-import {Express, RequestHandler, Router} from 'express';
+import {RequestHandler, Router} from 'express';
 import config from "../Config";
-import User, {generateUsername, getAccessTokensForScope, isAuthorizedToDo, IUser, UNAUTHROIZED_USERNAME} from "../User";
+import User, {generateUsername, getAccessTokensForScope, IUser, UNAUTHROIZED_USERNAME} from "../User";
 import {Document} from "mongoose";
 import mongoose, {redis} from "../Database";
 import RPCServer from "../RPC";
-import Client, { getIdentityEntityByAccessToken, IClient} from "../Auth/Client";
+import Client, {getIdentityEntityByAccessToken, IClient} from "../Auth/Client";
 import {nanoid} from 'nanoid';
 import fetch from 'node-fetch';
 import * as URL from 'url';
 import {
     AccessToken,
-    AccessTokenSchema, checkScopePermission,
+    AccessTokenSchema,
+    checkScopePermission,
     fromFormalToken,
     IAccessToken,
     IFormalAccessToken,
@@ -22,21 +23,21 @@ import {IClientRole} from "@znetstar/attic-common/lib/IClient";
 import * as _ from 'lodash';
 import {ScopeAccessTokenPair, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
 import {
+    ClientOrProviderDoesNotHaveAccessToGroupError,
     CouldNotFindTokenForScopeError,
     CouldNotLocateStateError,
-    InvalidGrantTypeError,
-    ErrorGettingTokenFromProviderError, InvalidAccessTokenError,
+    ErrorGettingTokenFromProviderError,
+    InvalidAccessTokenError,
     InvalidClientOrProviderError,
+    InvalidGrantTypeError,
     InvalidResponseTypeError,
-    MalformattedTokenRequestError, NotAuthorizedToUseScopesError,
+    MalformattedTokenRequestError,
+    NotAuthorizedToUseScopesError,
     ProviderDoesNotAllowRegistrationError
 } from "@znetstar/attic-common/lib/Error/AccessToken";
 import {asyncMiddleware} from "./Common";
-import GenericError from "@znetstar/attic-common/lib/Error/GenericError";
-import { CouldNotLocateUserError } from '@znetstar/attic-common/lib/Error/Auth';
-import {CouldNotLocateIdentityError } from "@znetstar/attic-common/lib/Error/Auth";
+import {CouldNotLocateIdentityError, CouldNotLocateUserError} from '@znetstar/attic-common/lib/Error/Auth';
 import {OAuthTokenForm, OAuthTokenRequest} from "@znetstar/attic-common/lib/IRPC";
-import {ClientOrProviderDoesNotHaveAccessToGroupError} from "@znetstar/attic-common/lib/Error/AccessToken";
 
 export const AuthMiddleware = Router();
 
@@ -197,17 +198,26 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.authorizatio
         user: user
     })
 
-    refreshToken = new AccessToken({
-        tokenType: 'refresh_token',
-        token: nanoid(),
-        linkedToken: accessToken._id,
+    refreshToken = await AccessToken.findOne({
+        client,
+        user,
         scope: scopes,
-        client: client._id,
-        clientRole: IClientRole.consumer,
-        clientName: client.name,
-        redirectUri: client.redirectUri,
-        user: user
-    });
+        tokenType: TokenTypes.RefreshToken
+    }).exec();
+
+    if (!refreshToken) {
+        refreshToken = new AccessToken({
+            tokenType: 'refresh_token',
+            token: nanoid(),
+            linkedToken: accessToken._id,
+            scope: scopes,
+            client: client._id,
+            clientRole: IClientRole.consumer,
+            clientName: client.name,
+            redirectUri: client.redirectUri,
+            user: user
+        });
+    }
 
     accessToken.linkedToken = refreshToken._id;
     return {
@@ -355,17 +365,27 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
         user: user
     })
 
-    refreshToken = new AccessToken({
-        tokenType: 'refresh_token',
-        token: nanoid(),
-        linkedToken: accessToken._id,
+
+    refreshToken = await AccessToken.findOne({
+        client,
+        user,
         scope: scopes,
-        client: client._id,
-        clientRole: IClientRole.consumer,
-        clientName: client.name,
-        redirectUri: client.redirectUri,
-        user: user
-    });
+        tokenType: TokenTypes.RefreshToken
+    }).exec();
+
+    if (!refreshToken) {
+        refreshToken = new AccessToken({
+            tokenType: 'refresh_token',
+            token: nanoid(),
+            linkedToken: accessToken._id,
+            scope: scopes,
+            client: client._id,
+            clientRole: IClientRole.consumer,
+            clientName: client.name,
+            redirectUri: client.redirectUri,
+            user: user
+        });
+    }
 
     accessToken.linkedToken = refreshToken._id;
     return {
@@ -418,17 +438,26 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_crede
         user: user
     })
 
-    refreshToken = new AccessToken({
-        tokenType: 'refresh_token',
-        token: nanoid(),
-        linkedToken: accessToken._id,
+    refreshToken = await AccessToken.findOne({
+        client,
+        user,
         scope: scopes,
-        client: client._id,
-        clientRole: IClientRole.consumer,
-        clientName: client.name,
-        redirectUri: client.redirectUri,
-        user: user
-    });
+        tokenType: TokenTypes.RefreshToken
+    }).exec();
+
+    if (!refreshToken) {
+        refreshToken = new AccessToken({
+            tokenType: 'refresh_token',
+            token: nanoid(),
+            linkedToken: accessToken._id,
+            scope: scopes,
+            client: client._id,
+            clientRole: IClientRole.consumer,
+            clientName: client.name,
+            redirectUri: client.redirectUri,
+            user: user
+        });
+    }
 
     accessToken.linkedToken = refreshToken._id;
     return {

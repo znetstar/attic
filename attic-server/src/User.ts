@@ -434,8 +434,12 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
         },
         $set: ({
             scope: config.get('unauthorizedScopes'),
-            groups: config.unauthorizedGroups ? config.unauthorizedGroups : [ config.unauthorizedGroups ]
-        } as any)
+        } as any),
+        $addToSet: {
+            groups: {
+                $each: config.unauthorizedGroups ? config.unauthorizedGroups : [ ]
+            }
+        }
     }, { upsert: true });
 
     if (config.rootUsername && config.rootPassword) {
@@ -445,9 +449,13 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
             },
             $set: ({
                 scope: [ '.*' ],
-                password: await bcryptPassword(config.rootPassword),
-                groups: config.rootGroups ? config.rootGroups : [ config.rootUsername ]
-            } as any)
+                password: await bcryptPassword(config.rootPassword)
+            } as any),
+            $addToSet: {
+                groups: {
+                    $each: config.rootGroups ? config.rootGroups : [ config.rootUsername ]
+                }
+            }
         }, { upsert: true });
     }
 });
