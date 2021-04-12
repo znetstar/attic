@@ -115,6 +115,7 @@ export default interface IRPC {
     listEntityTypes(): Promise<string[]>;
     findIdentityEntity(query: any): Promise<IEntity>;
     getIdentityEntity(query: any): Promise<IEntity>;
+    findSelfEntities(query: string): Promise<IEntity[]>;
 
     getNextResolverPriority(mountPoint: IMountPoint): Promise<number>;
 

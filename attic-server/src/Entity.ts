@@ -90,6 +90,17 @@ RPCServer.methods.findEntities = async (query: BasicFindOptions) => {
         entities;
 }
 
+RPCServer.methods.findSelfEntities = async (query: BasicFindOptions) => {
+    let { user } = userFromRpcContext(this);
+
+    query.query.user = user._id;
+
+    let entities = await findEntityInner(query);
+    return Array.isArray(entities) ?
+        entities.map(e => e.toJSON({ virtuals: true })) :
+        entities;
+}
+
 RPCServer.methods.createEntity = async (fields: any) => {
     let entity = await Entity.create(fields);
 
