@@ -14,6 +14,7 @@ import ApplicationContext from "../ApplicationContext";
 import ItemCache from "../ItemCache";
 import { Document } from 'mongoose';
 import Config from '../Config';
+import {UnauthorizedUserDoesNotHavePermissionToAccessResourceError, UserDoesNotHavePermissionToAccessResourceError} from "@znetstar/attic-common/lib/Error/Auth";
 
 export interface SerializedHTTPResponseExt {
     headers: [string, string][]
@@ -26,13 +27,22 @@ const HTTPResponseCache = new ItemCache<ILocation, SerializedHTTPResponse>('HTTP
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
     let scopeContext: IScopeContext = req.scopeContext;
 
+    let userIsAuth = await location.authenticateLocation(scopeContext.user);
+
+    if (!userIsAuth) {
+        if (scopeContext.user.username === Config.unauthorizedUserName) {
+            throw new UnauthorizedUserDoesNotHavePermissionToAccessResourceError()
+        } else {
+            throw new UserDoesNotHavePermissionToAccessResourceError();
+        }
+    }
+
     let inLoc = _.cloneDeep({ href: location.href, auth: location.auth, headers: { 'user-agent': req.headers['user-agent'] } });
 
-    let scope = location.auth || 'rpc.getResponse';
+    let scope = 'rpc.getResponse';
     let scopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
     if (scope !== scopeContext.currentScope)
         scopePair = (await (await scopeContext.user.getAccessTokensForScope(scope)).next()).value;
-
 
     let cachedResult = await HTTPResponseCache.getObject(inLoc);
     if (cachedResult) {

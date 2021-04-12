@@ -36,6 +36,7 @@ import GenericError from "@znetstar/attic-common/lib/Error/GenericError";
 import { CouldNotLocateUserError } from '@znetstar/attic-common/lib/Error/Auth';
 import {CouldNotLocateIdentityError } from "@znetstar/attic-common/lib/Error/Auth";
 import {OAuthTokenForm, OAuthTokenRequest} from "@znetstar/attic-common/lib/IRPC";
+import {ClientOrProviderDoesNotHaveAccessToGroupError} from "@znetstar/attic-common/lib/Error/AccessToken";
 
 export const AuthMiddleware = Router();
 
@@ -373,6 +374,69 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
     }
 });
 
+ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_credentials', async function (client: IClient&Document, req: OAuthTokenRequest) {
+    let accessToken: IAccessToken&Document,
+        refreshToken: IAccessToken&Document;
+    let {
+        clientId,
+        clientSecret,
+        scope,
+        username
+    } = getAccessTokenForm(req);
+
+    if (!clientSecret || !clientId || !scope || !scope.length) {
+        throw new MalformattedTokenRequestError();
+    }
+
+    if (!client)
+        throw new InvalidClientOrProviderError();
+
+    let groups = client.scope.map((s: string) => s.match(/^group\.(.*)/)).filter(Boolean).map((g: string[]) => g[1]);
+
+    let user = await User.findOne({
+        username: username,
+        groups: {
+            $in: groups
+        }
+    }).exec();
+
+    if (!user) {
+        throw new ClientOrProviderDoesNotHaveAccessToGroupError();
+    }
+
+    let scopes = checkScopePermission([].concat(scope), client, user);
+
+
+    accessToken = new AccessToken({
+        tokenType: 'bearer',
+        token: nanoid(),
+        scope: scopes,
+        client: client._id,
+        clientRole:  IClientRole.consumer,
+        clientName: client.name,
+        redirectUri: client.redirectUri,
+        user: user
+    })
+
+    refreshToken = new AccessToken({
+        tokenType: 'refresh_token',
+        token: nanoid(),
+        linkedToken: accessToken._id,
+        scope: scopes,
+        client: client._id,
+        clientRole: IClientRole.consumer,
+        clientName: client.name,
+        redirectUri: client.redirectUri,
+        user: user
+    });
+
+    accessToken.linkedToken = refreshToken._id;
+    return {
+        accessToken,
+        refreshToken
+    }
+});
+
 
 AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ extended: true, type: 'application/x-www-form-urlencoded' }), require('body-parser').json({ type: 'application/json' }),restrictScopeMiddleware('auth.token'), asyncMiddleware(async function (req: any, res: any, next: any) {
     let form = {
@@ -391,8 +455,6 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             req.query
         ]
     });
-
-
 
     let state: string;
     let originalState: string;
@@ -591,6 +653,27 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
         let scopes = checkScopePermission((req.query.scope || '').split(' '), client, req.user);
 
+        let providerScopes: string[] = [];
+        let unauthorizedProviderScopes: string[] = [];
+
+        for (let scope of scopes) {
+            let providerScopeMatch = scope.match(new RegExp(`^${scope}\.(.*)`));
+            if (providerScopeMatch) {
+                let providerScope = providerScopeMatch[1];
+                if (!provider.scope.includes(providerScope))
+                    unauthorizedProviderScopes.push(providerScope);
+                else
+                    providerScopes.push(providerScope);
+            }
+        }
+
+        if (unauthorizedProviderScopes.length) {
+            throw new NotAuthorizedToUseScopesError(unauthorizedProviderScopes);
+        }
+
+        if (!providerScopes.length)
+            providerScopes = provider.scope;
+
         let newState = {
             client: client.id,
             provider: provider.id,
@@ -639,13 +722,15 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
         let finalUri = URL.parse(authorizeUri||provider.authorizeUri, true);
         if (!authorizeUri) {
+            let outboundScope: string[] = [];
+
             finalUri.query = {
                 ...(finalUri.query || {}),
                 client_id: provider.clientId,
                 // client_secret: provider.clientSecret,
                 redirect_uri: newState.redirectUri,
                 state: state,
-                scope: [].concat(provider.scope).join(provider.scopeJoin || config.defaultScopeJoin),
+                scope: [].concat(providerScopes).join(provider.scopeJoin || config.defaultScopeJoin),
                 response_type: 'code'
             };
 

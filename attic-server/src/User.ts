@@ -42,6 +42,7 @@ export interface IUserModel {
     getFormalAccessTokensForScope(scope: string|string[]): AsyncGenerator<ScopeFormalAccessTokenPair>;
     password?: string;
     checkPassword(password: string): Promise<boolean>;
+    groups: string[];
 }
 
 export type IUser = IUserBase&IUserModel;
@@ -66,6 +67,11 @@ export const UserSchema = <Schema<IUser>>(new (mongoose.Schema)({
     password: {
         type: String,
         required: false
+    },
+    groups: {
+        type: [String],
+        required: false,
+        default: []
     }
 }, {
     collection: 'users',
@@ -113,7 +119,15 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
     if (this.password && this.modifiedPaths().includes('password')) {
         this.password = await bcryptPassword(this.password);
     }
+
+    if (this.groups.length) {
+        for (let group of this.groups) {
+            if (!this.scopes.includes('group.'+group))
+                this.scopes.push('group.'+group);
+        }
+    }
 });
+
 
 export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|string, scope: string[]|string): AsyncGenerator<ScopeAccessTokenPair> {
     if (user instanceof ObjectId || typeof(user) === 'string')

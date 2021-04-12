@@ -29,3 +29,30 @@ export class CouldNotLocateIdentityError extends GenericError {
     }
 }
 
+export class UserDoesNotHavePermissionToAccessResourceError extends GenericError {
+    public static get code(): number {
+        return 2002;
+    }
+
+    public static get httpCode(): number {
+        return 403;
+    }
+
+    constructor(public message: string = 'User does not have permission to access this resource') {
+        super(message, CouldNotLocateIdentityError.code, CouldNotLocateIdentityError.httpCode);
+    }
+}
+
+export class UnauthorizedUserDoesNotHavePermissionToAccessResourceError extends GenericError {
+    public static get code(): number {
+        return 2003;
+    }
+
+    public static get httpCode(): number {
+        return 401;
+    }
+
+    constructor(public message: string = 'This resource cannot be accessed anonymously, try logging in') {
+        super(message, CouldNotLocateIdentityError.code, CouldNotLocateIdentityError.httpCode);
+    }
+}

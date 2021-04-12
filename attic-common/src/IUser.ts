@@ -8,6 +8,7 @@ export interface IUser {
    username: string;
    disabled?: boolean;
    password?: string;
+   groups?: string[];
 }
 
 

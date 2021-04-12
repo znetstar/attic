@@ -239,6 +239,7 @@ export async function accessTokenFromRefresh(self: IAccessToken&Document): Promi
         let formalToken: IFormalAccessToken = await tokenResp.json();
         let { accessToken, refreshToken: newRefreshToken } = await fromFormalToken(formalToken, user, client, IClientRole.provider);
         accessToken.save();
+
         if (newRefreshToken) {
             await self.remove();
             await newRefreshToken.save();

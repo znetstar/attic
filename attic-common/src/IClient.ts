@@ -24,6 +24,7 @@ export interface IClient {
     uriSubstitutions?: [string,string][];
     scopeJoin?: string
     sendStateWithRedirectUri?: boolean;
+    
 }
 
 export default IClient;
