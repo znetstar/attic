@@ -90,6 +90,8 @@ export default interface IRPC {
     updateLocation(id: string, fields: any): Promise<CreateLocationResponse>
     deleteLocations(query: BasicFindQueryOptions): Promise<void>;
     deleteLocation(query: any): Promise<void>;
+    authenticateLocation(locationId: string, userId: string): Promise<boolean>;
+    getUserByLocationAuth(locationId: string): Promise<IUser[]>;
 
     findResolvers(query: BasicFindOptions): Promise<IResolver[]|number>;
     findResolver(query: any): Promise<IResolver>;
@@ -131,7 +133,6 @@ export default interface IRPC {
     generateUsername(): Promise<string>;
     deleteAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
     deleteSelfAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
-
 
     findClients(query: BasicFindOptions): Promise<IClient[]|number>;
     findClient(query: any): Promise<IClient>;

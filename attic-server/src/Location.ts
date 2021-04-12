@@ -13,16 +13,17 @@ import * as _ from 'lodash';
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema} from "./Entity";
-import {IUser} from "./User";
-import {IAccessToken} from "./Auth/AccessToken";
+import User, {IUser} from "./User";
+import {checkScopePermission, IAccessToken} from "./Auth/AccessToken";
 import {IHttpContext} from "./Drivers/HTTPCommon";
 import ItemCache, {DocumentItemCache} from "./ItemCache";
+import {ScopeFormalAccessTokenPair} from "@znetstar/attic-common/lib/IAccessToken";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export interface ILocationModel {
     id?: ObjectId;
     _id?: ObjectId;
-    auth?: string;
+    auth?: string[];
     getHref?(): string;
     setHref?(value: string|url.UrlWithStringQuery): void;
     toString?(): string;
@@ -30,7 +31,10 @@ export interface ILocationModel {
     entity?: IEntity|ObjectId;
     httpContext?: IHttpContext;
     driverOptions?: any;
+    authenticateLocation?(user: IUser): Promise<boolean>;
+    getUserByLocationAuth?(): AsyncGenerator<IUser&Document>;
 }
+
 
 export type ILocation = ILocationModel&ILocationBase;
 export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
@@ -63,7 +67,7 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
         required: false
     },
     auth: {
-        type: String,
+        type: [String],
         required: false
     },
     entity: {
@@ -130,7 +134,10 @@ LocationSchema.methods.getDriver = function () {
 
 LocationSchema.methods.getHref = LocationSchema.methods.toString = function () {
     let clone = this.toJSON();
-    delete clone.auth;
+    let auth;
+    if (clone.auth) {
+        clone.auth = [].concat(clone.auth).join(' ');
+    }
     return url.format(clone);
 }
 
@@ -138,11 +145,15 @@ LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): 
     if (typeof(val) === 'string')
         val = url.parse(val);
 
+    if (val.auth) {
+        let [auth] = val.auth.split(':');
+        this.auth = auth.split(' ');
+    }
 
     for (let k in val) {
         if (k === 'auth' && _.isEmpty(val[k]))
             continue;
-        if (['href', 'toString', 'id', '_id'].includes((k)))
+        if (['href', 'toString', 'id', '_id', 'auth'].includes((k)))
             continue;
         this[<any>k] = (<any>val)[<any>k];
     }
@@ -160,6 +171,54 @@ LocationSchema.pre([ 'find', 'findOne' ] as any, function () {
     let self: any = this;
     // moveAndConvertValue(self, 'entity', 'entity', (x: any) => new ObjectId(x));
 });
+
+export async function authenticateLocation(location: ILocation, user: IUser): Promise<boolean> {
+    let groups = location.auth;
+
+    if (!location.auth || !location.auth.length)
+        return true;
+
+    return groups.map(g => user.groups.includes(g)).includes(true);
+}
+
+export async function* getUserByLocationAuth(location: ILocation): AsyncGenerator<IUser&Document> {
+    let cur = User.find({ groups: { $in: location.auth } }).cursor();
+
+    let doc;
+    while (doc = await cur.next()) {
+        yield doc;
+    }
+}
+
+LocationSchema.methods.authenticateLocation = async function (user: IUser) {
+    return authenticateLocation(this, user);
+}
+
+LocationSchema.methods.getUserByLocationAuth = async function* (): AsyncGenerator<IUser&Document> {
+    return getUserByLocationAuth(this);
+}
+
+RPCServer.methods.authenticateLocation = async (locationId: string, userId: string): Promise<boolean> => {
+    let [ location, user ] = await Promise.all([
+        Location.findById(locationId).exec(),
+        User.findById(userId).exec()
+    ]);
+
+    return authenticateLocation(location, user);
+}
+
+RPCServer.methods.getUserByLocationAuth = async (locationId: string): Promise<IUser[]> => {
+    let [ location ] = await Promise.all([
+        Location.findById(locationId).exec()
+    ]);
+
+    let results: IUser[] = [];
+    for await (let user of getUserByLocationAuth(location)) {
+        results.push(user.toJSON());
+    }
+
+    return results;
+}
 
 RPCServer.methods.findLocation = async (query: any) => {
     let location = await Location.findOne(query).exec();
@@ -258,6 +317,7 @@ Location.collection.createIndex({
 }, {
     expireAfterSeconds: 0
 });
+
 
 // export const ResolverCache = new DocumentItemCache<ILocation, ILocation, Model<any>>(Location);
 export const ResolverCache = new ItemCache<ILocation, ILocation>('Location');

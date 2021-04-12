@@ -170,3 +170,18 @@ export class AccessTokenNotFoundError extends GenericError {
     }
 
 }
+
+export class ClientOrProviderDoesNotHaveAccessToGroupError extends GenericError {
+    public static get code(): number {
+        return 1011;
+    }
+
+    public static get httpCode(): number {
+        return 403;
+    }
+
+    constructor(public message: string = 'The client or provider given does not have access to the group requested') {
+        super(message, InvalidAccessTokenError.code, InvalidAccessTokenError.httpCode);
+    }
+
+}
