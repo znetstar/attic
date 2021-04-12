@@ -240,8 +240,8 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
             continue;
         if (!doc || !doc.scopeMatch) {
             yield [doc.scopeQuery, null];
-        } else if (!isDone.has(doc.scopeQuery)) {
-            isDone.add(doc.scopeQuery);
+        } else if (!isDone.has(JSON.stringify([doc.scopeQuery, doc.client]))) {
+            isDone.add(JSON.stringify([doc.scopeQuery, doc.client]));
             if (doc.tokenType === TokenTypes.RefreshToken) {
                 let child = await AccessTokenSchema.methods.accessTokenFromRefresh.call(doc);
                 yield [doc.scopeQuery, child];
