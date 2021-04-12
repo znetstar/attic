@@ -122,8 +122,8 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
 
     if (this.groups.length) {
         for (let group of this.groups) {
-            if (!this.scopes.includes('group.'+group))
-                this.scopes.push('group.'+group);
+            if (!this.scope.includes('group.'+group))
+                this.scope.push('group.'+group);
         }
     }
 });
@@ -231,7 +231,7 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
 
     let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
     // @ts-ignore
-    require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
+    // require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
    let cur =  pipeline.cursor({ batchSize: 500 }).exec();
 
     let isDone = new Set<string>();
@@ -433,18 +433,20 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
             username: UNAUTHROIZED_USERNAME,
         },
         $set: ({
-            scope: config.get('unauthorizedScopes')
+            scope: config.get('unauthorizedScopes'),
+            groups: config.unauthorizedGroups ? config.unauthorizedGroups : [ config.unauthorizedGroups ]
         } as any)
     }, { upsert: true });
 
     if (config.rootUsername && config.rootPassword) {
         await User.updateOne({ username: config.rootUsername }, {
             $setOnInsert: {
-                username: config.rootUsername,
+                username: config.rootUsername
             },
             $set: ({
                 scope: [ '.*' ],
-                password: await bcryptPassword(config.rootPassword)
+                password: await bcryptPassword(config.rootPassword),
+                groups: config.rootGroups ? config.rootGroups : [ config.rootUsername ]
             } as any)
         }, { upsert: true });
     }

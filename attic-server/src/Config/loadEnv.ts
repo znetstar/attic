@@ -49,8 +49,10 @@
         'SERVICE_CLEINT_ID',
         'SERVICE_CLIENT_SECRET',
         'UNAUTHROIZED_USERNAME',
+        'UNAUTHORIZED_GROUPS',
         'ROOT_USERNAME',
         'ROOT_PASSWORD',
+        'ROOT_GROUPS',
         'LOG_LEVEL',
         'PLUGINS'
     ];

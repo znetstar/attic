@@ -13,12 +13,13 @@ import * as _ from 'lodash';
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema} from "./Entity";
-import User, {IUser} from "./User";
 import {checkScopePermission, IAccessToken} from "./Auth/AccessToken";
 import {IHttpContext} from "./Drivers/HTTPCommon";
 import ItemCache, {DocumentItemCache} from "./ItemCache";
 import {ScopeFormalAccessTokenPair} from "@znetstar/attic-common/lib/IAccessToken";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
+
+type IUser = any;
 
 export interface ILocationModel {
     id?: ObjectId;
@@ -31,7 +32,9 @@ export interface ILocationModel {
     entity?: IEntity|ObjectId;
     httpContext?: IHttpContext;
     driverOptions?: any;
+    // @ts-ignore
     authenticateLocation?(user: IUser): Promise<boolean>;
+    // @ts-ignore
     getUserByLocationAuth?(): AsyncGenerator<IUser&Document>;
 }
 
@@ -172,6 +175,8 @@ LocationSchema.pre([ 'find', 'findOne' ] as any, function () {
     // moveAndConvertValue(self, 'entity', 'entity', (x: any) => new ObjectId(x));
 });
 
+
+// @ts-ignore
 export async function authenticateLocation(location: ILocation, user: IUser): Promise<boolean> {
     let groups = location.auth;
 
@@ -181,7 +186,10 @@ export async function authenticateLocation(location: ILocation, user: IUser): Pr
     return groups.map(g => user.groups.includes(g)).includes(true);
 }
 
+// @ts-ignore
 export async function* getUserByLocationAuth(location: ILocation): AsyncGenerator<IUser&Document> {
+
+    // @ts-ignore
     let cur = User.find({ groups: { $in: location.auth } }).cursor();
 
     let doc;
@@ -201,6 +209,8 @@ LocationSchema.methods.getUserByLocationAuth = async function* (): AsyncGenerato
 RPCServer.methods.authenticateLocation = async (locationId: string, userId: string): Promise<boolean> => {
     let [ location, user ] = await Promise.all([
         Location.findById(locationId).exec(),
+
+        // @ts-ignore
         User.findById(userId).exec()
     ]);
 

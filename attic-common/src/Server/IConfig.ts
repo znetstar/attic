@@ -37,8 +37,10 @@ export interface IConfig {
     serviceClientSecret?: string;
     serviceClientName?: string;
     unauthorizedUserName?: string;
+    unauthorizedGroups?: string[];
     rootUsername?: string;
     rootPassword?: string;
+    rootGroups?: string[];
 
 
     /**
