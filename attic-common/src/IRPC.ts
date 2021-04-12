@@ -78,6 +78,7 @@ export interface IHTTPResponse {
     method: string;
 }
 
+export type FindEntitiesResult = IEntity[]|number;
 
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
@@ -104,9 +105,9 @@ export default interface IRPC {
 
     // zoom.meeting:read
 
-    findEntities(query: BasicFindOptions): Promise<IEntity[]|number>;
+    findEntities(query: BasicFindOptions): Promise<FindEntitiesResult>;
     findEntity(query: any): Promise<IEntity>;
-    searchEntities(query: BasicTextSearchOptions): Promise<IEntity[]|number>;
+    searchEntities(query: BasicTextSearchOptions): Promise<FindEntitiesResult>;
     createEntity(Entity: IEntity): Promise<string>;
     updateEntity(id: string, fields: any): Promise<void>
     deleteEntities(query: BasicFindQueryOptions): Promise<void>;
@@ -115,7 +116,7 @@ export default interface IRPC {
     listEntityTypes(): Promise<string[]>;
     findIdentityEntity(query: any): Promise<IEntity>;
     getIdentityEntity(query: any): Promise<IEntity>;
-    findSelfEntities(query: string): Promise<IEntity[]>;
+    findSelfEntities(query: BasicFindOptions): Promise<FindEntitiesResult>;
 
     getNextResolverPriority(mountPoint: IMountPoint): Promise<number>;
 

@@ -14,6 +14,7 @@ import * as _ from "lodash";
 import { HTTPResourceEntity } from './Entities';
 import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {userFromRpcContext} from "./User";
+import {FindEntitiesResult} from "@znetstar/attic-common/lib/IRPC";
 
 export interface IEntityModel {
     id: ObjectId;
@@ -90,7 +91,7 @@ RPCServer.methods.findEntities = async (query: BasicFindOptions) => {
         entities;
 }
 
-RPCServer.methods.findSelfEntities = async (query: BasicFindOptions) => {
+RPCServer.methods.findSelfEntities = async (query: BasicFindOptions): Promise<FindEntitiesResult> => {
     let { user } = userFromRpcContext(this);
 
     query.query.user = user._id;
