@@ -502,7 +502,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
     let stateKey = stateKeyBase+state;
 
     if (
-        req.query.code
+        req.    query.code
     ) {
         let existingState: any = req.query.state && await redis.hgetall(stateKey);
 
