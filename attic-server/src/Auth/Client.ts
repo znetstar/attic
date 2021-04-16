@@ -161,11 +161,7 @@ export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&D
 async function getSelfIdentityEntityByAccessToken(user: string|ObjectId, accessTokenId: string|ObjectId): Promise<IIdentityEntity&Document> {
     let accessToken = await AccessToken.findOne({
         user: user as any,
-<<<<<<< HEAD
         token: accessTokenId as any,
-=======
-        token: accessTokenId as any
->>>>>>> 1694e5992b1ab466a84b1fb15779f397530bc508
     }).exec();
     return getIdentityEntityByAccessToken(accessToken);
 }
