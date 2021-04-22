@@ -238,9 +238,6 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
         grantType,
         code
     } = getAccessTokenForm(form);
-    if (grantType.includes("password")) {
-        grantType = "password";
-    }
 
     let grantEvent = `Web.AuthMiddleware.getAccessToken.grantTypes.${grantType || ''}`;
 
