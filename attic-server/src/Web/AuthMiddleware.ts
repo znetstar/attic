@@ -238,6 +238,9 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
         grantType,
         code
     } = getAccessTokenForm(form);
+    if (grantType.includes("password")) {
+        grantType = "password";
+    }
 
     let grantEvent = `Web.AuthMiddleware.getAccessToken.grantTypes.${grantType || ''}`;
 
@@ -502,7 +505,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
     let stateKey = stateKeyBase+state;
 
     if (
-        req.    query.code
+        req.query.code
     ) {
         let existingState: any = req.query.state && await redis.hgetall(stateKey);
 

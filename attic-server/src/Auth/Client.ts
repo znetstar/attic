@@ -126,12 +126,14 @@ export async function getIdentityEntityByAccessToken(accessToken: IAccessToken&D
         ]
     });
     let identity = await ApplicationContext.triggerHookSingle<IIdentityEntityBase|null>(`Client.getIdentityEntity.${accessToken.clientName}.${accessToken.clientRole}`, accessToken);
+    if (!identity) {
+        return null;
+    }
 
     delete identity.id;
     delete identity._id;
 
     identity.clientName = accessToken.clientName;
-
     let existingIdentity = await IdentityEntity.findOne({
         externalId: identity.externalId,
         type: identity.type

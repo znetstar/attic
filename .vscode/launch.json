@@ -5,8 +5,9 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "pwa-node",
+            "type": "node",
             "request": "launch",
+            "runtimeExecutable": "node",
             "name": "Launch Program",
             "skipFiles": [
                 "<node_internals>/**"
@@ -17,9 +18,9 @@
             ],
             "env": {
                 "LOG_LEVEL": "silly",
-                "SITE_URI":"https://yin-etomon.zb.gy",
+                "EMAIL_HOSTNAME":"social.etomon.com",
+                "SITE_URI":"https://yin-attic.zb.gy",
                 "MONGO_URI":"mongodb://localhost:27017/etomon-attic",
-                "":"ht/auth/wechat/authorize",
             }
         }
     ]

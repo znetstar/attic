@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.2.6",
+    "version": "3.2.7",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -50,7 +50,7 @@
         "grunt-jsdoc": "^2.4.1",
         "grunt-ts": "^6.0.0-beta.22",
         "grunt-typedoc": "^0.2.4",
-        "ts-node": "^9.0.0",
+        "ts-node": "^9.1.1",
         "typedoc": "^0.18.0",
         "typescript": "^3.9.9"
     },

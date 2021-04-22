@@ -68,5 +68,6 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     logLevel: LogLevels.info,
     autoLogEvents: true,
     logErrors: true,
-    logListening: true
+    logListening: true,
+    emailHostname: "social.etomon.com"
 };
