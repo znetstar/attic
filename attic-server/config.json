@@ -1,0 +1,13 @@
+{
+    "plugins": [
+      "@etomon/attic-server-etomon-app",
+      "@etomon/attic-server-zoom",
+      "@etomon/attic-server-wechat",
+      "@etomon/attic-server-google"
+    ],
+    "port": 7373,
+    "host": "0.0.0.0",
+    "siteUri": "https://social.etomon.com",
+    "serviceClientId":  "etomon-service",
+    "serviceClientSecret": "a3dea1cf-8411-48ae-89cf-359a18fe2ece"
+  }

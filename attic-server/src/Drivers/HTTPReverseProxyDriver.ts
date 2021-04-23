@@ -30,7 +30,7 @@ export default class HTTPReverseProxyDriver extends HTTPDriverBase implements ID
             res,
             scopeContext: req.scopeContext
         });
-
+        //@ts-ignore
         for (let [key,value] of headers) {
             proxyReq.setHeader(key, value);
         }
