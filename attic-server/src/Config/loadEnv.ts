@@ -30,6 +30,7 @@
         'PORT',
         'HOST',
         'UNIX_SOCKET',
+        'EMAIL_HOSTNAME',
         'ENABLE_CACHE',
         'CACHE_SIZE',
         'CACHE_MAX',
