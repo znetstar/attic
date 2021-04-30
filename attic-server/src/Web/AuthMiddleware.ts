@@ -582,7 +582,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
                 if (provider.role.includes(IClientRole.registration)) {
                     user = new User({
-                        username: generateUsername(),
+                        username: identity.email || generateUsername(),
                         scope: [
                             ...config.get('unauthorizedScopes').slice(0)
                         ],
