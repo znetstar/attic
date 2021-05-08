@@ -16,7 +16,6 @@ import {
     AccessTokenNotFoundError
 } from "@znetstar/attic-common/lib/Error/AccessToken";
 import RPCServer from "../RPC";
-import {UserHasBeenDisabledError} from "../../../attic-common/src/Error/Auth";
 
 export {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 

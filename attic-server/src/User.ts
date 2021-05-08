@@ -24,7 +24,7 @@ import {IHTTPResponse} from "./Drivers/HTTPCommon";
 import {ILocation} from "./Location";
 import {getHttpResponse} from "./Web/ResolverMiddleware";
 import Entity from "./Entity";
-import {UserHasBeenDisabledError} from "../../attic-common/src/Error/Auth";
+import {UserHasBeenDisabledError} from "@znetstar/attic-common/lib/Error/Auth";
 
 const Sentencer = require('sentencer');
 
