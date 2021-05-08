@@ -7,7 +7,7 @@ import RPCServer from "./RPC";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import {Chance} from 'chance';
 import * as _ from 'lodash';
-import {IIdentityEntityModel} from "./Entities/IdentityEntity";
+import IdentityEntity, {IIdentityEntityModel} from "./Entities/IdentityEntity";
 import ApplicationContext from "./ApplicationContext";
 import AccessToken, {AccessTokenSchema, IAccessToken, IScopeContext, toFormalToken} from "./Auth/AccessToken";
 import {AccessTokenSet, FormalAccessTokenSet, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
@@ -23,6 +23,8 @@ import {CouldNotLocateUserError} from "@znetstar/attic-common/lib/Error/Auth";
 import {IHTTPResponse} from "./Drivers/HTTPCommon";
 import {ILocation} from "./Location";
 import {getHttpResponse} from "./Web/ResolverMiddleware";
+import Entity from "./Entity";
+import {UserHasBeenDisabledError} from "../../attic-common/src/Error/Auth";
 
 const Sentencer = require('sentencer');
 
@@ -128,14 +130,24 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
     }
 });
 
+UserSchema.pre<IUser&Document>([ 'delete', 'remove' ] as any, async function ()  {
+  await Promise.all([
+    IdentityEntity.deleteMany({ user: this._id })
+  ]);
+});
+
 
 export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|string, scope: string[]|string): AsyncGenerator<ScopeAccessTokenPair> {
     if (user instanceof ObjectId || typeof(user) === 'string')
         user = await User.findById(user).exec();
 
     if (!user) throw new CouldNotLocateUserError();
+    else if (user.disabled) {
+      throw new UserHasBeenDisabledError();
+    }
 
-    let nonImplicitScopes: string[] = [];
+
+  let nonImplicitScopes: string[] = [];
     scope = [].concat(scope);
     let testScope: string;
     let doneScopes = new Set();

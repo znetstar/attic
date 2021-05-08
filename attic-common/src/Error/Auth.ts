@@ -56,3 +56,17 @@ export class UnauthorizedUserDoesNotHavePermissionToAccessResourceError extends 
         super(message, CouldNotLocateIdentityError.code, CouldNotLocateIdentityError.httpCode);
     }
 }
+
+export class UserHasBeenDisabledError extends GenericError {
+  public static get code(): number {
+    return 2004;
+  }
+
+  public static get httpCode(): number {
+    return 403;
+  }
+
+  constructor(public message: string = 'Cannot perform this operation because the user has been disabled') {
+    super(message, UserHasBeenDisabledError.code, UserHasBeenDisabledError.httpCode);
+  }
+}
