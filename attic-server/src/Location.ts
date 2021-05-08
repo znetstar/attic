@@ -254,6 +254,7 @@ export async function findLocationInner(query: BasicFindOptions) {
     if (query.sort) locationsQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) locationsQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) locationsQuery.limit(query.limit);
+if (query.populate) locationsQuery.populate(query.populate);
     let locations = await locationsQuery.exec();
     return locations;
 }
@@ -317,6 +318,7 @@ RPCServer.methods.searchLocations = async (query:  BasicTextSearchOptions) => {
     }
     if (!Number.isNaN(Number(query.skip))) locationsQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) locationsQuery.limit(query.limit);
+if (query.populate) locationsQuery.populate(query.populate);
     let locations = await locationsQuery.exec();
     return locations.map(l => l.toJSON({ virtuals: true }));
 }

@@ -80,6 +80,7 @@ export async function findEntityInner(query: BasicFindOptions) {
     if (query.sort) entityQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) entityQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) entityQuery.limit(query.limit);
+if (query.populate) entityQuery.populate(query.populate);
     let entities = await entityQuery.exec();
     return entities;
 }
@@ -156,6 +157,7 @@ RPCServer.methods.searchEntities = async (query:  BasicTextSearchOptions) => {
     }
     if (!Number.isNaN(Number(query.skip))) entityQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) entityQuery.limit(query.limit);
+if (query.populate) entityQuery.populate(query.populate);
     let ents = await entityQuery.exec();
     return ents.map(e => e.toJSON({ virtuals: true }));
 }

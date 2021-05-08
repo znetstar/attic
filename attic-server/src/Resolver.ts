@@ -164,6 +164,7 @@ export async function findResolverInner(query: BasicFindOptions) {
     if (query.sort) resolversQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) resolversQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) resolversQuery.limit(query.limit);
+if (query.populate) resolversQuery.populate(query.populate);
     let resolvers = await resolversQuery.exec();
     return resolvers;
 }
@@ -216,6 +217,7 @@ RPCServer.methods.searchResolvers = async (query:  BasicTextSearchOptions) => {
     }
     if (!Number.isNaN(Number(query.skip))) resolverQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) resolverQuery.limit(query.limit);
+if (query.populate) resolverQuery.populate(query.populate);
     let resolvers = await resolverQuery.exec();
     return resolvers.map(l => l.toJSON({ virtuals: true }));
 }

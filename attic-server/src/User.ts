@@ -130,7 +130,7 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
     }
 });
 
-UserSchema.pre<IUser&Document>([ 'delete', 'remove' ] as any, async function ()  {
+UserSchema.pre<IUser&Document>([ 'deleteOne', 'remove' ] as any, async function ()  {
   await Promise.all([
     IdentityEntity.deleteMany({ user: this._id }),
     AccessToken.deleteMany({ user: this._id })
@@ -380,6 +380,7 @@ export async function findUserInner(query: BasicFindOptions) {
     if (query.sort) usersQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) usersQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) usersQuery.limit(query.limit);
+    if (query.populate) usersQuery.populate(query.populate);
     let users = await usersQuery.exec();
     return users;
 }
@@ -432,6 +433,7 @@ RPCServer.methods.searchUsers = async (query:  BasicTextSearchOptions) => {
     }
     if (!Number.isNaN(Number(query.skip))) usersQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) usersQuery.limit(query.limit);
+if (query.populate) usersQuery.populate(query.populate);
     let users = await usersQuery.exec();
     return users.map(l => l.toJSON({ virtuals: true }));
 }

@@ -26,6 +26,7 @@ export interface BasicFindQueryOptions {
     limit?: number;
     query?: any;
     sort?: any;
+    populate?: string|string[];
 }
 
 export interface BasicFindQueryOptionAdditions {

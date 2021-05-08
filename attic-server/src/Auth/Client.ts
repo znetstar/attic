@@ -83,6 +83,7 @@ export async function findClientInner(query: BasicFindOptions) {
     if (query.sort) clientsQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) clientsQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) clientsQuery.limit(query.limit);
+if (query.populate) clientsQuery.populate(query.populate);
     let clients = await clientsQuery.exec();
     return clients;
 }
@@ -198,6 +199,7 @@ RPCServer.methods.getIdentityEntityByAccessToken = async function(accessTokenId:
 //     }
 //     if (!Number.isNaN(Number(query.skip))) clientsQuery.skip(query.skip);
 //     if (!Number.isNaN(Number(query.limit))) clientsQuery.limit(query.limit);
+if (query.populate) clientsQuery.populate(query.populate);
 //     let clients = await clientsQuery.exec();
 //     return clients.map(l => l.toJSON({ virtuals: true }));
 // }
