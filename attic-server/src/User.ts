@@ -132,7 +132,8 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
 
 UserSchema.pre<IUser&Document>([ 'delete', 'remove' ] as any, async function ()  {
   await Promise.all([
-    IdentityEntity.deleteMany({ user: this._id })
+    IdentityEntity.deleteMany({ user: this._id }),
+    AccessToken.deleteMany({ user: this._id })
   ]);
 });
 
