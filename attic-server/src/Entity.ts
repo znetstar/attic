@@ -77,6 +77,7 @@ export async function findEntityInner(query: BasicFindOptions) {
         const count = await entityQuery.count().exec();
         return count;
     }
+
     if (query.sort) entityQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) entityQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) entityQuery.limit(query.limit);

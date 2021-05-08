@@ -13,6 +13,7 @@ export interface BasicTextSearchQueryOptions {
     skip?: number;
     limit?: number;
     terms: string;
+    populate?: string|string[];
 }
 
 export interface BasicTextSearchQueryOptionAdditions {

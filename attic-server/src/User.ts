@@ -380,7 +380,7 @@ export async function findUserInner(query: BasicFindOptions) {
     if (query.sort) usersQuery.sort(query.sort);
     if (!Number.isNaN(Number(query.skip))) usersQuery.skip(query.skip);
     if (!Number.isNaN(Number(query.limit))) usersQuery.limit(query.limit);
-    if (query.populate) usersQuery.populate(query.populate);
+if (query.populate) usersQuery.populate(query.populate);
     let users = await usersQuery.exec();
     return users;
 }
