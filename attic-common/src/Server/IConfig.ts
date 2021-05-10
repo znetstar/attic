@@ -8,6 +8,11 @@ export enum LogLevels {
     error = 'error'
 }
 
+export enum ExpressSessionDrivers {
+  mongo = 'mongo',
+  redis = 'redis'
+}
+
 export type PluginPath = [ string, string ]|string;
 
 export interface IConfig {
@@ -108,6 +113,7 @@ export interface IConfig {
      * Defult key size for the express session string
      */
     expressSessionSecretSize?: number;
+    expressSessionDriver?: ExpressSessionDrivers;
 
     /**
      * List of drivers available
@@ -128,6 +134,7 @@ export interface IConfig {
     logErrors?: boolean;
     logListening?: boolean;
     cacheNon200HTTPResponses?: boolean;
+
 }
 
 export default IConfig;
