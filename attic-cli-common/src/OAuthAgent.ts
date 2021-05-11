@@ -1,6 +1,6 @@
 import {OAuthTokenRequest} from "@znetstar/attic-common/lib/IRPC";
 import {IRPC} from "@znetstar/attic-common";
-import {Client, HTTPClientTransport, JSONSerializer} from "multi-rpc";
+import {Client, HTTPClientTransport, JSONSerializer,RPCError} from "multi-rpc";
 import Config from "./Config/Config";
 import {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 import {InvalidGrantTypeError} from "@znetstar/attic-common/lib/Error/AccessToken";
@@ -72,16 +72,6 @@ export interface RawRPCError {
 };
 
 
-export class RPCError extends Error {
-  constructor(errorObj: any) {
-    super();
-
-    this.message = errorObj.message;
-    if (errorObj.data && errorObj.data.message) {
-      this.message += "\n"+'Inner Error: '+errorObj.data.stack;
-    }
-  }
-}
 
 export interface AuthorizationCodeRequest  {
   grant_type: 'authorization_code';
@@ -209,20 +199,27 @@ export class OAuthAgent {
   public static ensureError(rawError: any, httpCode?: number): OAuthRequestError {
     if (rawError.ensured)
       return rawError;
-    let errorCode = rawError?.error?.data?.code;
+
+    if (rawError?.error)
+      rawError = rawError.error;
+
+    let errorCode = rawError?.data?.code;
     let err: OAuthRequestError;
+    let message = rawError.message || 'Unexpected Error';
+    httpCode = rawError.status || rawError.httpCode || httpCode;
     if (typeof(errorCode) !== 'undefined') {
       err = new (errors.get(errorCode) as any)(rawError.error.data);
-    } else if (rawError.status) {
-      err = new GenericError(rawError.message, 0, rawError.status, rawError);
-      (err as any).httpCode = rawError.status;
+    } else if (rawError.status || rawError.httpCode) {
+      err = new GenericError(rawError.message, 0, httpCode, rawError);
+      (err as any).httpCode = httpCode;
       (err as any).code = 0;
-    } else if (rawError.error) {
-      httpCode = (rawError.error as any).httpCode || httpCode || 500;
-      err = new RPCError(rawError.error as any) as OAuthRPCError;
-      err.httpCode = httpCode;
+    }
+    else if (rawError.code) {
+      httpCode = (rawError as any).httpCode || httpCode || 500;
+      (rawError as any).httpCode = httpCode;
+      err = rawError.data || rawError;
     } else {
-      err = { httpCode: 500, ...rawError } as IError;
+      err = { httpCode, message, ...rawError } as IError;
     }
 
     err.ensured = true;
@@ -341,14 +338,19 @@ export class OAuthAgent {
 
     }
   }
-
+  public createRPCProxy(options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: AuthorizationCodeRequest, options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: ClientCredentialsRequest, options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: PasswordRequest, options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: RefreshTokenRequest, options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult;
-  public createRPCProxy(request: AuthorizationCodeRequest|ClientCredentialsRequest|PasswordRequest|RefreshTokenRequest|PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult {
-    let oauthTokenRequest: OAuthTokenRequest = { ...request, ...this.client };
+  public createRPCProxy(request?: RPCProxyOptions|AuthorizationCodeRequest|ClientCredentialsRequest|PasswordRequest|RefreshTokenRequest|PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult {
+    let oauthTokenRequest: OAuthTokenRequest;
+    if (!options && (request as RPCProxyOptions)?.headers || (request as RPCProxyOptions)?.transport) {
+      options = request as RPCProxyOptions;
+    }
+    else if (request)
+      oauthTokenRequest = { ...(request as PartialOAuthTokenRequest), ...this.client };
 
     let serializer = new JSONSerializer();
     let headers = options?.headers || new Map<string, string>();
