@@ -3,21 +3,21 @@ import {Mongoose, Schema, Document, Model} from 'mongoose';
 import mongoose, {redis} from './Database';
 import config from "./Config";
 import ApplicationContext from "./ApplicationContext";
-import { EncodeToolsNative } from '@etomon/encode-tools';
+import { EncodeTools } from '@etomon/encode-tools';
 import * as ObjectHash  from 'object-hash';
 import * as msgpack from '@msgpack/msgpack';
 import {BinaryEncoding, HashAlgorithm, IDFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
-import {EncodingOptions} from "@etomon/encode-tools/lib/EncodeToolsNative";
+import {EncodingOptions} from "@etomon/encode-tools/lib/EncodeTools";
 
 const ItemCacheEncoderOptions: EncodingOptions = {
   binaryEncoding: BinaryEncoding.base64,
-  hashAlgorithm: HashAlgorithm.xxhash3,
+  hashAlgorithm: HashAlgorithm.xxhash64,
   serializationFormat: SerializationFormat.msgpack,
   uniqueIdFormat: IDFormat.uuidv4String
 };
 
 export class ItemCache<I, T> {
-    protected encoder = new EncodeToolsNative(ItemCacheEncoderOptions);
+    protected encoder = new EncodeTools(ItemCacheEncoderOptions);
 
     constructor(protected groupName: string, protected cacheExpireIn: number = config.cacheExpireIn) {
 
