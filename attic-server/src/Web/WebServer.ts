@@ -13,10 +13,12 @@ import ApplicationContext, {ListenStatus} from "../ApplicationContext";
 import {Application} from "typedoc";
 import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
+import * as ws from 'ws';
 import * as _ from 'lodash';
 import {
     RPCError
 } from 'multi-rpc';
+import {initDocumentSync} from "./DocumentSyncMiddleware";
 
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
 
@@ -128,13 +130,41 @@ export let WebRouter: Router;
 
 export let WebHTTPServer: HTTPServer;
 export let WebExpress: any;
+export let WebSocketServer: ws.Server;
+export let WebSocketPaths = new Map<string, ws.Server>([
+  [ '/sync', WebSocketServer ]
+]);
 
 export async function loadWebServer() {
     await ApplicationContext.emitAsync('launch.loadWebServer.start');
     WebExpress = express();
-    WebHTTPServer = new HTTPServer(WebExpress);
-    WebRouter = express.Router();
 
+    WebSocketServer = new ws.Server({ noServer: true });
+
+    WebHTTPServer = new HTTPServer(WebExpress);
+    WebHTTPServer.on('upgrade', function (request: any, socket: any, head: any) {
+      (async () => {
+        await new Promise((resolve, reject) => {
+          restrictScopeMiddleware(`sync.connect`)(request, {} as any, (err: any) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+        const pathname = require('url').parse(request.url).pathname;
+        let server = WebSocketPaths.get(pathname)
+        if (server) {
+          server.handleUpgrade(request, socket, head, function (ws) {
+            server.emit('connection', ws, request);
+          });
+        } else {
+          socket.destroy();
+        }
+      })().catch(() => {
+        socket.destroy();
+      });
+    });
+
+    WebRouter = express.Router();
 
     WebExpress.use(SessionMiddleware);
     WebExpress.use(AuthMiddleware);
@@ -155,9 +185,10 @@ export async function loadWebServer() {
         handleError(error, req, res);
     });
 
-    await ApplicationContext.emitAsync('launch.loadWebServer.start');
+    await ApplicationContext.emitAsync('launch.loadWebServer.complete');
 }
 
+ApplicationContext.once('launch.loadWebServer.complete', () => initDocumentSync());
 
 export async function webServerListen() {
     await ApplicationContext.emitAsync('Web.webServerListen.start');

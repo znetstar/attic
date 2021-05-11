@@ -5,7 +5,6 @@ import * as path from 'path';
 import Config from "../Config";
 import * as cookieParser from "cookie-parser";
 import {redis, default as mongoose} from "../Database";
-import {ExpressSessionDrivers} from "@znetstar/attic-common/lib/Server/IConfig";
 
 const MongoStore = require('connect-mongo');
 export const RedisStore = require('connect-redis')(session)
@@ -20,7 +19,8 @@ if (!Config.expressSessionSecret) {
     }
 }
 
-export const ExpressSessionStore = Config.expressSessionDriver === ExpressSessionDrivers.redis ? new RedisStore({ client: redis }) : MongoStore.create({ client: mongoose.connection });
+export const ExpressSessionStore = new RedisStore({ client: redis });
+  // Config.expressSessionDriver === ExpressSessionDrivers.redis ?// : MongoStore.create({ client: mongoose.connection });
 
 export const SessionMiddleware = session({
     cookie: {

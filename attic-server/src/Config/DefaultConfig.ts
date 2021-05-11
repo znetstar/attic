@@ -19,8 +19,6 @@
  */
 import Config, {LogLevels} from './Config';
 import * as os from 'os';
-import {ExpressSessionDrivers} from "@znetstar/attic-common/lib/Server/IConfig";
-
 export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     puppeteerOptions: { headless: true },
     plugins: [
@@ -31,7 +29,6 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     redisUri: 'redis://localhost:6379/0',
     port: 7373,
     host: '127.0.0.1',
-    expressSessionDriver: ExpressSessionDrivers.redis,
     promptUnauthenticatedToLogin: true,
     hostname: os.hostname(),
     authorizeGracePeriod: 5*60e3,

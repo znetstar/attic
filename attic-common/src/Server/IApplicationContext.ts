@@ -29,6 +29,8 @@ export interface IApplicationContext {
     plugins: Map<string, IPlugin>;
     mongoose: unknown;
     package: unknown;
+    webSocketServer: unknown;
+    webSocketPaths: Map<string, unknown>;
     triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>>;
     triggerHookSingle<T>(method: string, ...params: any[]): Promise<T|unknown>;
     registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void;
