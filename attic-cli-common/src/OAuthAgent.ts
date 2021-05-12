@@ -1,4 +1,4 @@
-import {OAuthTokenRequest} from "@znetstar/attic-common/lib/IRPC";
+import {OAuthTokenRequest as OAuthTokenRequestBase} from "@znetstar/attic-common/lib/IRPC";
 import {IRPC} from "@znetstar/attic-common";
 import {Client, HTTPClientTransport, JSONSerializer,RPCError} from "multi-rpc";
 import Config from "./Config/Config";
@@ -8,6 +8,11 @@ import {GenericError, IError} from "@znetstar/attic-common/lib/Error";
 import {LevelUp} from 'levelup';
 import fetch from 'cross-fetch';
 
+/**
+ * Full OAuth request (this is the stuff that goes into `fetch` usually).
+ */
+type OAuthTokenRequest = OAuthTokenRequestBase;
+
 import {
   BinaryEncoding,
   EncodeTools,
@@ -16,19 +21,28 @@ import {
   SerializationFormat
 } from '@etomon/encode-tools/lib/EncodeTools';
 
-
+/**
+ * Client infomation from OAuth
+ */
 export interface ClientDetails {
   client_id: string;
   client_secret: string;
   redirect_uri: string;
 }
 
+/**
+ * Options for the RPC Proxy
+ */
 export interface RPCProxyOptions {
   headers: Map<string, string>|[string,string][];
   transport: HTTPClientTransport;
   accessToken?: IFormalAccessToken;
 }
 
+/**
+ * Everything in the `OAuthTokenRequest` except for the client stuff (`ClientDetails`).
+ * This is so you don't have to include the client stuff with every request
+ */
 export interface PartialOAuthTokenRequest {
   grant_type: string;
   state?: string;
@@ -39,6 +53,9 @@ export interface PartialOAuthTokenRequest {
   scope?: string|string[];
 }
 
+/**
+ * Fields specifically for getting an access token from a refresh token
+ */
 export interface RefreshTokenRequest {
   grant_type: 'refresh_token';
   state?: string;
@@ -46,13 +63,22 @@ export interface RefreshTokenRequest {
   scope?: string|string[];
 }
 
+/**
+ * Fields specifically for getting an access token from client credentials
+ */
 export interface ClientCredentialsRequest {
   grant_type: 'client_credentials';
   state?: string;
+  /**
+   * Username of the user you'd like to login as
+   */
   username: string;
   scope?: string|string[];
 }
 
+/**
+ * Fields specifically for getting an access token from username/password
+ */
 export interface PasswordRequest {
   grant_type: 'password';
   state?: string;
@@ -61,6 +87,9 @@ export interface PasswordRequest {
   scope?: string|string[];
 }
 
+/**
+ * Raw RPC Error from multi-rpc
+ */
 export interface RawRPCError {
   message:  string;
   stack?: string;
@@ -72,8 +101,9 @@ export interface RawRPCError {
   }
 };
 
-
-
+/**
+ * Fields specifically for getting an access token from an authorization code (like WeChat or Google)
+ */
 export interface AuthorizationCodeRequest  {
   grant_type: 'authorization_code';
   state?: string;
@@ -82,15 +112,26 @@ export interface AuthorizationCodeRequest  {
 }
 
 export type UsedAccessToken = IFormalAccessToken&{
+  /**
+   * Is true when the access token has been used more than once
+   */
   used?: boolean;
 }
 
-
 export interface RPCProxyResult {
+  /**
+   * RPC Client from Multi-RPC
+   */
   RPCClient: Client,
+  /**
+   * The full RPC Proxy
+   */
   RPCProxy: IRPC
 }
 
+/**
+ * The standard grant types
+ */
 enum GrantTypeList {
   clientCredentials= 'client_credentials',
   password = 'password',
@@ -100,13 +141,41 @@ enum GrantTypeList {
 
 export type GrantType = (GrantTypeList|string);
 
+/**
+ * Options for the RPC Invoke function
+ */
 export interface RPCInvokeOptions {
+  /**
+   * RPC Method to Call
+   */
   method: string,
+  /**
+   * Args
+   */
   args: unknown[],
+  /**
+   * not used
+   * @deprecated
+   */
   noLoop?: boolean;
+  /**
+   * The Multi-RPC Client
+   */
   RPCClient: Client;
+  /**
+   * HTTP Headers to be used with each request
+   */
   headers: Map<string, string>;
+  /**
+   * The OAuth token request
+   */
   request?: OAuthTokenRequest
+  /**
+   * Grants that are allowed to be used when attempting to get a new token.
+   *
+   * The grants will be attempted in sequence, so `allowedGrants[0]` will be the first grant attempted
+   * if the token has expired.
+   */
   allowedGrants?: GrantType[];
 }
 
@@ -120,12 +189,26 @@ let errorsObj = require('@znetstar/attic-common/lib/Error');
 for (let k in errorsObj) {
   errors.set(errorsObj[k].code, errorsObj[k]);
 }
-
-export const DEFAULT_ALLOWED_GRANTS = [ GrantTypeList.refreshToken, GrantTypeList.password, GrantTypeList.authorizationCode ];
+/**
+ * The full RPC Proxy
+ */
+export const DEFAULT_ALLOWED_GRANTS: GrantType[] = [ GrantTypeList.refreshToken, GrantTypeList.password, GrantTypeList.authorizationCode ];
 
 export type OAuthRequestError = (OAuthRPCError|IError)&{ ensured?: boolean };
 
+/**
+ * A tool to manage Attic OAuth tokens, and provides
+ * an easy to use interface for attic
+ */
 export class OAuthAgent {
+  /**
+   *
+   * @param serverUri URI to the attic server
+   * @param client The OAuth `ClientDetails`
+   * @param cache Accepts a `levelup` instance to use as a cache for access tokens. If not provided will refresh every time
+   * @param allowedGrants Grants that will be attempted to be used if the token has expired
+   * @param encoder An `EncodeTools` instance for encoding/decoding tokens and generating hashes
+   */
   constructor(public serverUri: string, public client: ClientDetails, public cache?: LevelUp,  public allowedGrants: GrantType[] = DEFAULT_ALLOWED_GRANTS, protected encoder: EncodeTools = new EncodeTools({
     binaryEncoding: BinaryEncoding.nodeBuffer,
     hashAlgorithm: HashAlgorithm.xxhash64,
@@ -135,10 +218,17 @@ export class OAuthAgent {
     this.cache = this.cache || OAuthAgent.createDefaultCache();
   }
 
+  /**
+   * Returns the default cache that will be used, which is `memdown` (memory only)
+   */
   public static createDefaultCache(): LevelUp {
     return require('levelup')(require('memdown')());
   }
 
+  /**
+   * Generates the hash used to uniquely identify each refresh token
+   * @param request - Stuff that would be needed to get an access token
+   */
   public async makeAccessTokenKey(request: OAuthTokenRequest):Promise<Buffer> {
     let key = {
       refresh_token: request.refresh_token,
@@ -150,6 +240,10 @@ export class OAuthAgent {
     return (await this.encoder.hashObject(key));
   }
 
+  /**
+   * Retrieves an access token from the cache or `null` if non are found
+   * @param request
+   */
   public async getAccessToken(request: OAuthTokenRequest): Promise<UsedAccessToken|null> {
     if (!this.cache)
       return null;
@@ -168,6 +262,11 @@ export class OAuthAgent {
     }
   }
 
+  /**
+   * Adds an access token to the cache
+   * @param request
+   * @param token
+   */
   public async setAccessToken(request: OAuthTokenRequest, token: UsedAccessToken): Promise<void> {
     if (!this.cache)
       return;
@@ -181,6 +280,10 @@ export class OAuthAgent {
     }
   }
 
+  /**
+   * Deletes an access token from the cache
+   * @param request
+   */
   public async deleteAccessToken(request: OAuthTokenRequest): Promise<void> {
     if (!this.cache)
       return;
@@ -192,7 +295,10 @@ export class OAuthAgent {
       throw err;
     }
   }
-
+  /**
+   * Gets an access token given the full OAuth request (what would normally go into `fetch`).
+   * @param request - Full OAuth request (this is the stuff that goes into `fetch` usually).
+   */
   public static fromConfig(config: Config): OAuthAgent {
     return new OAuthAgent(config.serverUri, {
       client_id: config.clientId,
@@ -200,7 +306,12 @@ export class OAuthAgent {
       redirect_uri: config.redirectUri
     });
   }
-
+  /**
+   * Deals with the different types of errors that may be thrown (e.g., `fetch` error or `multi-rpc` `RPCError`)
+   * returning an object with a consistent interface.
+   * @param rawError The raw error provided
+   * @param httpCode An HTTP Code that will be used if none can be detected
+   */
   public static ensureError(rawError: any, httpCode?: number): OAuthRequestError {
     if (rawError.ensured)
       return rawError;
@@ -234,10 +345,22 @@ export class OAuthAgent {
     return err;
   }
 
+  /**
+   * Given a `PartialOAuthTokenRequest` (`OAuthTokenRequest` without the `ClientDetails)
+   * ensures that a valid token is available by pulling an existing token from the cache,
+   * or refreshing by using the information in the request.
+   * @param $request
+   * @param forceNewToken Don't pull from cache
+   */
   public async ensureTokenFromPartialRequest($request: PartialOAuthTokenRequest, forceNewToken: boolean = false): Promise<UsedAccessToken> {
     return this.ensureToken(this.makeFullRequest($request), forceNewToken);
   }
-
+  /**
+   * Given a `OAuthTokenRequest` ensures that a valid token is available by pulling an existing token from the cache,
+   * or refreshing by using the information in the request.
+   * @param $request
+   * @param forceNewToken Don't pull from cache
+   */
   public async ensureToken($request: OAuthTokenRequest, forceNewToken: boolean = false): Promise<UsedAccessToken> {
     let request = { ...$request };
     let accessToken = !forceNewToken ? await this.getAccessToken(request) : null;
@@ -321,6 +444,18 @@ export class OAuthAgent {
     return accessToken;
   }
 
+  /**
+   * Invokes the RPC method with the token derived from the `OAuthTokenRequest`
+   * will throw an error with the `httpCode` set to `401` if no token can be obtained.
+   * @param RPCClient
+   * @param allowedGrants
+   * @param args
+   * @param method
+   * @param headers
+   * @param request
+   * @param accessToken Provide an existing access token inline. Is useful when you don't need refreshing/caching
+   * @param force Force a token refresh if possible (no cache)
+   */
   public async rpcInvoke<T>({ RPCClient, allowedGrants, args, method, headers, request }: RPCInvokeOptions, accessToken?: UsedAccessToken, force?: boolean): Promise<T> {
     if (!request && !accessToken) {
         try {
@@ -356,16 +491,50 @@ export class OAuthAgent {
     }
   }
 
+  /**
+   * Returns a full `OAuthTokenRequest` given a `PartialOAuthTokenRequest` by adding the `ClientDetails` from `this.client`
+   * @param request
+   */
   public makeFullRequest(request: PartialOAuthTokenRequest): OAuthTokenRequest {
      return { ...(request), ...this.client };
   }
 
+  /**
+   * Returns an anonymous `RPCProxy` to interface with the Attic RPC API
+   * This proxy will have no login info, so calling methods that require
+   * authentication will trigger a `401` or a `403`.
+   * @param options
+   */
   public createRPCProxy(options?: RPCProxyOptions): RPCProxyResult;
+  /**
+   * Returns a `RPCProxy` to interface with the Attic RPC API
+   * @param options
+   */
   public createRPCProxy(request: AuthorizationCodeRequest, options?: RPCProxyOptions): RPCProxyResult;
+  /**
+   * Returns a `RPCProxy` to interface with the Attic RPC API
+   * @param options
+   */
   public createRPCProxy(request: ClientCredentialsRequest, options?: RPCProxyOptions): RPCProxyResult;
+  /**
+   * Returns a `RPCProxy` to interface with the Attic RPC API
+   * @param options
+   */
   public createRPCProxy(request: PasswordRequest, options?: RPCProxyOptions): RPCProxyResult;
+  /**
+   * Returns a `RPCProxy` to interface with the Attic RPC API
+   * @param options
+   */
   public createRPCProxy(request: RefreshTokenRequest, options?: RPCProxyOptions): RPCProxyResult;
+  /**
+   * Returns a `RPCProxy` to interface with the Attic RPC API
+   * @param options
+   */
   public createRPCProxy(request: PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult;
+  /**
+   * Returns a `RPCProxy` to interface with the Attic RPC API
+   * @param options
+   */
   public createRPCProxy(request?: RPCProxyOptions|AuthorizationCodeRequest|ClientCredentialsRequest|PasswordRequest|RefreshTokenRequest|PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult {
     let oauthTokenRequest: OAuthTokenRequest;
     if (!options && (request as RPCProxyOptions)?.headers || (request as RPCProxyOptions)?.accessToken || (request as RPCProxyOptions)?.transport) {
