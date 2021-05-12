@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli-common",
-    "version": "3.1.7",
+    "version": "3.1.9",
     "description": "",
     "main": "lib/index.js",
     "contributors": [
@@ -24,13 +24,9 @@
         "prepare": "grunt",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "peerDependencies": {
-        "@znetstar/attic-common": "^3"
-    },
     "devDependencies": {
         "@types/levelup": "^4.3.1",
         "@types/memdown": "^3.0.0",
-        "@znetstar/attic-common": "^3.4.0",
         "docdash": "^1.2.0",
         "grunt": "^1.2.1",
         "grunt-contrib-clean": "^2.0.0",
@@ -49,6 +45,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
+        "@znetstar/attic-common": "^3.4.0",
         "@etomon/encode-tools": "^1.1.1",
         "@types/cliff": "^0.1.5",
         "@types/fs-extra": "^9.0.1",
