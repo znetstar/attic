@@ -4,7 +4,7 @@ import {Client, HTTPClientTransport, JSONSerializer,RPCError} from "multi-rpc";
 import Config from "./Config/Config";
 import {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 import {InvalidGrantTypeError} from "@znetstar/attic-common/lib/Error/AccessToken";
-import {GenericError, IError} from "@znetstar/attic-common/lib/Error";
+import {GenericError, IError} from "@znetstar/attic-common/lib/Error/index";
 import {LevelUp} from 'levelup';
 import fetch from 'cross-fetch';
 
