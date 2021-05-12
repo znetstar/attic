@@ -24,8 +24,9 @@ export interface ClientDetails {
 }
 
 export interface RPCProxyOptions {
-  headers: Map<string, string>;
+  headers: Map<string, string>|[string,string][];
   transport: HTTPClientTransport;
+  accessToken?: IFormalAccessToken;
 }
 
 export interface PartialOAuthTokenRequest {
@@ -80,6 +81,10 @@ export interface AuthorizationCodeRequest  {
   scope?: string|string[];
 }
 
+export type UsedAccessToken = IFormalAccessToken&{
+  used?: boolean;
+}
+
 
 export interface RPCProxyResult {
   RPCClient: Client,
@@ -124,7 +129,7 @@ export class OAuthAgent {
   constructor(public serverUri: string, public client: ClientDetails, public cache?: LevelUp,  public allowedGrants: GrantType[] = DEFAULT_ALLOWED_GRANTS, protected encoder: EncodeTools = new EncodeTools({
     binaryEncoding: BinaryEncoding.nodeBuffer,
     hashAlgorithm: HashAlgorithm.xxhash64,
-    serializationFormat: SerializationFormat.msgpack,
+    serializationFormat: SerializationFormat.json,
     uniqueIdFormat: IDFormat.uuidv4String
   })) {
     this.cache = this.cache || OAuthAgent.createDefaultCache();
@@ -145,14 +150,14 @@ export class OAuthAgent {
     return (await this.encoder.hashObject(key));
   }
 
-  public async getAccessToken(request: OAuthTokenRequest): Promise<IFormalAccessToken|null> {
+  public async getAccessToken(request: OAuthTokenRequest): Promise<UsedAccessToken|null> {
     if (!this.cache)
       return null;
 
     let key = await this.makeAccessTokenKey(request);
     try {
       let cachedObjectRaw = await this.cache.get(key);
-      let cachedObject = this.encoder.deserializeObject<IFormalAccessToken>(cachedObjectRaw);
+      let cachedObject = this.encoder.deserializeObject<UsedAccessToken>(cachedObjectRaw);
       return cachedObject;
     }  catch (err) {
       if (err.notFound) {
@@ -163,7 +168,7 @@ export class OAuthAgent {
     }
   }
 
-  public async setAccessToken(request: OAuthTokenRequest, token: IFormalAccessToken): Promise<void> {
+  public async setAccessToken(request: OAuthTokenRequest, token: UsedAccessToken): Promise<void> {
     if (!this.cache)
       return;
 
@@ -208,8 +213,10 @@ export class OAuthAgent {
     let message = rawError.message || 'Unexpected Error';
     httpCode = rawError.status || rawError.httpCode || httpCode;
     if (typeof(errorCode) !== 'undefined') {
-      err = new (errors.get(errorCode) as any)(rawError.error.data);
-    } else if (rawError.status || rawError.httpCode) {
+      let Err = errors.get(errorCode) as any;
+      if (Err) err = new (Err)(rawError.data);
+      else err = void(0);
+    } else if (rawError.  status || rawError.httpCode) {
       err = new GenericError(rawError.message, 0, httpCode, rawError);
       (err as any).httpCode = httpCode;
       (err as any).code = 0;
@@ -218,17 +225,22 @@ export class OAuthAgent {
       httpCode = (rawError as any).httpCode || httpCode || 500;
       (rawError as any).httpCode = httpCode;
       err = rawError.data || rawError;
-    } else {
-      err = { httpCode, message, ...rawError } as IError;
     }
+
+    if (!err) err = { httpCode, message, ...rawError } as IError;
+
 
     err.ensured = true;
     return err;
   }
 
-  public async ensureToken($request: OAuthTokenRequest, forceNewToken: boolean = false): Promise<IFormalAccessToken> {
+  public async ensureTokenFromPartialRequest($request: PartialOAuthTokenRequest, forceNewToken: boolean = false): Promise<UsedAccessToken> {
+    return this.ensureToken(this.makeFullRequest($request), forceNewToken);
+  }
+
+  public async ensureToken($request: OAuthTokenRequest, forceNewToken: boolean = false): Promise<UsedAccessToken> {
     let request = { ...$request };
-    let accessToken = await this.getAccessToken(request);
+    let accessToken = !forceNewToken ? await this.getAccessToken(request) : null;
     // If we have a token already just return it
     if (!forceNewToken && accessToken?.access_token)
       return accessToken;
@@ -303,32 +315,37 @@ export class OAuthAgent {
       throw OAuthAgent.ensureError(err, 500);
     }
 
-    accessToken = body as IFormalAccessToken;
+    accessToken = body as UsedAccessToken;
+    accessToken.used = true;
     await this.setAccessToken(request, accessToken);
     return accessToken;
   }
 
-  public async rpcInvoke<T>({ RPCClient, allowedGrants, args, method, headers, request }: RPCInvokeOptions, accessToken?: IFormalAccessToken): Promise<T> {
-    if (!request) {
-      try {
-        return await RPCClient.invoke(method, args as any[]) as T;
-      } catch (err) {
-        throw OAuthAgent.ensureError(err);
+  public async rpcInvoke<T>({ RPCClient, allowedGrants, args, method, headers, request }: RPCInvokeOptions, accessToken?: UsedAccessToken, force?: boolean): Promise<T> {
+    if (!request && !accessToken) {
+        try {
+          return await RPCClient.invoke(method, args as any[]) as T;
+        } catch (err) {
+          throw OAuthAgent.ensureError(err);
+        }
       }
-    }
 
     let retryAuthOn = [ 401, 400 ];
+    let notUsed: boolean = false;
     try {
-      accessToken = await this.ensureToken(request);
+      accessToken = (accessToken && !accessToken.used) ? accessToken : await this.ensureToken(request, force || accessToken?.used);
+      notUsed = !accessToken?.used;
+      accessToken.used = true;
       headers.set(`Authorization`, `Bearer ${accessToken.access_token}`);
+
       return await RPCClient.invoke(method, args as any[]) as T;
     } catch ($err) {
       let err =  OAuthAgent.ensureError($err) as OAuthRequestError;
-      if (retryAuthOn.includes(err?.httpCode)) {
+      if (request && retryAuthOn.includes(err?.httpCode)) {
         if (allowedGrants.length) {
-          request.grant_type = allowedGrants.shift();
+          request.grant_type = notUsed ? allowedGrants[0] : allowedGrants.shift();
 
-          return this.rpcInvoke({headers, allowedGrants, method, args, RPCClient, request}, accessToken)
+          return this.rpcInvoke({headers, allowedGrants, method, args, RPCClient, request}, accessToken, true);
         } else {
           await this.deleteAccessToken(request);
         }
@@ -338,6 +355,11 @@ export class OAuthAgent {
 
     }
   }
+
+  public makeFullRequest(request: PartialOAuthTokenRequest): OAuthTokenRequest {
+     return { ...(request), ...this.client };
+  }
+
   public createRPCProxy(options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: AuthorizationCodeRequest, options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request: ClientCredentialsRequest, options?: RPCProxyOptions): RPCProxyResult;
@@ -346,30 +368,36 @@ export class OAuthAgent {
   public createRPCProxy(request: PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult;
   public createRPCProxy(request?: RPCProxyOptions|AuthorizationCodeRequest|ClientCredentialsRequest|PasswordRequest|RefreshTokenRequest|PartialOAuthTokenRequest, options?: RPCProxyOptions): RPCProxyResult {
     let oauthTokenRequest: OAuthTokenRequest;
-    if (!options && (request as RPCProxyOptions)?.headers || (request as RPCProxyOptions)?.transport) {
+    if (!options && (request as RPCProxyOptions)?.headers || (request as RPCProxyOptions)?.accessToken || (request as RPCProxyOptions)?.transport) {
       options = request as RPCProxyOptions;
+      request = void(0);
     }
     else if (request)
-      oauthTokenRequest = { ...(request as PartialOAuthTokenRequest), ...this.client };
+      oauthTokenRequest = this.makeFullRequest(request as PartialOAuthTokenRequest);
 
     let serializer = new JSONSerializer();
-    let headers = options?.headers || new Map<string, string>();
-    let httpTransport = options?.transport || new HTTPClientTransport(serializer, this.serverUri+'/rpc', headers);
+    let headers = (options?.headers && ((options?.headers instanceof Map) ? options?.headers : new Map<string,string>(Array.from(options?.headers)))) || new Map<string, string>();
+
+    let httpTransport = options?.transport || new HTTPClientTransport(serializer, this.serverUri+'/rpc', headers as Map<string,string>);
 
     let self = this;
+
+    if (headers && !(headers instanceof Map)) {
+      headers = new Map<string,string>(Array.from(headers));
+    }
 
     const RPCClient = <Client>(new Client(httpTransport));
     const RPCProxy = new Proxy(<IRPC>{}, {
       get: function (target, property: string) {
         return async function<T> (...args: any[]) {
           return self.rpcInvoke({
-            headers,
+            headers: headers as Map<string,string>,
             request: oauthTokenRequest,
             RPCClient: RPCClient,
             method: property,
             args: args,
             allowedGrants: self.allowedGrants.slice(0)
-          })
+          }, options?.accessToken)
         }
       },
       set: () => false,
