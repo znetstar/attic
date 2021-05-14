@@ -376,12 +376,12 @@ export class OAuthAgent {
       }
 
       // If we have a refresh token let's use that
-      if (!request.refresh_token) {
+      if (request.refresh_token) {
         request.grant_type = 'refresh_token';
         request.refresh_token = accessToken?.refresh_token;
       }
       // If we have the username and password, we'll go with that
-      else if (!request.username && request.password) {
+      else if (request.username && request.password) {
         request.grant_type = 'password';
       }
       // If we have client credentials, let's use that
