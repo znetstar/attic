@@ -580,13 +580,13 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
                 user = identity.user as IUser&Document;
             }
             else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
-                if (provider.role.includes(IClientRole.registration)) {
-                    user = new User({
-                        username: identity.email || generateUsername(),
-                        scope: [
-                            ...config.get('unauthorizedScopes').slice(0)
-                        ],
-                    });
+                  if (provider.role.includes(IClientRole.registration)) {
+                      user = new User({
+                          username: identity.email || generateUsername(),
+                          scope: [
+                              ...config.get('unauthorizedScopes').slice(0)
+                          ],
+                      });
                 } else {
                     throw new ProviderDoesNotAllowRegistrationError();
                 }

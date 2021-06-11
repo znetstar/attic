@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli-common",
-    "version": "3.1.9",
+    "version": "3.1.32",
     "description": "",
     "main": "lib/index.js",
     "contributors": [
@@ -45,7 +45,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@znetstar/attic-common": "^3.4.0",
+        "@znetstar/attic-common": "^3.4.3",
         "@etomon/encode-tools": "^1.1.1",
         "@types/cliff": "^0.1.5",
         "@types/fs-extra": "^9.0.1",

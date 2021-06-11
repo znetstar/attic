@@ -4,7 +4,7 @@ import {Client, HTTPClientTransport, JSONSerializer,RPCError} from "multi-rpc";
 import Config from "./Config/Config";
 import {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 import {InvalidGrantTypeError} from "@znetstar/attic-common/lib/Error/AccessToken";
-import {GenericError, IError} from "@znetstar/attic-common/lib/Error";
+import {GenericError, IError} from "@znetstar/attic-common/lib/Error/index";
 import {LevelUp} from 'levelup';
 import fetch from 'cross-fetch';
 
@@ -368,6 +368,7 @@ export class OAuthAgent {
     if (!forceNewToken && accessToken?.access_token)
       return accessToken;
 
+
     // If a grant type is set, we don't need to do anything special
     if (!request?.grant_type) {
       if (!request) request = {
@@ -376,12 +377,12 @@ export class OAuthAgent {
       }
 
       // If we have a refresh token let's use that
-      if (!request.refresh_token) {
+      if (request.refresh_token) {
         request.grant_type = 'refresh_token';
         request.refresh_token = accessToken?.refresh_token;
       }
       // If we have the username and password, we'll go with that
-      else if (!request.username && request.password) {
+      else if (request.username && request.password) {
         request.grant_type = 'password';
       }
       // If we have client credentials, let's use that
@@ -456,7 +457,8 @@ export class OAuthAgent {
    * @param accessToken Provide an existing access token inline. Is useful when you don't need refreshing/caching
    * @param force Force a token refresh if possible (no cache)
    */
-  public async rpcInvoke<T>({ RPCClient, allowedGrants, args, method, headers, request }: RPCInvokeOptions, accessToken?: UsedAccessToken, force?: boolean): Promise<T> {
+  public async rpcInvoke<T>(opts: RPCInvokeOptions, accessToken?: UsedAccessToken, force?: boolean): Promise<T> {
+    let { RPCClient, allowedGrants, args, method, headers, request } = opts;
     if (!request && !accessToken) {
         try {
           return await RPCClient.invoke(method, args as any[]) as T;
@@ -541,7 +543,7 @@ export class OAuthAgent {
       options = request as RPCProxyOptions;
       request = void(0);
     }
-    else if (request)
+    else if (request && Object.keys(request).length)
       oauthTokenRequest = this.makeFullRequest(request as PartialOAuthTokenRequest);
 
     let serializer = new JSONSerializer();
