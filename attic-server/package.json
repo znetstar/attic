@@ -18,7 +18,7 @@
         "attic-server": "bin/attic-server"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test": "true",
         "start": "tsnode src/launch",
         "preapre": "npm run build",
         "build": "grunt"
