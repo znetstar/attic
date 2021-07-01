@@ -38,6 +38,7 @@ export interface IConfig {
     defaultScopeJoin?: string;
     expireRefreshTokenIn?: number;
     updateIdentityUponTokenRefresh?: boolean;
+
     serviceClientId?: string;
     serviceClientSecret?: string;
     serviceClientName?: string;
