@@ -23,7 +23,6 @@ export interface IApplicationHookEmitter {
   triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>>;
   triggerHookSingle<T>(method: string, ...params: any[]): Promise<T|unknown>;
   registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void;
-  loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void>;
 }
 
 export type IApplicationContext = IApplicationHookEmitter&{
@@ -38,5 +37,5 @@ export type IApplicationContext = IApplicationHookEmitter&{
     package: unknown;
     webSocketServer: unknown;
     webSocketPaths: Map<string, unknown>;
-
+    loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void>;
 }
