@@ -26,7 +26,7 @@ export class ItemCache<I, T> {
     public get cacheEnabled() { return config.enableCache }
 
     public async serialize(item: T): Promise<Buffer> {
-        return this.encoder.serializeObject<T>(item) as Buffer;
+        return this.encoder.serializeObject<T>(item) as unknown as Buffer;
     }
     public async deserialize(item: Buffer): Promise<T> {
         return this.encoder.deserializeObject<T>(item) as T;
@@ -35,7 +35,7 @@ export class ItemCache<I, T> {
     public async getCacheKey(itemRef: I): Promise<string> {
         // @ts-ignore
         if (itemRef.toJSON) itemRef = itemRef.toJSON();
-        return [this.groupName, await this.encoder.hashObject(itemRef)].join('.');
+        return [this.groupName, (await this.encoder.hashObject(itemRef)).toString('base64')].join('.');
     }
 
     public async getObject(ref: I): Promise<T|null> {

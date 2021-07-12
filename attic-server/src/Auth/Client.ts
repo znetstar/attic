@@ -217,7 +217,7 @@ Client.collection.createIndex({
 
 export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
-ApplicationContext.once('loadModels.complete', async () => {
+ApplicationContext.once('launch.loadModels.complete', async () => {
     if (config.serviceClientId && config.serviceClientSecret) {
         await Client.updateOne({clientId: config.serviceClientId }, {
             $setOnInsert: {

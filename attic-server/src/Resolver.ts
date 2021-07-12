@@ -107,7 +107,7 @@ ResolverSchema.pre(([ 'find', 'findOne' ] as  any),  function () {
 ResolverSchema.pre('init', function () {
     let self: any = this;
 
-    self.mountPoint = ensureMountPoint(self.mountPoint);
+    try { self.mountPoint = ensureMountPoint(self.mountPoint); } catch (err) {}
     self.isRootResolver = self.type === 'RootResolver';
 });
 
@@ -257,15 +257,19 @@ export async function rootResolverResolve(location: ILocation): Promise<ILocatio
         .exec());
 
     // Loop through each resolver
-    let resolver: IResolver&Document;
-    while (resolver = await resolvers.next()) {
+    let rawResolver: IResolver&Document;
+    while (rawResolver = await resolvers.next()) {
         // Attempt to resolve the location
         let outLocation: ILocation&Document;
-        if (resolver.isRootResolver) {
+        if (rawResolver.isRootResolver) {
+            const resolver = Resolver.hydrate(rawResolver);
             outLocation = await ResolverSchema.methods.resolve.call(resolver, location);
         }
         else {
-            outLocation = (await resolver.resolve(location)) as ILocation&Document;
+            const TResolver = mongoose.models[rawResolver.type];
+            const resolver = Resolver.hydrate(rawResolver);
+
+          outLocation = await (TResolver as any).schema.methods.resolve.call(resolver, location) as ILocation&Document;
         }
 
         if (outLocation) {
@@ -326,8 +330,8 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         // @ts-ignore
         if (result && result.toJSON) { result = result.toJSON({ virtuals: true }); }
 
-        if (result) {
-            await ResolverCache.setObject(location, result);
+        if (result && ( typeof(location.cacheExpireIn) === 'undefined' || location.cacheExpireIn > 0 )) {
+            await ResolverCache.setObject(location, result, location.cacheExpireIn);
         }
     }
 
