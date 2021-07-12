@@ -102,6 +102,11 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
     preferredAuthProvider: {
         type: String,
         required: false
+    },
+    cacheExpireIn: {
+       type: Number,
+      required: false,
+      validate: (x: number) => x >= 0
     }
 }, {
     timestamps: true
