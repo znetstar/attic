@@ -14,6 +14,7 @@ import {IMountPoint} from "@znetstar/attic-common/lib/IResolver";
 import Config from "./Config";
 import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import ApplicationContext from "./ApplicationContext";
+import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 
 export interface IResolverModel {
     id: ObjectId;
@@ -222,6 +223,7 @@ if (query.populate) resolverQuery.populate(query.populate);
     return resolvers.map(l => l.toJSON({ virtuals: true }));
 }
 
+
 export async function rootResolverResolve(location: ILocation): Promise<ILocation&Document> {
     // First find a resolver
     let match = <any>{
@@ -267,6 +269,15 @@ export async function rootResolverResolve(location: ILocation): Promise<ILocatio
         }
         else {
             const TResolver = mongoose.models[rawResolver.type];
+
+            if (!TResolver) {
+              throw new GenericError(
+                `Unknown Resolver of type ${rawResolver.type}`,
+                0,
+                500
+              );
+            }
+
             const resolver = Resolver.hydrate(rawResolver);
 
           outLocation = await (TResolver as any).schema.methods.resolve.call(resolver, location) as ILocation&Document;
@@ -291,9 +302,6 @@ export async function resolve(location: ILocation|string, options: ResolveOption
     let result: ILocation;
     let { id, noCache } = options;
 
-    // @ts-ignore
-    if (location && location.populate) { await location.populate('entity').execPopulate(); }
-
     ApplicationContext.logs.silly({
         method: 'Resolver.resolve.start',
         params: [
@@ -307,8 +315,14 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         location = <ILocation>{ href: location };
     }
 
+    let cacheKey: ILocation = _.cloneDeep(location);
+
+
+    // @ts-ignore
+    if (location && location.populate) { await location.populate('entity').execPopulate(); }
+
     if (!noCache) {
-        result = await ResolverCache.getObject(location);
+        result = await ResolverCache.getObject(cacheKey);
     }
 
     if (!result) {
@@ -331,7 +345,7 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         if (result && result.toJSON) { result = result.toJSON({ virtuals: true }); }
 
         if (result && ( typeof(location.cacheExpireIn) === 'undefined' || location.cacheExpireIn > 0 )) {
-            await ResolverCache.setObject(location, result, location.cacheExpireIn);
+            await ResolverCache.setObject(cacheKey, result, location.cacheExpireIn);
         }
     }
 
