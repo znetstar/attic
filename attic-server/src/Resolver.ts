@@ -14,6 +14,7 @@ import {IMountPoint} from "@znetstar/attic-common/lib/IResolver";
 import Config from "./Config";
 import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import ApplicationContext from "./ApplicationContext";
+import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 
 export interface IResolverModel {
     id: ObjectId;
@@ -222,6 +223,7 @@ if (query.populate) resolverQuery.populate(query.populate);
     return resolvers.map(l => l.toJSON({ virtuals: true }));
 }
 
+
 export async function rootResolverResolve(location: ILocation): Promise<ILocation&Document> {
     // First find a resolver
     let match = <any>{
@@ -267,6 +269,15 @@ export async function rootResolverResolve(location: ILocation): Promise<ILocatio
         }
         else {
             const TResolver = mongoose.models[rawResolver.type];
+
+            if (!TResolver) {
+              throw new GenericError(
+                `Unknown Resolver of type ${rawResolver.type}`,
+                0,
+                500
+              );
+            }
+
             const resolver = Resolver.hydrate(rawResolver);
 
           outLocation = await (TResolver as any).schema.methods.resolve.call(resolver, location) as ILocation&Document;
