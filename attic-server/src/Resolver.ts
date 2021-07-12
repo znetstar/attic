@@ -291,9 +291,6 @@ export async function resolve(location: ILocation|string, options: ResolveOption
     let result: ILocation;
     let { id, noCache } = options;
 
-    // @ts-ignore
-    if (location && location.populate) { await location.populate('entity').execPopulate(); }
-
     ApplicationContext.logs.silly({
         method: 'Resolver.resolve.start',
         params: [
@@ -307,8 +304,14 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         location = <ILocation>{ href: location };
     }
 
+    let cacheKey: ILocation = _.cloneDeep(location);
+
+
+    // @ts-ignore
+    if (location && location.populate) { await location.populate('entity').execPopulate(); }
+
     if (!noCache) {
-        result = await ResolverCache.getObject(location);
+        result = await ResolverCache.getObject(cacheKey);
     }
 
     if (!result) {
@@ -331,7 +334,7 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         if (result && result.toJSON) { result = result.toJSON({ virtuals: true }); }
 
         if (result && ( typeof(location.cacheExpireIn) === 'undefined' || location.cacheExpireIn > 0 )) {
-            await ResolverCache.setObject(location, result, location.cacheExpireIn);
+            await ResolverCache.setObject(cacheKey, result, location.cacheExpireIn);
         }
     }
 
