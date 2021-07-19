@@ -241,7 +241,7 @@ export async function accessTokenFromRefresh(self: IAccessToken&Document): Promi
         accessToken.save();
 
         if (newRefreshToken) {
-            await self.remove();
+            self.remove && await self.remove();
             await newRefreshToken.save();
         }
 
