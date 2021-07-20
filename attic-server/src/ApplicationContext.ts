@@ -87,7 +87,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
             return;
 
         let delta = { method: args[0], params: args.slice(1) };
-        this.logger.debug(delta);
+        this.logger.silly(delta);
     }
 
     onLog = (log: any) => {

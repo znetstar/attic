@@ -248,8 +248,8 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
     let client = await Client.findOne({
         clientId,
         clientSecret,
-        redirectUri,
-        role: 'consumer'
+        role: { $in: [ 'consumer' ] },
+      redirectUri
     }).exec();
 
 
