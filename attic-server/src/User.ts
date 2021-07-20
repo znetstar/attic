@@ -243,9 +243,7 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
     });
 
     let doc: IAccessToken&Document&{ scopeQuery: string, scopeMatch: boolean };
-    // @ts-ignore
-    require('fs').writeFileSync('/tmp/x.json', JSON.stringify(pipeline._pipeline, null ,4))
-   let cur =  pipeline.cursor({ batchSize: 500 }).exec();
+    let cur =  pipeline.cursor({ batchSize: 500 }).exec();
 
     let isDone = new Set<string>();
     while (doc = await cur.next()) {

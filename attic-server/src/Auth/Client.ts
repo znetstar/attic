@@ -208,12 +208,12 @@ RPCServer.methods.getIdentityEntityByAccessToken = async function(accessTokenId:
 const Client = mongoose.model<IClient&Document>('Client', ClientSchema);
 export default Client;
 
-Client.collection.createIndex({
-    name: 1,
-    role: 1
-}, {
-    unique: true
-});
+// Client.collection.createIndex({
+//     name: 1,
+//     role: 1
+// }, {
+//     unique: true
+// });
 
 export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
@@ -227,7 +227,7 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
                 name: config.serviceClientName || config.serviceClientId,
                 "clientSecret" : config.serviceClientSecret,
                 "redirectUri" : config.siteUri,
-                "scope" : [ '.*' ],
+                "scope" : [ '.*', ...(config.rootGroups || []).map((s) => `group.${s}`)  ],
                 "role" : [
                     "consumer"
                 ],
