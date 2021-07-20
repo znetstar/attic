@@ -65,7 +65,7 @@ export async function loadPlugins(){
     const pkg = await require('fs-extra').readJson(path.join(__dirname, '..', 'package.json'));
     const dependencies = Object.keys(pkg.dependencies);
     let installablePlugins = installInstructions.filter(i => (
-      i.install
+      i.install && !Array.isArray(i.pluginPathSpec)
     ));
     const pluginsNotInPkg = installInstructions.filter(i => !dependencies.includes(i.pluginName) && !Array.isArray(i.pluginPathSpec));
 
