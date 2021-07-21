@@ -73,6 +73,19 @@ export async function loadPlugins(){
       installablePlugins = _.uniq(installablePlugins.concat(pluginsNotInPkg));
     }
 
+  ApplicationContext.logs.debug({
+    method: `launch.loadPlugins.loadPlugins.load.start`,
+    params: [
+      installInstructions.map((i) => ({
+        ...i,
+        pluginModule: !!i.pluginModule
+      }))
+    ]
+  });
+
+  for (const spec of installInstructions) {
+
+    let { pluginName, pluginPath, pluginPathSpec, pluginModule } = spec;
     if (installablePlugins.length) {
       if (!npmLoaded) {
         await new Promise<void>((resolve, reject) => {
@@ -107,20 +120,7 @@ export async function loadPlugins(){
       });
 
     }
-
-  ApplicationContext.logs.debug({
-    method: `launch.loadPlugins.loadPlugins.load.start`,
-    params: [
-      installInstructions.map((i) => ({
-        ...i,
-        pluginModule: !!i.pluginModule
-      }))
-    ]
-  });
-
-  for (const spec of installInstructions) {
-      let { pluginName, pluginPath, pluginPathSpec, pluginModule } = spec;
-      let Plugin: Constructible<IPlugin>;
+    let Plugin: Constructible<IPlugin>;
 
       ApplicationContext.logs.silly({
         method: `launch.loadPlugins.loadPlugin.load.start`,

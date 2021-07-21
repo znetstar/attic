@@ -101,6 +101,8 @@ export class AtticExpressTransport extends ExpressTransport {
                             });
                         }
                         headers["Content-Type"] = this.serializer.content_type;
+                        // response.error.message
+
 
                         res.writeHead(200, headers);
                         res.end(this.serializer.serialize(response));
