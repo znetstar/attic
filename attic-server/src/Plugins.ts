@@ -17,7 +17,7 @@ let npmLoaded = false;
 export async function loadPlugins(){
     await ApplicationContext.emitAsync('launch.loadPlugins.start');
 
-    const installInstructions: { pluginPath: string, pluginName: string, pluginPathSpec: PluginPath, install: boolean }[] = [];
+    const installInstructions: { pluginModule: any, pluginPath: string, pluginName: string, pluginPathSpec: PluginPath, install: boolean }[] = [];
 
     for (let pluginPathSpec of Config.plugins) {
         ApplicationContext.logs.silly({
@@ -48,7 +48,8 @@ export async function loadPlugins(){
           pluginPathSpec,
           install: !Boolean(pluginModule),
           pluginName,
-          pluginPath
+          pluginPath,
+          pluginModule: pluginModule
         };
 
         installInstructions.push(spec);
@@ -64,7 +65,7 @@ export async function loadPlugins(){
     const pkg = await require('fs-extra').readJson(path.join(__dirname, '..', 'package.json'));
     const dependencies = Object.keys(pkg.dependencies);
     let installablePlugins = installInstructions.filter(i => (
-      i.install
+      i.install && !Array.isArray(i.pluginPathSpec)
     ));
     const pluginsNotInPkg = installInstructions.filter(i => !dependencies.includes(i.pluginName) && !Array.isArray(i.pluginPathSpec));
 
@@ -72,6 +73,19 @@ export async function loadPlugins(){
       installablePlugins = _.uniq(installablePlugins.concat(pluginsNotInPkg));
     }
 
+  ApplicationContext.logs.debug({
+    method: `launch.loadPlugins.loadPlugins.load.start`,
+    params: [
+      installInstructions.map((i) => ({
+        ...i,
+        pluginModule: !!i.pluginModule
+      }))
+    ]
+  });
+
+  for (const spec of installInstructions) {
+
+    let { pluginName, pluginPath, pluginPathSpec, pluginModule } = spec;
     if (installablePlugins.length) {
       if (!npmLoaded) {
         await new Promise<void>((resolve, reject) => {
@@ -106,10 +120,7 @@ export async function loadPlugins(){
       });
 
     }
-
-    for (const spec of installInstructions) {
-      const { pluginName, pluginPath, pluginPathSpec } = spec;
-      let Plugin: Constructible<IPlugin>, pluginModule: any;
+    let Plugin: Constructible<IPlugin>;
 
       ApplicationContext.logs.silly({
         method: `launch.loadPlugins.loadPlugin.load.start`,
@@ -175,5 +186,15 @@ export async function loadPlugins(){
 
       await ApplicationContext.emitAsync(`Plugins.${plugin.name}.init`, plugin);
     }
+
+  ApplicationContext.logs.debug({
+    method: `launch.loadPlugins.loadPlugins.load.complete`,
+    params: [
+      installInstructions.map((i) => ({
+        ...i,
+        pluginModule: !!i.pluginModule
+      }))
+    ]
+  });
     await ApplicationContext.emitAsync('launch.loadPlugins.complete');
 }

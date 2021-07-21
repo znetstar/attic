@@ -399,3 +399,10 @@ AccessToken.collection.createIndex({
     isBearer: -1,
     createdAt: -1
 });
+
+AccessToken.collection.createIndex({
+  tokenType: 1,
+  client: 1,
+  clientRole: 1,
+  token: 1
+});

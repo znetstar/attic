@@ -221,19 +221,17 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
     if (config.serviceClientId && config.serviceClientSecret) {
         await Client.updateOne({clientId: config.serviceClientId }, {
             $setOnInsert: {
-                clientId: config.serviceClientId
-            },
-            $set: ({
+                clientId: config.serviceClientId,
                 name: config.serviceClientName || config.serviceClientId,
                 "clientSecret" : config.serviceClientSecret,
                 "redirectUri" : config.siteUri,
                 "scope" : [ '.*', ...(config.rootGroups || []).map((s) => `group.${s}`)  ],
                 "role" : [
-                    "consumer"
+                  "consumer"
                 ],
                 expireAccessTokenIn: null,
                 expireRefreshTokenIn: null
-            } as any)
+            }
         }, {upsert: true});
     }
 });

@@ -101,6 +101,8 @@ export class AtticExpressTransport extends ExpressTransport {
                             });
                         }
                         headers["Content-Type"] = this.serializer.content_type;
+                        // response.error.message
+
 
                         res.writeHead(200, headers);
                         res.end(this.serializer.serialize(response));
@@ -144,7 +146,7 @@ export async function loadWebServer() {
     WebHTTPServer = new HTTPServer(WebExpress);
     WebHTTPServer.on('upgrade', function (request: any, socket: any, head: any) {
       (async () => {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           restrictScopeMiddleware(`sync.connect`)(request, {} as any, (err: any) => {
             if (err) reject(err);
             else resolve();
