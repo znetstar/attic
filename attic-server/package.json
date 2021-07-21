@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.3.6",
+    "version": "3.3.7",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -93,8 +93,8 @@
         "ioredis": "^4.24.2",
         "json-rpc-2.0": "^0.2.10",
         "mongoose": "^5.10.0",
-        "multi-rpc": "^1.7.0",
-        "multi-rpc-express-transport": "^1.0.3",
+        "multi-rpc": "^1.7.1",
+        "multi-rpc-express-transport": "^1.1.2",
         "nanoid": "^3.1.12",
         "nconf": "^0.10.0",
         "node-fetch": "^2.6.1",
