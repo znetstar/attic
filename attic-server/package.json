@@ -94,6 +94,7 @@
         "json-rpc-2.0": "^0.2.10",
         "mongoose": "^5.10.0",
         "multi-rpc": "^1.7.1",
+        "multi-rpc-common": "^2.3.1",
         "multi-rpc-express-transport": "^1.1.2",
         "nanoid": "^3.1.12",
         "nconf": "^0.10.0",
