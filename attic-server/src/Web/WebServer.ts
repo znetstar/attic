@@ -146,7 +146,7 @@ export async function loadWebServer() {
     WebHTTPServer = new HTTPServer(WebExpress);
     WebHTTPServer.on('upgrade', function (request: any, socket: any, head: any) {
       (async () => {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           restrictScopeMiddleware(`sync.connect`)(request, {} as any, (err: any) => {
             if (err) reject(err);
             else resolve();

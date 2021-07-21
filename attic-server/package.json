@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.3.11",
+    "version": "3.3.13",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -21,7 +21,8 @@
         "test": "true",
         "start": "tsnode src/launch",
         "preapre": "npm run build",
-        "build": "grunt"
+        "build": "grunt",
+        "prepack": "npm run build"
     },
     "devDependencies": {
         "@types/chance": "^1.1.0",
