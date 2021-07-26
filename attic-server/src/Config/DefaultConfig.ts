@@ -19,7 +19,6 @@
  */
 import Config, {LogLevels} from './Config';
 import * as os from 'os';
-
 export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     puppeteerOptions: { headless: true },
     plugins: [
@@ -68,14 +67,10 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     logLevel: LogLevels.info,
     autoLogEvents: true,
     logErrors: true,
-<<<<<<< Updated upstream
-    logListening: true
-};
-=======
     logListening: true,
 
     allowClientOverride: false,
     allowRootUserOverride: false,
     allowUnauthorizedUserOverride: false
 };
->>>>>>> Stashed changes
+

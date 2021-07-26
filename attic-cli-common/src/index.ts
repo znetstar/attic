@@ -9,6 +9,6 @@ export {
 } from './misc';
 export {
     RPCProxy,
-    RPCClient,
-    RPCError
+    RPCClient
 } from './RPC';
+export * from './OAuthAgent';

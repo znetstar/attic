@@ -241,7 +241,7 @@ export async function accessTokenFromRefresh(self: IAccessToken&Document): Promi
         accessToken.save();
 
         if (newRefreshToken) {
-            await self.remove();
+            self.remove && await self.remove();
             await newRefreshToken.save();
         }
 
@@ -398,4 +398,11 @@ AccessToken.collection.createIndex({
 AccessToken.collection.createIndex({
     isBearer: -1,
     createdAt: -1
+});
+
+AccessToken.collection.createIndex({
+  tokenType: 1,
+  client: 1,
+  clientRole: 1,
+  token: 1
 });

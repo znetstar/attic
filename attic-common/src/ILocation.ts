@@ -20,6 +20,7 @@ export default interface ILocation {
     search?: string;
     expiresAt?: Date;
     driverOptions?: any;
+    cacheExpireIn?: number;
 }
 
 export function defaultLocation(): ILocation {

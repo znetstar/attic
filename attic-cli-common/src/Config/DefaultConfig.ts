@@ -8,5 +8,7 @@ export default <Config>{
     username: 'root',
     password: 'root',
     clientId: 'attic',
-    clientSecret: 'attic'
+    clientSecret: 'attic',
+    redirectUri: 'http://localhost:7373',
+    defaultScope: [ '.*', 'group.service' ]
 };

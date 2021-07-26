@@ -208,17 +208,18 @@ RPCServer.methods.getIdentityEntityByAccessToken = async function(accessTokenId:
 const Client = mongoose.model<IClient&Document>('Client', ClientSchema);
 export default Client;
 
-Client.collection.createIndex({
-    name: 1,
-    role: 1
-}, {
-    unique: true
-});
+// Client.collection.createIndex({
+//     name: 1,
+//     role: 1
+// }, {
+//     unique: true
+// });
 
 export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
-ApplicationContext.once('loadModels.complete', async () => {
+ApplicationContext.once('launch.loadModels.complete', async () => {
     if (config.serviceClientId && config.serviceClientSecret) {
+<<<<<<< HEAD
 
       const delta: any = {
         $setOnInsert: {
@@ -251,5 +252,21 @@ ApplicationContext.once('loadModels.complete', async () => {
       }
 
         await Client.updateOne({clientId: config.serviceClientId }, delta, {upsert: true});
+=======
+        await Client.updateOne({clientId: config.serviceClientId }, {
+            $setOnInsert: {
+                clientId: config.serviceClientId,
+                name: config.serviceClientName || config.serviceClientId,
+                "clientSecret" : config.serviceClientSecret,
+                "redirectUri" : config.siteUri,
+                "scope" : [ '.*', ...(config.rootGroups || []).map((s) => `group.${s}`)  ],
+                "role" : [
+                  "consumer"
+                ],
+                expireAccessTokenIn: null,
+                expireRefreshTokenIn: null
+            }
+        }, {upsert: true});
+>>>>>>> master
     }
 });

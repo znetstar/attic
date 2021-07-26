@@ -16,10 +16,16 @@ export interface ILogger {
     debug: LogFunction;
 }
 
-export interface IApplicationContext {
-    on(event: string, handler: (...args: unknown[]) => Promise<unknown>): void;
-    emit(event: string, ...args: unknown[]): void;
-    emitAsync(event: string, ...args: unknown[]): Promise<unknown[]>;
+export interface IApplicationHookEmitter {
+  on(event: string, handler: (...args: unknown[]) => Promise<unknown>): void;
+  emit(event: string, ...args: unknown[]): void;
+  emitAsync(event: string, ...args: unknown[]): Promise<unknown[]>;
+  triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>>;
+  triggerHookSingle<T>(method: string, ...params: any[]): Promise<T|unknown>;
+  registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void;
+}
+
+export type IApplicationContext = IApplicationHookEmitter&{
     config: IConfig;
     logs: ILogger;
     redis: unknown;
@@ -29,8 +35,7 @@ export interface IApplicationContext {
     plugins: Map<string, IPlugin>;
     mongoose: unknown;
     package: unknown;
-    triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>>;
-    triggerHookSingle<T>(method: string, ...params: any[]): Promise<T|unknown>;
-    registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void;
+    webSocketServer: unknown;
+    webSocketPaths: Map<string, unknown>;
     loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void>;
 }

@@ -31,7 +31,8 @@ import {  Notification } from 'multi-rpc';
 import {IApplicationContext} from "@znetstar/attic-common/lib/Server";
 import Constructible from "./Constructible";
 import {IDriver} from "@znetstar/attic-common/lib/IDriver";
-
+import {WebSocketPaths, WebSocketServer} from "./Web/WebServer";
+import * as ws from 'ws';
 
 export interface ListenStatus {
     urls: string[];
@@ -88,7 +89,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
             return;
 
         let delta = { method: args[0], params: args.slice(1) };
-        this.logger.debug(delta);
+        this.logger.silly(delta);
     }
 
     onLog = (log: any) => {
@@ -121,6 +122,14 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
 
     get webExpress() {
         return WebExpress();
+    }
+
+    get webSocketServer() {
+      return WebSocketServer;
+    }
+
+    get webSocketPaths(): Map<string, ws.Server> {
+      return WebSocketPaths;
     }
 
     get drivers() {

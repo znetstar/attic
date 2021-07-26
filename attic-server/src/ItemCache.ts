@@ -3,11 +3,22 @@ import {Mongoose, Schema, Document, Model} from 'mongoose';
 import mongoose, {redis} from './Database';
 import config from "./Config";
 import ApplicationContext from "./ApplicationContext";
-const { xxhash64 } = require('hash-wasm');
+import { EncodeTools } from '@etomon/encode-tools';
 import * as ObjectHash  from 'object-hash';
 import * as msgpack from '@msgpack/msgpack';
+import {BinaryEncoding, HashAlgorithm, IDFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {EncodingOptions} from "@etomon/encode-tools/lib/EncodeTools";
+
+const ItemCacheEncoderOptions: EncodingOptions = {
+  binaryEncoding: BinaryEncoding.base64,
+  hashAlgorithm: HashAlgorithm.xxhash64,
+  serializationFormat: SerializationFormat.msgpack,
+  uniqueIdFormat: IDFormat.uuidv4String
+};
 
 export class ItemCache<I, T> {
+    protected encoder = new EncodeTools(ItemCacheEncoderOptions);
+
     constructor(protected groupName: string, protected cacheExpireIn: number = config.cacheExpireIn) {
 
     }
@@ -15,17 +26,16 @@ export class ItemCache<I, T> {
     public get cacheEnabled() { return config.enableCache }
 
     public async serialize(item: T): Promise<Buffer> {
-        return Buffer.from(msgpack.encode(item));
+        return this.encoder.serializeObject<T>(item) as unknown as Buffer;
     }
     public async deserialize(item: Buffer): Promise<T> {
-        return msgpack.decode<T>(item) as T;
+        return this.encoder.deserializeObject<T>(item) as T;
     }
 
     public async getCacheKey(itemRef: I): Promise<string> {
         // @ts-ignore
         if (itemRef.toJSON) itemRef = itemRef.toJSON();
-        let objectHash: Buffer = Buffer.from(JSON.stringify(itemRef), 'utf8');
-        return [this.groupName, await xxhash64(objectHash)].join('.');
+        return [this.groupName, (await this.encoder.hashObject(itemRef)).toString('base64')].join('.');
     }
 
     public async getObject(ref: I): Promise<T|null> {

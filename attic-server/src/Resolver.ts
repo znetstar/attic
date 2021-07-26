@@ -14,6 +14,7 @@ import {IMountPoint} from "@znetstar/attic-common/lib/IResolver";
 import Config from "./Config";
 import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import ApplicationContext from "./ApplicationContext";
+import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 
 export interface IResolverModel {
     id: ObjectId;
@@ -107,7 +108,7 @@ ResolverSchema.pre(([ 'find', 'findOne' ] as  any),  function () {
 ResolverSchema.pre('init', function () {
     let self: any = this;
 
-    self.mountPoint = ensureMountPoint(self.mountPoint);
+    try { self.mountPoint = ensureMountPoint(self.mountPoint); } catch (err) {}
     self.isRootResolver = self.type === 'RootResolver';
 });
 
@@ -222,6 +223,7 @@ if (query.populate) resolverQuery.populate(query.populate);
     return resolvers.map(l => l.toJSON({ virtuals: true }));
 }
 
+
 export async function rootResolverResolve(location: ILocation): Promise<ILocation&Document> {
     // First find a resolver
     let match = <any>{
@@ -257,15 +259,28 @@ export async function rootResolverResolve(location: ILocation): Promise<ILocatio
         .exec());
 
     // Loop through each resolver
-    let resolver: IResolver&Document;
-    while (resolver = await resolvers.next()) {
+    let rawResolver: IResolver&Document;
+    while (rawResolver = await resolvers.next()) {
         // Attempt to resolve the location
         let outLocation: ILocation&Document;
-        if (resolver.isRootResolver) {
+        if (rawResolver.isRootResolver) {
+            const resolver = Resolver.hydrate(rawResolver);
             outLocation = await ResolverSchema.methods.resolve.call(resolver, location);
         }
         else {
-            outLocation = (await resolver.resolve(location)) as ILocation&Document;
+            const TResolver = mongoose.models[rawResolver.type];
+
+            if (!TResolver) {
+              throw new GenericError(
+                `Unknown Resolver of type ${rawResolver.type}`,
+                0,
+                500
+              );
+            }
+
+            const resolver = Resolver.hydrate(rawResolver);
+
+          outLocation = await (TResolver as any).schema.methods.resolve.call(resolver, location) as ILocation&Document;
         }
 
         if (outLocation) {
@@ -287,9 +302,6 @@ export async function resolve(location: ILocation|string, options: ResolveOption
     let result: ILocation;
     let { id, noCache } = options;
 
-    // @ts-ignore
-    if (location && location.populate) { await location.populate('entity').execPopulate(); }
-
     ApplicationContext.logs.silly({
         method: 'Resolver.resolve.start',
         params: [
@@ -303,8 +315,14 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         location = <ILocation>{ href: location };
     }
 
+    let cacheKey: ILocation = _.cloneDeep(location);
+
+
+    // @ts-ignore
+    if (location && location.populate) { await location.populate('entity').execPopulate(); }
+
     if (!noCache) {
-        result = await ResolverCache.getObject(location);
+        result = await ResolverCache.getObject(cacheKey);
     }
 
     if (!result) {
@@ -326,8 +344,8 @@ export async function resolve(location: ILocation|string, options: ResolveOption
         // @ts-ignore
         if (result && result.toJSON) { result = result.toJSON({ virtuals: true }); }
 
-        if (result) {
-            await ResolverCache.setObject(location, result);
+        if (result && ( typeof(location.cacheExpireIn) === 'undefined' || location.cacheExpireIn > 0 )) {
+            await ResolverCache.setObject(cacheKey, result, location.cacheExpireIn);
         }
     }
 

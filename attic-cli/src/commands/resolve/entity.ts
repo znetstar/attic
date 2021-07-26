@@ -27,6 +27,7 @@ export default class ResolveEntity extends Resolve {
     let outLocation = await RPCProxy.resolve(location,{ id:  flags.id, noCache: flags.noCache });
     let outEntity: IEntity = null as any;
     if (!_.isEmpty(outLocation) && !_.isEmpty(outLocation.entity)) {
+      // @ts-ignore
       outEntity = await RPCProxy.findEntity({ id: outLocation.entity });
     }
     let outString = formatOutputFromFlags(outEntity, flags, [   'id', 'type', 'source.href' ])

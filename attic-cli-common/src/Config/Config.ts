@@ -8,8 +8,9 @@ export default interface Config {
     refreshToken?: string;
     username?: string;
     password?: string;
-    clientId?: string;
-    clientSecret?: string;
-    redirectUri?: string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    defaultScope: string[];
 }
 
