@@ -443,36 +443,62 @@ const User = mongoose.model<IUser&Document>('User', UserSchema);
 export const UNAUTHROIZED_USERNAME = config.get('unauthorizedUserName');
 
 ApplicationContext.once('launch.loadModels.complete', async () => {
-    await User.updateOne({ username: UNAUTHROIZED_USERNAME }, {
-        $setOnInsert: {
-            username: UNAUTHROIZED_USERNAME,
-        },
-        $set: ({
-            scope: config.get('unauthorizedScopes'),
-        } as any),
-        $addToSet: {
-            groups: {
-                $each: config.unauthorizedGroups ? config.unauthorizedGroups : [ ]
-            }
-        }
-    }, { upsert: true });
+  {
+    const delta: any = {
+      $setOnInsert: {
+        username: UNAUTHROIZED_USERNAME,
+      }
+    };
+
+    // @ts-ignore
+    const groups: string[] = config.unauthorizedGroups = typeof((config.unauthorizedGroups || [])) === 'string' ? config.unauthorizedGroups.split(",") : [];
+    const extra: any = {
+      scope: config.get('unauthorizedScopes'),
+      groups: config.unauthorizedGroups ? config.unauthorizedGroups : [ ]
+    }
+
+    if (config.allowUnauthorizedUserOverride) {
+      delta.$set = extra;
+    }
+    else {
+      delta.$setOnInsert = {
+        ...delta.$setOnInsert,
+        ...extra
+      };
+    }
+
+    await User.updateOne({ username: UNAUTHROIZED_USERNAME }, delta, { upsert: true });
+  }
+
+  {
+    const delta: any = {
+      $setOnInsert: {
+        username: config.rootUsername
+      }
+    };
+
+    // @ts-ignore
+    const groups: string[] = config.rootGroups = typeof((config.rootGroups || [])) === 'string' ? config.rootGroups.split(",") : [];
+    const extra: any = {
+      scope: [ '.*' ],
+      password: await bcryptPassword(config.rootPassword),
+      groups
+    }
+
+    if (config.allowRootUserOverride) {
+      delta.$set = extra;
+    }
+    else {
+      delta.$setOnInsert = {
+        ...delta.$setOnInsert,
+        ...extra
+      };
+    }
 
     if (config.rootUsername && config.rootPassword) {
-        await User.updateOne({ username: config.rootUsername }, {
-            $setOnInsert: {
-                username: config.rootUsername
-            },
-            $set: ({
-                scope: [ '.*' ],
-                password: await bcryptPassword(config.rootPassword)
-            } as any),
-            $addToSet: {
-                groups: {
-                    $each: config.rootGroups ? config.rootGroups : [ config.rootUsername ]
-                }
-            }
-        }, { upsert: true });
+      await User.updateOne({ username: config.rootUsername }, delta, { upsert: true });
     }
+  }
 });
 
 User.collection.createIndex({

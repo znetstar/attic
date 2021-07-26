@@ -199,7 +199,7 @@ RPCServer.methods.getIdentityEntityByAccessToken = async function(accessTokenId:
 //     }
 //     if (!Number.isNaN(Number(query.skip))) clientsQuery.skip(query.skip);
 //     if (!Number.isNaN(Number(query.limit))) clientsQuery.limit(query.limit);
-if (query.populate) clientsQuery.populate(query.populate);
+// if (query.populate) clientsQuery.populate(query.populate);
 //     let clients = await clientsQuery.exec();
 //     return clients.map(l => l.toJSON({ virtuals: true }));
 // }
@@ -219,21 +219,37 @@ export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
 ApplicationContext.once('loadModels.complete', async () => {
     if (config.serviceClientId && config.serviceClientSecret) {
-        await Client.updateOne({clientId: config.serviceClientId }, {
-            $setOnInsert: {
-                clientId: config.serviceClientId
-            },
-            $set: ({
-                name: config.serviceClientName || config.serviceClientId,
-                "clientSecret" : config.serviceClientSecret,
-                "redirectUri" : config.siteUri,
-                "scope" : [ '.*' ],
-                "role" : [
-                    "consumer"
-                ],
-                expireAccessTokenIn: null,
-                expireRefreshTokenIn: null
-            } as any)
-        }, {upsert: true});
+
+      const delta: any = {
+        $setOnInsert: {
+          clientId: config.serviceClientId
+        }
+      };
+
+      // @ts-ignore
+      const groups: string[] = config.rootGroups = typeof((config.rootGroups || [])) === 'string' ? config.rootGroups.split(",") : [];
+      const extra: any = {
+        name: config.serviceClientName || config.serviceClientId,
+        "clientSecret" : config.serviceClientSecret,
+        "redirectUri" : config.siteUri,
+        "scope" : [ '.*', ...groups.map((s) => `group.${s}`)  ],
+        "role" : [
+          "consumer"
+        ],
+        expireAccessTokenIn: null,
+        expireRefreshTokenIn: null
+      }
+
+      if (config.allowClientOverride) {
+        delta.$set = extra;
+      }
+      else {
+        delta.$setOnInsert = {
+          ...delta.$setOnInsert,
+          ...extra
+        };
+      }
+
+        await Client.updateOne({clientId: config.serviceClientId }, delta, {upsert: true});
     }
 });

@@ -128,6 +128,10 @@ export interface IConfig {
     logErrors?: boolean;
     logListening?: boolean;
     cacheNon200HTTPResponses?: boolean;
+
+    allowClientOverride?: boolean;
+    allowRootUserOverride?: boolean;
+    allowUnauthorizedUserOverride?: boolean;
 }
 
 export default IConfig;

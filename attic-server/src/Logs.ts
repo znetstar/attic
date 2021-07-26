@@ -2,19 +2,18 @@
  * @author Etomon Team <open-source@etomon.com>
  * @copyright 2021 Etomon, PBC
  */
-
-import Config from './Config/index';
+import {IApplicationContext} from "@znetstar/attic-common/lib/Server";
 
 const winston = require('winston');
 const {
     format: logFormat
 } = winston;
 
-export function createLogger() {
+export function createLogger(ctx: IApplicationContext) {
     const logger = (global as any).logger = winston.createLogger({
         format: logFormat.combine(
             logFormat((info: any) => {
-                info.hostname = Config.hostname;
+                info.hostname = ctx.config.hostname;
                 return info;
             })()
         ),
@@ -23,7 +22,7 @@ export function createLogger() {
                 format: logFormat.combine(
                     logFormat.json()
                 ),
-                level: Config.logLevel
+                level: ctx.config.logLevel
             })
         ]
     });

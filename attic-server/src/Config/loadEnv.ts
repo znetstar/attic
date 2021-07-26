@@ -47,7 +47,14 @@
         'EXPRESS_SESSION_MAX_AGE',
         'EXPRESS_SESSION_SECRET',
         'EXPRESS_SESSION_SECRET_SIZE',
+<<<<<<< Updated upstream
         'SERVICE_CLEINT_ID',
+=======
+        'SERVICE_CLIENT_ID',
+        'ALLOW_CLIENT_OVERRIDE',
+        'ALLOW_ROOT_USER_OVERRIDE',
+        'ALLOW_UNUATHORIZED_USER_OVERRIDE',
+>>>>>>> Stashed changes
         'SERVICE_CLIENT_SECRET',
         'UNAUTHROIZED_USERNAME',
         'UNAUTHORIZED_GROUPS',
