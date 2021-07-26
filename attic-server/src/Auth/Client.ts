@@ -219,7 +219,6 @@ export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
 ApplicationContext.once('launch.loadModels.complete', async () => {
     if (config.serviceClientId && config.serviceClientSecret) {
-<<<<<<< HEAD
 
       const delta: any = {
         $setOnInsert: {
@@ -252,21 +251,5 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
       }
 
         await Client.updateOne({clientId: config.serviceClientId }, delta, {upsert: true});
-=======
-        await Client.updateOne({clientId: config.serviceClientId }, {
-            $setOnInsert: {
-                clientId: config.serviceClientId,
-                name: config.serviceClientName || config.serviceClientId,
-                "clientSecret" : config.serviceClientSecret,
-                "redirectUri" : config.siteUri,
-                "scope" : [ '.*', ...(config.rootGroups || []).map((s) => `group.${s}`)  ],
-                "role" : [
-                  "consumer"
-                ],
-                expireAccessTokenIn: null,
-                expireRefreshTokenIn: null
-            }
-        }, {upsert: true});
->>>>>>> master
     }
 });

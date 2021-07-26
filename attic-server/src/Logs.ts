@@ -22,7 +22,7 @@ export function createLogger(ctx: IApplicationContext) {
                 format: logFormat.combine(
                     logFormat.json()
                 ),
-                level: ctx.config.logLevel
+                level: 'silly'
             })
         ]
     });
