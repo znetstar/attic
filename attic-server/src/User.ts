@@ -449,7 +449,7 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
     };
 
     // @ts-ignore
-    const groups: string[] = config.unauthorizedGroups = typeof(config.rootGroups) === 'string' ? config.unauthorizedGroups.split(",") : (config.unauthorizedGroups||[]);
+    const groups: string[] = config.unauthorizedGroups = typeof(config.unauthorizedGroups) === 'string' ? config.unauthorizedGroups.split(",") : (config.unauthorizedGroups||[]);
     const extra: any = {
       scope: config.get('unauthorizedScopes'),
       groups: groups
