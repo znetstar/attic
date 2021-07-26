@@ -227,11 +227,11 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
       };
 
       // @ts-ignore
-      const groups: string[] = config.rootGroups = typeof((config.rootGroups || [])) === 'string' ? config.rootGroups.split(",") : [];
+      const groups: string[] = config.rootGroups = typeof(config.rootGroups) === 'string' ? config.rootGroups.split(",") : (config.rootGroups||[]);
       const extra: any = {
         name: config.serviceClientName || config.serviceClientId,
         "clientSecret" : config.serviceClientSecret,
-        "redirectUri" : config.siteUri,
+        "redirectUri" : config.serviceRedirectUri || config.siteUri,
         "scope" : [ '.*', ...groups.map((s) => `group.${s}`)  ],
         "role" : [
           "consumer"

@@ -449,10 +449,10 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
     };
 
     // @ts-ignore
-    const groups: string[] = config.unauthorizedGroups = typeof((config.unauthorizedGroups || [])) === 'string' ? config.unauthorizedGroups.split(",") : [];
+    const groups: string[] = config.unauthorizedGroups = typeof(config.rootGroups) === 'string' ? config.unauthorizedGroups.split(",") : (config.unauthorizedGroups||[]);
     const extra: any = {
       scope: config.get('unauthorizedScopes'),
-      groups: config.unauthorizedGroups ? config.unauthorizedGroups : [ ]
+      groups: groups
     }
 
     if (config.allowUnauthorizedUserOverride) {
@@ -476,7 +476,8 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
     };
 
     // @ts-ignore
-    const groups: string[] = config.rootGroups = typeof((config.rootGroups || [])) === 'string' ? config.rootGroups.split(",") : [];
+    const groups: string[] = config.rootGroups = typeof(config.rootGroups) === 'string' ? config.rootGroups.split(",") : (config.rootGroups||[]);
+
     const extra: any = {
       scope: [ '.*' ],
       password: await bcryptPassword(config.rootPassword),
