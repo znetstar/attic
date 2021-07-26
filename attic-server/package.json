@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.3.17",
+    "version": "3.3.18",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
