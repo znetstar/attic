@@ -469,32 +469,32 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
   }
 
   {
-    const delta: any = {
-      $setOnInsert: {
-        username: config.rootUsername
-      }
-    };
-
-    // @ts-ignore
-    const groups: string[] = config.rootGroups = typeof(config.rootGroups) === 'string' ? config.rootGroups.split(",") : (config.rootGroups||[]);
-
-    const extra: any = {
-      scope: [ '.*' ],
-      password: await bcryptPassword(config.rootPassword),
-      groups
-    }
-
-    if (config.allowRootUserOverride) {
-      delta.$set = extra;
-    }
-    else {
-      delta.$setOnInsert = {
-        ...delta.$setOnInsert,
-        ...extra
-      };
-    }
-
     if (config.rootUsername && config.rootPassword) {
+      const delta: any = {
+        $setOnInsert: {
+          username: config.rootUsername
+        }
+      };
+
+      // @ts-ignore
+      const groups: string[] = config.rootGroups = typeof(config.rootGroups) === 'string' ? config.rootGroups.split(",") : (config.rootGroups||[]);
+
+      const extra: any = {
+        scope: [ '.*' ],
+        password: await bcryptPassword(config.rootPassword),
+        groups
+      }
+
+      if (config.allowRootUserOverride) {
+        delta.$set = extra;
+      }
+      else {
+        delta.$setOnInsert = {
+          ...delta.$setOnInsert,
+          ...extra
+        };
+      }
+
       await User.updateOne({ username: config.rootUsername }, delta, { upsert: true });
     }
   }
