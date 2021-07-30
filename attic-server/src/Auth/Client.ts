@@ -219,19 +219,37 @@ export const SERVICE_CLIENT_ID = config.get('serviceClientId');
 
 ApplicationContext.once('launch.loadModels.complete', async () => {
     if (config.serviceClientId && config.serviceClientSecret) {
-        await Client.updateOne({clientId: config.serviceClientId }, {
-            $setOnInsert: {
-                clientId: config.serviceClientId,
-                name: config.serviceClientName || config.serviceClientId,
-                "clientSecret" : config.serviceClientSecret,
-                "redirectUri" : config.siteUri,
-                "scope" : [ '.*', ...(config.rootGroups || []).map((s) => `group.${s}`)  ],
-                "role" : [
-                  "consumer"
-                ],
-                expireAccessTokenIn: null,
-                expireRefreshTokenIn: null
-            }
-        }, {upsert: true});
+
+      const delta: any = {
+        $setOnInsert: {
+          clientId: config.serviceClientId
+        }
+      };
+
+      // @ts-ignore
+      const groups: string[] = config.rootGroups = typeof(config.rootGroups) === 'string' ? config.rootGroups.split(",") : (config.rootGroups||[]);
+      const extra: any = {
+        name: config.serviceClientName || config.serviceClientId,
+        "clientSecret" : config.serviceClientSecret,
+        "redirectUri" : config.serviceRedirectUri || config.siteUri,
+        "scope" : [ '.*', ...groups.map((s) => `group.${s}`)  ],
+        "role" : [
+          "consumer"
+        ],
+        expireAccessTokenIn: null,
+        expireRefreshTokenIn: null
+      }
+
+      if (config.allowClientOverride) {
+        delta.$set = extra;
+      }
+      else {
+        delta.$setOnInsert = {
+          ...delta.$setOnInsert,
+          ...extra
+        };
+      }
+
+        await Client.updateOne({clientId: config.serviceClientId }, delta, {upsert: true});
     }
 });

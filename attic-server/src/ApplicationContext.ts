@@ -41,7 +41,7 @@ export interface ListenStatus {
 export const drivers: Map<string, Constructible<IDriver>> = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 export class ApplicationContextBase extends EventEmitter implements IApplicationContext{
-    protected logger = createLogger();
+    protected logger: any;
     constructor() {
         super({
             wildcard: true,
@@ -50,6 +50,8 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
             removeListener: true,
             verboseMemoryLeak: false
         });
+
+        this.logger = createLogger(this);
 
         if (this.config.autoLogEvents) {
             this.onAny(this.onAutoLog);

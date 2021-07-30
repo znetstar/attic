@@ -140,14 +140,16 @@ export async function loadPlugins(){
 
         if (!pluginModule) {
           for (const possiblePaths of [
-            [ `lib`, `Atticfile` ],
-            [ `src`, `Atticfile` ],
-            [  ]
-          ])
-          try { pluginModule = require(path.join(pluginPath, ...possiblePaths)); }
-          catch (err) {
-            if (err.code !== 'MODULE_NOT_FOUND')
-              throw err;
+            [ `lib`, `Atticfile.js` ],
+            [ `src`, `Atticfile.ts` ]
+          ]) {
+            const fullpath = path.join(pluginPath, ...possiblePaths);
+            try {
+              pluginModule = require(fullpath);
+            } catch (err) {
+              if (err.code !== 'MODULE_NOT_FOUND')
+                throw err;
+            }
           }
         }
 

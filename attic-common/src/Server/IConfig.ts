@@ -42,6 +42,7 @@ export interface IConfig {
     serviceClientId?: string;
     serviceClientSecret?: string;
     serviceClientName?: string;
+    serviceRedirectUri?: string;
     unauthorizedUserName?: string;
     unauthorizedGroups?: string[];
     rootUsername?: string;
@@ -135,7 +136,9 @@ export interface IConfig {
     logErrors?: boolean;
     logListening?: boolean;
     cacheNon200HTTPResponses?: boolean;
-
+    allowClientOverride?: boolean;
+    allowRootUserOverride?: boolean;
+    allowUnauthorizedUserOverride?: boolean;
 }
 
 export default IConfig;

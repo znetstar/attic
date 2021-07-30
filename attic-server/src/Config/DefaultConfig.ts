@@ -67,5 +67,10 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     logLevel: LogLevels.info,
     autoLogEvents: true,
     logErrors: true,
-    logListening: true
+    logListening: true,
+
+    allowClientOverride: false,
+    allowRootUserOverride: false,
+    allowUnauthorizedUserOverride: false
 };
+
