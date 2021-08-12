@@ -72,7 +72,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
       try {
         if (this.config.dbInit) {
           for (const dbInitRecord of this.config.dbInit) {
-            const q = dbInitRecord.query ||  dbInitRecord.document._id ? { _id: dbInitRecord.document._id } : null;
+            const q = dbInitRecord.query || (dbInitRecord.document._id ? { _id: dbInitRecord.document._id } : null);
             if ((dbInitRecord as DBInitRecordMongo<any>).collection) {
               if (q) {
                 if (dbInitRecord.replace) {
