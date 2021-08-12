@@ -15,6 +15,22 @@ export enum ExpressSessionDrivers {
 
 export type PluginPath = [ string, string ]|string;
 
+export interface DBInitRecordBase<T>  {
+  document: T,
+  replace?: boolean;
+  query?: unknown;
+}
+
+export type DBInitRecordMongo<T,> = DBInitRecordBase<T>&{
+  collection: string;
+};
+
+export type DBInitRecordMongoose<T> = DBInitRecordBase<T>&{
+  model: string;
+};
+
+export type DBInitRecord<T> = DBInitRecordMongo<T>|DBInitRecordMongoose<T>;
+
 export interface IConfig {
     /**
      * Externally facing hostname
@@ -139,6 +155,8 @@ export interface IConfig {
     allowClientOverride?: boolean;
     allowRootUserOverride?: boolean;
     allowUnauthorizedUserOverride?: boolean;
+
+    dbInit?: DBInitRecord<any>[];
 }
 
 export default IConfig;

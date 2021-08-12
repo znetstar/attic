@@ -71,6 +71,8 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
 
     allowClientOverride: false,
     allowRootUserOverride: false,
-    allowUnauthorizedUserOverride: false
+    allowUnauthorizedUserOverride: false,
+
+    dbInit: []
 };
 

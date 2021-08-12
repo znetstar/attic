@@ -33,6 +33,7 @@ import Constructible from "./Constructible";
 import {IDriver} from "@znetstar/attic-common/lib/IDriver";
 import {WebSocketPaths, WebSocketServer} from "./Web/WebServer";
 import * as ws from 'ws';
+import {DBInitRecordMongo, DBInitRecordMongoose} from "@znetstar/attic-common/lib/Server/IConfig";
 
 export interface ListenStatus {
     urls: string[];
@@ -63,18 +64,83 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
         if (this.config.logListening)
             this.on('Web.webServerListen.complete', this.onWebServerListen);
 
-        this.once('launch.complete', () => {
-            this.logs.verbose({
-                method: 'launch.complete',
-                params: [
+        this.once('launch.complete', this.onLaunchCompleteLog);
+        this.once('launch.complete', this.onLaunchCompleteDbInit);
+    }
+
+    onLaunchCompleteDbInit = async () =>  {
+      try {
+        if (this.config.dbInit) {
+          for (const dbInitRecord of this.config.dbInit) {
+            const q = dbInitRecord.query ||  dbInitRecord.document._id ? { _id: dbInitRecord.document._id } : null;
+            if ((dbInitRecord as DBInitRecordMongo<any>).collection) {
+              if (q) {
+                if (dbInitRecord.replace) {
+                  await this.mongoose.connection.db.collection((dbInitRecord as DBInitRecordMongo<any>).collection).replaceOne(
+                    q,
+                    dbInitRecord.document
+                  );
+                } else {
+                  await this.mongoose.connection.db.collection((dbInitRecord as DBInitRecordMongo<any>).collection).updateOne(
+                    q,
                     {
-                        name: this.package.name,
-                        version: this.package.version,
-                        contributors: this.package.contributors.map((c: any) => `${c.name} <${c.email}>`)
+                      $set: {
+                        ...dbInitRecord.document,
+                      },
+                      ...(dbInitRecord.document._id ? ({$setOnInit: {_id: dbInitRecord.document._id}}) : {})
+                    },
+                    {
+                      upsert: true
                     }
-                ]
-            })
+                  );
+                }
+              } else {
+                await this.mongoose.connection.db.collection((dbInitRecord as DBInitRecordMongo<any>).collection).insertOne(
+                  dbInitRecord.document
+                );
+              }
+            } else if ((dbInitRecord as DBInitRecordMongoose<any>).model) {
+              if (q) {
+                if (dbInitRecord.replace) {
+                  await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].replaceOne(q, dbInitRecord.document);
+                } else {
+                  await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].updateOne(q, {
+                    $set: {
+                      ...dbInitRecord.document,
+                    },
+                    ...(dbInitRecord.document._id ? ({$setOnInit: {_id: dbInitRecord.document._id}}) : {})
+                  }, {
+                    upsert: true
+                  });
+                }
+              } else {
+                await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].create(dbInitRecord.document);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        this.logs.error({
+          method: 'launch.complete',
+          params: [
+            { message: err.stack }
+          ]
         });
+        process.exit(1);
+      }
+    }
+
+    onLaunchCompleteLog = () => {
+      this.logs.verbose({
+        method: 'launch.complete',
+        params: [
+          {
+            name: this.package.name,
+            version: this.package.version,
+            contributors: this.package.contributors.map((c: any) => `${c.name} <${c.email}>`)
+          }
+        ]
+      })
     }
 
     onWebServerListen = (status: ListenStatus) => {
