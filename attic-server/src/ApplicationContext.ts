@@ -28,12 +28,14 @@ import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import  * as fs from 'fs-extra';
 import * as path from 'path';
 import {  Notification } from 'multi-rpc';
-import {IApplicationContext} from "@znetstar/attic-common/lib/Server";
+import {IApplicationContext} from "@znetstar/attic-common/lib/Server/index";
 import Constructible from "./Constructible";
 import {IDriver} from "@znetstar/attic-common/lib/IDriver";
-import {WebSocketPaths, WebSocketServer} from "./Web/WebServer";
+import {handleErrorMiddleware, WebSocketPaths, WebSocketServer} from "./Web/WebServer";
 import * as ws from 'ws';
 import {DBInitRecordMongo, DBInitRecordMongoose} from "@znetstar/attic-common/lib/Server/IConfig";
+
+import {asyncMiddleware} from "./Web/Common";
 
 export interface ListenStatus {
     urls: string[];
@@ -51,6 +53,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
             removeListener: true,
             verboseMemoryLeak: false
         });
+
 
         this.logger = createLogger(this);
 
@@ -187,7 +190,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
 
 
     get webExpress() {
-        return WebExpress();
+        return WebExpress;
     }
 
     get webSocketServer() {
@@ -242,6 +245,16 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
         name = name || driver.name;
         this.drivers.set(name, driver);
         await this.emitAsync(`Drivers.${name}.init`, driver);
+    }
+
+    get middleware() {
+      const {restrictScopeMiddleware} = require("./Web/AuthMiddleware");
+      const{handleErrorMiddleware} = require('./Web/WebServer');
+      return {
+        restrictScopeMiddleware: restrictScopeMiddleware,
+        asyncMiddleware: asyncMiddleware,
+        handleErrorMiddleware: handleErrorMiddleware
+      }
     }
 }
 

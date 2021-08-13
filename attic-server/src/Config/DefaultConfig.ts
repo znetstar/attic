@@ -47,8 +47,8 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
 
     expireTokenIn: ( 1 * 60 * 60 * 1000 ),
     expireRefreshTokenIn: (365 * 24 * 60 * 60 * 1000 ),
-    serviceClientId: 'attic',
-    serviceClientSecret: 'attic',
+    // serviceClientId: 'attic',
+    // serviceClientSecret: 'attic',
     shortUrlSize: 4,
     rootResolverBatchSize: 50,
 
@@ -73,6 +73,9 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     allowRootUserOverride: false,
     allowUnauthorizedUserOverride: false,
 
-    dbInit: []
+    dbInit: [],
+    allowGetTokenWithNoRedirectUri: [
+      'client_credentials'
+    ]
 };
 

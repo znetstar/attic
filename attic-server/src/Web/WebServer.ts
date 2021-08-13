@@ -19,6 +19,7 @@ import {
     RPCError
 } from 'multi-rpc';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
+import {asyncMiddleware} from "./Common";
 
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
 
@@ -61,10 +62,14 @@ function processWebError(error: IError|Error|RPCError, httpOpts?: HTTPErrorOpts)
     return err;
 }
 
-async function handleError(error: any, req: any, res: any) {
+export function handleError(error: any, req: any, res: any) {
     let err = processWebError(error, { httpMethod: req.method, httpUrl: req.originalUrl });
 
     res.status(err.httpCode || 500).send({ error: err });
+}
+
+export function handleErrorMiddleware() {
+  return (handleError);
 }
 
 export class AtticExpressTransport extends ExpressTransport {
@@ -183,11 +188,11 @@ export async function loadWebServer() {
         WebExpress.use(ResolverMiddleware);
     }
 
-    WebExpress.use((error: any, req: any, res: any, next: any) => {
-        handleError(error, req, res);
-    });
+  await ApplicationContext.emitAsync('launch.loadWebServer.complete');
 
-    await ApplicationContext.emitAsync('launch.loadWebServer.complete');
+  WebExpress.use((error: any, req: any, res: any, next: any) => {
+      handleError(error, req, res);
+  });
 }
 
 ApplicationContext.once('launch.loadWebServer.complete', () => initDocumentSync());

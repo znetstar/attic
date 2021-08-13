@@ -385,7 +385,7 @@ if (query.populate) usersQuery.populate(query.populate);
 
 RPCServer.methods.findUsers = async (query: BasicFindOptions) =>  {
     let users = await findUserInner(query);
-    return Array.isArray(users) ?
+      return Array.isArray(users) ?
         users.map(l => l.toJSON({ virtuals: true })) :
         users;
 }
@@ -469,7 +469,7 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
   }
 
   {
-    if (config.rootUsername && config.rootPassword) {
+    if (config.rootUsername) {
       const delta: any = {
         $setOnInsert: {
           username: config.rootUsername
@@ -481,8 +481,11 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
 
       const extra: any = {
         scope: [ '.*' ],
-        password: await bcryptPassword(config.rootPassword),
         groups
+      }
+
+      if (config.rootPassword) {
+        extra.password = await bcryptPassword(config.rootPassword);
       }
 
       if (config.allowRootUserOverride) {

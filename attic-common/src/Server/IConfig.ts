@@ -157,6 +157,7 @@ export interface IConfig {
     allowUnauthorizedUserOverride?: boolean;
 
     dbInit?: DBInitRecord<any>[];
+    allowGetTokenWithNoRedirectUri?: string[];
 }
 
 export default IConfig;

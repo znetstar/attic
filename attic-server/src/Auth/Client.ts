@@ -25,6 +25,8 @@ export interface IClientModel {
     getIdentityEntity(token: IAccessToken&Document): Promise<IIdentityEntity&Document>;
     uriSubstitutions?: Map<string, string>;
     applyUriSubstitutions(qs: any): any;
+    get defaultUser(): IUser|string|undefined;
+    defaultUsername?: string;
 }
 
 export type IClient = IClientBase&IClientModel;
@@ -45,10 +47,21 @@ export const ClientSchema = <Schema<IClient>>(new (mongoose.Schema)({
     },
     role: { type: [String], required: true, enum: Object.keys(require('@znetstar/attic-common/lib/IClient').IClientRole) },
     scopeJoin: { type: String, required: false  },
-    sendStateWithRedirectUri: { type: Boolean, required: false }
+    sendStateWithRedirectUri: { type: Boolean, required: false },
+    defaultUsername: {
+      type: String,
+      required: false
+    }
 }, {
     collection: 'clients'
 }));
+
+ClientSchema.virtual('defaultUser', {
+  justOne: true,
+  ref:  'User',
+  localField: 'defaultUsername',
+  foreignField: 'username'
+})
 
 export function applyUriSubstitutions(provider: IClient, qs: any) {
     if (!provider.uriSubstitutions || !provider.uriSubstitutions.size)
@@ -239,6 +252,9 @@ ApplicationContext.once('launch.loadModels.complete', async () => {
         expireAccessTokenIn: null,
         expireRefreshTokenIn: null
       }
+
+      if (config.rootUsername)
+        extra.defaultUsername = config.rootUsername;
 
       if (config.allowClientOverride) {
         delta.$set = extra;

@@ -3,6 +3,7 @@ import {IPlugin} from "./IPlugin";
 import Constructible from "../Constructible";
 import IConfig, {LogLevels} from "./IConfig";
 import IRPC from "../IRPC";
+import {Middleware, middlewareCreator, restrictScopeMiddleware,asyncMiddleware} from "./Middleware";
 
 export type LogFunction = (entry: any, options?: unknown) => void;
 
@@ -18,6 +19,7 @@ export interface ILogger {
 
 export interface IApplicationHookEmitter {
   on(event: string, handler: (...args: unknown[]) => Promise<unknown>): void;
+  once(event: string, handler: (...args: unknown[]) => Promise<unknown>): void;
   emit(event: string, ...args: unknown[]): void;
   emitAsync(event: string, ...args: unknown[]): Promise<unknown[]>;
   triggerHook<T>(method: string, ...params: any[]): Promise<Array<T>>;
@@ -37,5 +39,11 @@ export type IApplicationContext = IApplicationHookEmitter&{
     package: unknown;
     webSocketServer: unknown;
     webSocketPaths: Map<string, unknown>;
+    middleware: {
+       [name: string]: middlewareCreator;
+       restrictScopeMiddleware: restrictScopeMiddleware;
+       asyncMiddleware: asyncMiddleware,
+       handleErrorMiddleware: ()=>Middleware
+    },
     loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void>;
 }

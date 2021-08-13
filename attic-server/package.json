@@ -66,6 +66,11 @@
             "name": "Etomon Team",
             "email": "open-source@etomon.com",
             "url": "https://etomon.com"
+        },
+        {
+          "name": "Third Act Team",
+          "email": "zach@thirdact.digital",
+          "url": "https://thirdact.digital"
         }
     ],
     "license": "AGPL-3.0",

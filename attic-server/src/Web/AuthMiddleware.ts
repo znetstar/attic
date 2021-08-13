@@ -52,6 +52,7 @@ AuthMiddleware.use((req: any, res, next) => {
 })
 
 export function restrictScopeMiddleware(scope: string): RequestHandler {
+
     return function (req: any, res: any, next: any) {
         (async () => {
             if (!req.user) {
@@ -66,6 +67,7 @@ export function restrictScopeMiddleware(scope: string): RequestHandler {
                     if (accessToken) {
                         context.currentScopeAccessToken = accessToken;
 
+
                         return;
                     }
                 }
@@ -75,7 +77,7 @@ export function restrictScopeMiddleware(scope: string): RequestHandler {
     }
 }
 
-function restrictOauth(fn: string) {
+export function restrictOauth(fn: string) {
     return function (req: any, res: any, next: any) {
         return restrictScopeMiddleware(`auth.${req.params.provider}.${fn}`)(req ,res, next);
     }
@@ -239,18 +241,24 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
         code
     } = getAccessTokenForm(form);
 
+    const enforceRedirectUri = !config.allowGetTokenWithNoRedirectUri || !config.allowGetTokenWithNoRedirectUri.includes(grantType);
     let grantEvent = `Web.AuthMiddleware.getAccessToken.grantTypes.${grantType || ''}`;
 
-    if (!grantType || !clientId || !clientSecret || !redirectUri || !(ApplicationContext).eventNames().includes(grantEvent)) {
+    if (!grantType || !clientId || !clientSecret || (enforceRedirectUri && !redirectUri) || !(ApplicationContext).eventNames().includes(grantEvent)) {
         throw new MalformattedTokenRequestError();
     }
 
-    let client = await Client.findOne({
-        clientId,
-        clientSecret,
-        role: { $in: [ 'consumer' ] },
-      redirectUri
-    }).exec();
+    const q: any = {
+      clientId,
+      clientSecret,
+      role: { $in: [ 'consumer' ] }
+    };
+
+    if (enforceRedirectUri) {
+      q.redirectUri = redirectUri;
+    }
+
+    let client = await Client.findOne(q).exec();
 
 
     if (!client) {
@@ -326,13 +334,6 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
     let {
         password,
         username,
-        refreshTokenCode,
-        originalState,
-        redirectUri,
-        clientId,
-        clientSecret,
-        grantType,
-        code,
         scope
     } = getAccessTokenForm(req);
 
@@ -414,7 +415,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_crede
     let groups = client.scope.map((s: string) => s.match(/^group\.(.*)/)).filter(Boolean).map((g: string[]) => g[1]);
 
     let user = await User.findOne({
-        username: username,
+        username: username ? username : (!client.defaultUser ? client.defaultUsername : (client.defaultUser as IUser).username),
         groups: {
             $in: groups
         }
