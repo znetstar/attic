@@ -201,13 +201,26 @@ export class AtticServerREST implements IPlugin {
       const mongoose = $mongoose as any;
 
 
-      web.use('/:modelName/:id', (req, res, next) => {
-        (req as any).targetId = req.params.id;
-        if (req.params.id === 'self') {
-          req.originalUrl = req.originalUrl.replace('/self', '/' + (req as any).user._id.toString());
-          (req as any).targetId = (req as any).user._id.toString();
-        }
-        next();
+      web.use('/:modelName/:id',
+        (req, res, next) => {
+          const {modelName} = req.params;
+          const methods = this.methodsFromModelName(modelName);
+
+          (req as any).targetId = req.params.id;
+          if (req.params.id === 'self') {
+            req.originalUrl = req.originalUrl.replace('/self', '/' + (req as any).user._id.toString());
+            (req as any).targetId = (req as any).user._id.toString();
+
+            // if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+          restrictScopeMiddleware(`rest.${modelName}.self.${req.method.toLowerCase()}`)
+            (
+              req, res, next
+            );
+
+            return
+          }
+
+          next();
       });
 
       // if (methods.findOne) {
@@ -220,7 +233,8 @@ export class AtticServerREST implements IPlugin {
               next && next();
               return;
             }
-            restrictScopeMiddleware(`rest.${modelName}.findOne`)
+            if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+restrictScopeMiddleware(`rest.${modelName}.findOne`)
             (
               req, res, next
             );
@@ -265,7 +279,8 @@ export class AtticServerREST implements IPlugin {
               return;
             }
             req.queryType = req.query.queryType || 'find';
-            restrictScopeMiddleware(`rest.${modelName}.${req.queryType}`)
+            if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+restrictScopeMiddleware(`rest.${modelName}.${req.queryType}`)
             (
               req, res, next
             );
@@ -317,7 +332,8 @@ export class AtticServerREST implements IPlugin {
           (req:any, res:any, next:any) => {
             const {modelName} = req.params;
             const methods = this.methodsFromModelName(modelName);
-            restrictScopeMiddleware(`rest.${modelName}.create`)
+            if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+restrictScopeMiddleware(`rest.${modelName}.create`)
             (
               req, res, next
             );
@@ -346,7 +362,8 @@ export class AtticServerREST implements IPlugin {
           (req:any, res:any, next:any) => {
             const {modelName} = req.params;
             const methods = this.methodsFromModelName(modelName);
-            restrictScopeMiddleware(`rest.${modelName}.update`)
+            if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+restrictScopeMiddleware(`rest.${modelName}.update`)
             (
               req, res, next
             );
@@ -374,7 +391,8 @@ export class AtticServerREST implements IPlugin {
           (req:any, res:any, next:any) => {
             const {modelName} = req.params;
             const methods = this.methodsFromModelName(modelName);
-            restrictScopeMiddleware(`rest.${modelName}.patch`)
+            if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+restrictScopeMiddleware(`rest.${modelName}.patch`)
             (
               req, res, next
             );
@@ -400,7 +418,8 @@ export class AtticServerREST implements IPlugin {
         (req:any, res:any, next:any) => {
           const {modelName} = req.params;
           const methods = this.methodsFromModelName(modelName);
-          restrictScopeMiddleware(`rest.${modelName}.delete`)
+          if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
+restrictScopeMiddleware(`rest.${modelName}.delete`)
           (
             req, res, next
           );
