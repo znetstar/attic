@@ -75,7 +75,8 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
 
     dbInit: [],
     allowGetTokenWithNoRedirectUri: [
-      'client_credentials'
+      'client_credentials',
+      'password'
     ]
 };
 
