@@ -105,8 +105,9 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
             } else if ((dbInitRecord as DBInitRecordMongoose<any>).model) {
               if (q) {
                 if (dbInitRecord.replace) {
-                  await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].replaceOne(q, dbInitRecord.document);
-                } else {
+                  await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].deleteOne(q);
+                }
+                // else {
                   await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].updateOne(q, {
                     $set: {
                       ...dbInitRecord.document,
@@ -115,7 +116,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
                   }, {
                     upsert: true
                   });
-                }
+                // }
               } else {
                 await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].create(dbInitRecord.document);
               }
