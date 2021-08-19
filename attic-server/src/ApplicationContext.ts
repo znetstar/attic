@@ -36,6 +36,7 @@ import * as ws from 'ws';
 import {DBInitRecordMongo, DBInitRecordMongoose} from "@znetstar/attic-common/lib/Server/IConfig";
 
 import {asyncMiddleware} from "./Web/Common";
+import {ObjectId} from "mongodb";
 
 export interface ListenStatus {
     urls: string[];
@@ -90,7 +91,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
                       $set: {
                         ...dbInitRecord.document,
                       },
-                      ...(dbInitRecord.document._id ? ({$setOnInit: {_id: dbInitRecord.document._id}}) : {})
+                      ...(dbInitRecord.document._id ? ({$setOnInsert: {_id: dbInitRecord.document._id}}) : {})
                     },
                     {
                       upsert: true
@@ -104,15 +105,19 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
               }
             } else if ((dbInitRecord as DBInitRecordMongoose<any>).model) {
               if (q) {
+                let newId: ObjectId|undefined;
                 if (dbInitRecord.replace) {
-                  await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].deleteOne(q);
+                  const val = await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].findOneAndRemove(q).exec();
+                  newId = val ? (val._id || val.value?._id) : void(0);
+                } else {
+                  newId = dbInitRecord.document._id;
                 }
                 // else {
                   await this.mongoose.models[(dbInitRecord as DBInitRecordMongoose<any>).model].updateOne(q, {
                     $set: {
-                      ...dbInitRecord.document,
+                      ...dbInitRecord.document
                     },
-                    ...(dbInitRecord.document._id ? ({$setOnInit: {_id: dbInitRecord.document._id}}) : {})
+                    ...(newId ? ({$setOnInsert: {_id: newId}}) : {})
                   }, {
                     upsert: true
                   });

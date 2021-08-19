@@ -5,7 +5,12 @@ import * as Redis from 'ioredis';
 import {RPCServer} from "../RPC";
 
 const mongoose = (<any>global).mongoose = <Mongoose>(<any>require('mongoose'));
-mongoose.connect(config.mongoUri, { useNewUrlParser: true, useUnifiedTopology: true }).catch((err: Error) => {
+mongoose.connect(config.mongoUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: true,
+  useCreateIndex: true
+}).catch((err: Error) => {
     console.error(`Error connecting to mongoose: ${err.stack}`)
 });
 
