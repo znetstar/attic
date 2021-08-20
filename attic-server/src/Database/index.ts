@@ -11,7 +11,8 @@ mongoose.connect(config.mongoUri, {
   useFindAndModify: true,
   useCreateIndex: true
 }).catch((err: Error) => {
-    console.error(`Error connecting to mongoose: ${err.stack}`)
+    console.error(`Error connecting to mongoose: ${err.stack}`);
+    process.exit(1);
 });
 
 export const redis = new Redis(config.redisUri);
