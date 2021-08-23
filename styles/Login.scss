@@ -1,0 +1,30 @@
+.login-panel {
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+  }
+  & > div {
+    text-align: center;
+    min-width: 15em;
+    margin: 10px 0;
+    &:last-child {
+      margin: 0;
+    }
+  }
+  .login-panel-buttons {
+    & > div {
+      margin: 1em 0;
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.email-password-form {
+  width: 100%;
+
+}
+
+.form-control {
+  width: 100%;
+}

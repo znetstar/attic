@@ -1,34 +1,31 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+## Installing
 
-First, run the development server:
+Install Node.js 14 (preferably by downloading [NVM](https://github.com/nvm-sh/nvm) and running `nvm install 14 && nvm use 14`) and [Docker](https://www.docker.com/).
 
-```bash
-npm run dev
-# or
-yarn dev
+Run `npm ci` to install the modules.
+
+## Configuring
+
+You'll need to add configuration options to `.env.local` in the root folder of this project.
+
+When I use "`{...}`" your expected to use your issued API credentials.  
+
+```text
+MONGO_URI=mongodb://localhost:8201/third-act
+REDIS_URI=redis://localhost:8202/0
+
+AWS_ACCESS_KEY_ID={...}
+AWS_SECRET_ACCESS_KEY={...}
+
+SMTP_URI={...}
+SMTP_FROM={...}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+Start the database by running `docker compose up -d mongo`.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.tsx`.
+Finally, you can start the server by running `npm run dev`. If you're using VSCode (or any Chrome-compatible IDE) you'll
+probably want to use [debugging](https://nextjs.org/docs/advanced-features/debugging).
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
