@@ -9,12 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@etomon/encode-tools": "^2.7.0",
     "@etomon/ioredisdown": "^1.2.2",
     "@fontsource/poppins": "^4.5.0",
     "@fontsource/roboto": "^4.5.0",
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
+    "@thirdact/simple-mongoose-interface": "^1.1.0",
     "@types/core-js": "^2.5.5",
     "@znetstar/attic-cli-common": "^3.1.44",
     "@znetstar/attic-common": "^3.8.1",

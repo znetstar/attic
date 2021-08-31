@@ -10,7 +10,7 @@ mongoose.connect(process.env.MONGO_URI as string, {
   useFindAndModify: true,
   useCreateIndex: true
 }).catch((err: Error) => {
-  console.error(`Error connecting to mongoose: ${err.stack}`);
+  console.error(`Error connecting to mongoose ${process.env.MONGO_URI }: ${err.stack}`);
   process.exit(1);
 });
 
