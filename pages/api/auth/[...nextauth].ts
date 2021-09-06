@@ -1,15 +1,25 @@
-import NextAuth, {Account, Profile as ProfileBase, Session, User} from 'next-auth'
-import Providers from 'next-auth/providers'
-import fetch from 'node-fetch';
+import NextAuth, {Account, Profile as ProfileBase, Session, User as UserBase} from 'next-auth'
+import Providers from 'next-auth/providers';
 import atticConfig from '../../../misc/attic-config/config.json';
 import {JWT} from "next-auth/jwt";
 import {IRPC, IUser as AtticUser} from '@znetstar/attic-common';
-import IAccessToken, { IFormalAccessToken as AtticAccessToken } from '@znetstar/attic-common/lib/IAccessToken';
+import IAccessToken, {
+  IFormalAccessToken,
+  IFormalAccessToken as AtticAccessToken
+} from '@znetstar/attic-common/lib/IAccessToken';
 import levelup from 'levelup';
 import { IORedisDown } from '@etomon/ioredisdown';
 import { OAuthAgent } from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import Redis from 'ioredis';
 import { default as AtticClient } from '@znetstar/attic-common/lib/IClient';
+import {IPOJOUser, IUser, toUserPojo, User as MarketplaceUser} from "../../common/_user";
+import { Document } from 'mongoose';
+import fetch  from 'node-fetch';
+import {
+  Conversion,
+  ToPojo,
+  toPojo
+} from '@thirdact/to-pojo';
 /**
  * Connection to redis used for session stuff
  */
@@ -137,14 +147,17 @@ const scope = DEFAULT_USER_SCOPE.join(' ');
 /**
  * Profile information as retrieved upon login
  */
-export type Profile = ProfileBase & {
-  atticUser: AtticUser
+export type User = UserBase & {
+  atticUser: AtticUser,
+  marketplaceUser: IPOJOUser
 };
 
 /**
  * Data to be stored in the session object. This data persists between page changes
  */
-export interface MarketplaceSessionData {}
+export interface MarketplaceSessionData {
+  user?: User
+}
 
 /**
  * JWT Token (this just actually wraps the attic access token)
@@ -153,11 +166,13 @@ export type MarketplaceToken = JWT&{
   atticAccessToken: AtticAccessToken;
   provider: string;
   atticUserId: string;
+  userId: string;
 };
 
 export type MarketplaceSession = Session&{
   token: MarketplaceToken;
   data: MarketplaceSessionData;
+  user: User,
   /**
    * Save the session data to redis
    */
@@ -170,15 +185,89 @@ export type MarketplaceSession = Session&{
   getAtticAgent(): OAuthAgent;
 };
 
+async function syncUser(atticUser: AtticUser): Promise<Document<IUser>> {
+  let marketplaceUser: Document<IUser>|null = await MarketplaceUser.findOne({ atticUserId: atticUser._id }).exec();
+
+  if (!marketplaceUser) {
+    let doc: any = {
+      atticUserId: atticUser._id
+    };
+    if (atticUser.identities[0]) {
+      doc.firstName = atticUser.identities[0].firstName;
+      doc.lastName = atticUser.identities[0].lastName;
+      doc.email = atticUser.username
+    }
+    const firstName = atticUser.identities[0]
+    marketplaceUser = await MarketplaceUser.create(doc);
+  }
+
+  return marketplaceUser as Document<IUser>;
+}
+
+export async function ensureUser(
+  input: MarketplaceToken|MarketplaceSession,
+  opts: { user?: User, session?: MarketplaceSession, account?: Account } = {}
+): Promise<{ marketplaceUser: IUser, atticUser: AtticUser, token: MarketplaceToken }> {
+  let { user, session, account } = opts;
+  let token: MarketplaceToken;
+  if ((input as MarketplaceSession)?.token) {
+    token = (input as MarketplaceSession)?.token;
+    session = input as MarketplaceSession;
+  } else {
+    token = input as MarketplaceToken;
+  }
+
+  const provider = oauthConsumerByName.get((token.provider ? token.provider : account?.provider) as string) as DBInitRecordWithAgent;
+
+  if (!provider.agent) {
+    throw  new Error(`Invalid provider ${account?.provider}`);
+  }
+
+  let marketplaceUser: IUser|undefined;
+  let   atticUser: AtticUser|undefined;
+
+  if (session) {
+
+    if (session?.data?.user) {
+      marketplaceUser = session?.data?.user.marketplaceUser;
+      atticUser = session?.data?.user.atticUser;
+    }
+  }
+
+  if (!marketplaceUser || !atticUser) {
+    // Here we used to saved refresh token to attempt a refresh
+    // If no refresh is needed, the library will just return the existing token
+    const atticAccessToken = token.atticAccessToken = (await provider.agent.ensureToken({
+      refresh_token: (token.atticAccessToken?.refresh_token || account?.refresh_token) as string,
+      client_id: provider.document.clientId,
+      client_secret: provider.document.clientSecret,
+      grant_type: 'refresh_token',
+      scope,
+      redirect_uri: provider.document.redirectUri
+    }));
+  }
+
+  token.provider = (token.provider || account?.provider) as string;
+
+  return {
+    marketplaceUser:  marketplaceUser as IUser,
+    token,
+    atticUser: atticUser as AtticUser
+  };
+}
+
+type Profile = ProfileBase;
 
 export default NextAuth({
+  jwt: {
+    signingKey: process.env.JWT_SIGNING_PRIVATE_KEY
+  },
   session: {
-    jwt: true
   },
   pages: {
     signIn: '/login',
     signOut: '/logout',
-    error: '/login',
+    error: '/error',
     newUser: '/signup'
   },
   callbacks: {
@@ -195,26 +284,11 @@ export default NextAuth({
      * @param profile
      * @param isNewUser
      */
-    async jwt(token: MarketplaceToken, user?: User, account?: Account, profile?: Profile, isNewUser?: boolean): Promise<MarketplaceToken> {
-      const provider = oauthConsumerByName.get((token.provider ? token.provider : account?.provider) as string) as DBInitRecordWithAgent;
-
-      if (!provider.agent) {
-        throw  new Error(`Invalid provider ${account?.provider}`);
-      }
-
-      // Here we used to saved refresh token to attempt a refresh
-      // If no refresh is needed, the library will just return the existing token
-        const atticAccessToken = token.atticAccessToken = (await provider.agent.ensureToken({
-        refresh_token: (token.atticAccessToken?.refresh_token || account?.refresh_token) as string,
-        client_id: provider.document.clientId,
-        client_secret: provider.document.clientSecret,
-        grant_type: 'refresh_token',
-        scope,
-        redirect_uri: provider.document.redirectUri
-      }));
-
-      token.provider = (token.provider || account?.provider) as string;
-      token.atticUserId = token.sub as string;
+    async jwt(token: MarketplaceToken, user?: User, account?: Account, profile?: ProfileBase, isNewUser?: boolean): Promise<MarketplaceToken>  {
+      if (token?.userId || user?.marketplaceUser) token.userId  =user?.marketplaceUser._id.toString() as string ||  token.userId;
+      if (token?.atticUserId || user?.atticUser._id || token.atticUserId) token.atticUserId =  user?.atticUser._id || token.atticUserId;
+      if (account) token.atticAccessToken = account as unknown as IFormalAccessToken;
+      if (account?.provider) token.provider = account.provider;
 
       return token;
     },
@@ -227,29 +301,54 @@ export default NextAuth({
     async session(session: MarketplaceSession, token: MarketplaceToken): Promise<MarketplaceSession> {
       session.token = token;
 
-      session.save = async function () {
-        // The refresh token is used as a session key, so sessions persist between token refreshes
-        await sessionDb.put(session.token.atticAccessToken?.refresh_token, session.data);
-      }
+      // session.save = async function () {
+      //   // The refresh token is used as a session key, so sessions persist between token refreshes
+      //   await sessionDb.put(session.token.atticAccessToken?.refresh_token, session.data);
+      // }
 
-      session.getAtticAgent = () => oauthConsumerByName.get(`marketplace-${token.provider}`)?.agent as OAuthAgent;
-
-      session.load = async function ()  {
-        let data: MarketplaceSessionData = {};
-        try {
-          // The refresh token is used as a session key, so sessions persist between token refreshes
-          data = (await sessionDb.get(session.token.atticAccessToken?.refresh_token)) as MarketplaceSessionData;
-        } catch (err)  {
-          if (!err.notFound) {
-            throw err;
-          }
-        } finally {
-          session.data = data;
+        function getAtticAgent() {
+          const agent = oauthConsumerByName.get(session.token.provider) as DBInitRecordWithAgent;
+          return agent. agent;
         }
+
+        session.getAtticAgent = getAtticAgent;
+
+        const agent = session.getAtticAgent();
+        if (!session.user?.atticUser) {
+        const { RPCProxy: rpcProxy } = agent.createRPCProxy({
+          grant_type: 'refresh_token',
+          refresh_token: token.atticAccessToken.refresh_token
+        });
+
+        const atticUser = await rpcProxy.getSelfUser() as AtticUser;
+
+        const marketplaceUser = toUserPojo(await syncUser(atticUser));
+        session.user = {
+          name: atticUser.username,
+          email: atticUser.username,
+          atticUser,
+          marketplaceUser
+        };
+      }
+      else if (!session.user?.marketplaceUser) {
+        session.user.marketplaceUser = toUserPojo(await syncUser(session.user.atticUser));
       }
 
-      await session.load();
-      return session;
+      // session.load = async function ()  {
+      //   let data: MarketplaceSessionData = {};
+      //   try {
+      //     // The refresh token is used as a session key, so sessions persist between token refreshes
+      //     data = (await sessionDb.get(session.token.atticAccessToken?.refresh_token)) as MarketplaceSessionData;
+      //   } catch (err)  {
+      //     if (!err.notFound) {
+      //       throw err;
+      //     }
+      //   } finally {
+      //     session.data = data;
+      //   }
+      // }
+
+      return toPojo<any, any>(session);
     }
   },
   providers: [
@@ -283,11 +382,14 @@ export default NextAuth({
           // Use the RPC interface to get the current user
           const {RPCProxy: atticRpc} = localRecord.agent.createRPCProxy();
           const atticUser: AtticUser = await atticRpc.getSelfUser() as AtticUser;
+          atticUser.identities = await (atticRpc as any).findSelfEntities() as any;
+          const marketplaceUser = await syncUser(atticUser);
 
           return {
             id: atticUser.id,
             name: atticUser.username,
-            atticUser
+            atticUser,
+            marketplaceUser: marketplaceUser.toJSON() as unknown as IUser
           }
         } catch (err) {
           if (err.httpCode === 403) {
@@ -303,6 +405,8 @@ export default NextAuth({
     ...Array.from(oauthProviderByName.values()).map((record) => {
       const provider = record.document.name;
       const clientId = `marketplace-${provider}`;
+
+      const  consumer = oauthConsumerByName.get(`marketplace-${provider}`);
       return {
         id: clientId,
         name: provider[0].toUpperCase() + provider.substr(1),
@@ -314,16 +418,40 @@ export default NextAuth({
         requestTokenUrl: `${atticUri}/auth/${provider}/authorize`,
         authorizationUrl: `${atticUri}/auth/${provider}/authorize?response_type=code`,
         // This call (`/rest/User/self`) is identical to `rpcProxy.getSelfUser()`
-        profileUrl: `${atticUri}/rest/User/self`,
+        profileUrl: `${atticUri}/rest/User/self?populate=identities`,
         async profile(atticUser: AtticUser, tokens: any): Promise<Profile> {
+          const resp = await fetch((process.env.ATTIC_URI as string) + '/rpc', {
+            method: 'POST',
+            body: JSON.stringify({
+              id: (new Date()).getTime(),
+              method: 'getSelfUser',
+              params: [],
+              jsonrpc:  '2.0'
+            }),
+            headers: {
+              'Content-Type':  'application/json',
+              'Authorization': `Bearer ${tokens.accessToken}`
+            }
+          });
+
+          const data = await resp.json();
+
+          atticUser = (data).result;
+
+          const marketplaceUser = await syncUser(atticUser);
+
+          const marketplaceUserPojo = toUserPojo(marketplaceUser);
+
           return {
             id: atticUser.id,
             name: atticUser.username,
-            atticUser
+            email: atticUser.username,
+            atticUser,
+            marketplaceUser
           };
         },
         clientId: clientId,
-        clientSecret: oauthConsumerByName.get(`marketplace-${provider}`)?.document.clientSecret
+        clientSecret: consumer?.document.clientSecret
       } as any;
     })
   ]

@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@etomon/encode-tools": "^2.7.0",
+    "@etomon/encode-tools": "^2.7.1",
     "@etomon/ioredisdown": "^1.2.2",
     "@fontsource/poppins": "^4.5.0",
     "@fontsource/roboto": "^4.5.0",

@@ -1,0 +1,12 @@
+
+.profile.page {
+  .image-wrapper {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+
+    input[type="file"] {
+      display: none;
+    }
+  }
+}
