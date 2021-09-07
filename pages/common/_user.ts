@@ -26,8 +26,13 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   atticUserId: { type: String, required: true },
-  image: { type: Buffer, required: false }
+  image: { type: Buffer, required: false },
+  password: { type: String, required: false }
 }));
+
+UserSchema.pre('save', async function () {
+
+});
 
 type ToUserParsable = (Document<IUser>&IUser)|IUser|Document<IUser>;
 export const ToUserPojo = new ToPojo<ToUserParsable, IPOJOUser>();

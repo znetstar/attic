@@ -2,8 +2,8 @@ import NextAuth, {Account, Profile as ProfileBase, Session, User as UserBase} fr
 import Providers from 'next-auth/providers';
 import atticConfig from '../../../misc/attic-config/config.json';
 import {JWT} from "next-auth/jwt";
-import {IRPC, IUser as AtticUser} from '@znetstar/attic-common';
-import IAccessToken, {
+import { IUser as AtticUser} from '@znetstar/attic-common';
+import {
   IFormalAccessToken,
   IFormalAccessToken as AtticAccessToken
 } from '@znetstar/attic-common/lib/IAccessToken';
@@ -11,13 +11,10 @@ import levelup from 'levelup';
 import { IORedisDown } from '@etomon/ioredisdown';
 import { OAuthAgent } from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import Redis from 'ioredis';
-import { default as AtticClient } from '@znetstar/attic-common/lib/IClient';
 import {IPOJOUser, IUser, toUserPojo, User as MarketplaceUser} from "../../common/_user";
 import { Document } from 'mongoose';
 import fetch  from 'node-fetch';
 import {
-  Conversion,
-  ToPojo,
   toPojo
 } from '@thirdact/to-pojo';
 /**

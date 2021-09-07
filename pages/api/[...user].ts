@@ -1,15 +1,14 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { apply_patch } from 'jsonpatch';
-import * as _ from 'lodash';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import {
   SimpleModelInterface,
   ModelInterface,
   RESTInterfaceHandler,
-  RESTInterfaceMiddleware, ModelInterfaceRequestMethods
+  ModelInterfaceRequestMethods
 } from '@thirdact/simple-mongoose-interface';
 import { DEFAULT_REST_INTERFACE_OPTIONS } from '@thirdact/simple-mongoose-interface/lib/RESTInterfaceHandler';
 import {IUser, User} from "../common/_user";
+import {MakeEncoder} from "../common/_encoder";
 
 const simpleInterface = new SimpleModelInterface<IUser>(new ModelInterface<IUser>(User));
 const restHandler = new RESTInterfaceHandler(simpleInterface, (
@@ -22,7 +21,7 @@ const restHandler = new RESTInterfaceHandler(simpleInterface, (
       ModelInterfaceRequestMethods.patch,
       ModelInterfaceRequestMethods.update
     ],
-    skipParseBody: true
+    skipParseBody: false
   }
 });
 
@@ -34,8 +33,22 @@ export default async function handler(
     req.url = (process.env.SITE_URI as string) + req.url;
     await restHandler.execute(req as any, res as any);
   } catch (err) {
-    debugger
-    throw err;
+    res.statusCode = err.httpCode || 500;
+    let buf = MakeEncoder().serializeObject(
+      {
+        error: {
+          message: err.message
+        }
+      }
+    )
+    res.end(
+      buf
+    );
   }
 }
 
+export const config = {
+  api: {
+    bodyParser: false
+  }
+}

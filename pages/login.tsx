@@ -8,6 +8,8 @@ import Alert, { AlertProps } from '@material-ui/lab/Alert';
 const URL = require('core-js/web/url');
 
 import {NextRouter, withRouter} from "next/router"
+import Profile from "./profile";
+import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
 
 
 interface AuthProviders {
@@ -17,7 +19,17 @@ interface AuthProviders {
 type ProviderType = AuthProviders|null;
 
 export async function getServerSideProps(context: any){
-  const providers = await getProviders()
+  const providers = await getProviders();
+  const { res } = context;
+  const session = await Login.getSession(context);
+
+  if (session) {
+    res.setHeader('Location', '/profile');
+    res.statusCode = 302;
+    res.end();
+    return { props: {} };
+  }
+
   return {
     props: {
       providers,
@@ -31,7 +43,7 @@ enum LoginPanelSlides {
   emailPassword = 1
 }
 
-export interface LoginPanelProps {
+export type LoginPanelProps = SessionComponentProps&{
   providers: ProviderType,
   csrfToken: string,
   initialSlide?: LoginPanelSlides,
@@ -39,7 +51,7 @@ export interface LoginPanelProps {
   router: NextRouter;
 };
 
-export interface LoginPanelState {
+export type LoginPanelState = SessionComponentState&{
   slide: LoginPanelSlides,
   emailPasswordForm: {
     email: string|null,
@@ -54,7 +66,7 @@ const styles = {
   }
 }
 
-export class Login extends Component<LoginPanelProps,LoginPanelState> {
+export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
   async componentDidMount() {
 
   }
@@ -125,7 +137,7 @@ export class Login extends Component<LoginPanelProps,LoginPanelState> {
               <MarketplaceLogo></MarketplaceLogo>
             </div>
             <div>
-              <h1>Let's get Started!</h1>
+              <h1>Let&amp;apos;s get Started!</h1>
               <div>Choose a method to sign in</div>
             </div>
             <div className={"login-panel-buttons"}>
@@ -161,11 +173,7 @@ export class Login extends Component<LoginPanelProps,LoginPanelState> {
   render() {
     return (
       <Fragment>
-        {this.state.errorMessage ? <Snackbar open={Boolean(this.state.errorMessage)} autoHideDuration={6000} onClose={() => this.setState({ errorMessage: null })}>
-          <Alert onClose={() => this.setState({ errorMessage: null })} severity="error">
-            {this.state.errorMessage}
-          </Alert>
-        </Snackbar> : null}
+        {this.errorDialog}
         <div className={"login-panel page"}>
           {
             this.slides.get(this.state.slide) || null
@@ -175,4 +183,6 @@ export class Login extends Component<LoginPanelProps,LoginPanelState> {
     )
   }
 }
+
+
 export default withRouter(Login);
