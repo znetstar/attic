@@ -160,16 +160,32 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                   resizeImage={this.imageSize}
                   allowUpload={true}
                 ></MarketplaceAvatar>
+              </FormControl>
+            </div>
+            <div>
+              <FormControl className={'form-control'}>
                 <TextField required={true} value={
                   this.fakeEmail ? null : this.userForm.email
                 }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={'form-input'} type={"email"} variant={"filled"} name={"email"} label="Email" />
+              </FormControl>
+            </div>
+            <div>
+              <FormControl className={'form-control'}>
                 <TextField onChange={(e) => { (this as any).state.userForm.password = e.currentTarget.value; this.forceUpdate(); }} required={false} className={'form-input'} type={"password"} variant={"filled"} name={"password"} label="Password" />
               </FormControl>
             </div>
             <div>
               <FormControl className={'form-control'}>
                 <TextField onChange={(e) => { this.state.userForm.firstName = e.currentTarget.value; this.forceUpdate(); }}  value={this.userForm.firstName} required={true} className={'form-input'} variant={"filled"} name={"first-name"} label="First Name" />
+              </FormControl>
+            </div>
+            <div>
+              <FormControl className={'form-control'}>
                 <TextField onChange={(e) => { this.state.userForm.middleName = e.currentTarget.value; this.forceUpdate(); }}   value={this.userForm.middleName} required={false} className={'form-input'}  variant={"filled"} name={"middle-name"} label="Middle Name" />
+              </FormControl>
+            </div>
+            <div>
+              <FormControl className={'form-control'}>
                 <TextField onChange={(e) => { this.state.userForm.lastName = e.currentTarget.value; this.forceUpdate(); }} value={this.userForm.lastName}  required={true} className={'form-input'}  variant={"filled"} name={"last-name"} label="Last Name" />
               </FormControl>
             </div>
