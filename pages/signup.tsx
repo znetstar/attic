@@ -77,26 +77,29 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
 
   submitNewUser = async () => {
     (async () => {
-      await this.apiRequest<null>(`/api/user`, {
-        method: 'POST',
-        body: Buffer.from(this.enc.serializeObject({
-          fields: this.state.emailPasswordForm
-        }))
-      })
+      await this.rpc['marketplace:createUser'](this.state.emailPasswordForm)
+        .then(() => {
+          this.handleError('Create success', 'success');
+          (document as any).location.href = '/login';
+        })
     })()
-      .then(() => {
-        document.location.href = '/login';
-      })
-      .catch(this.handleError);
+     .catch(this.handleError);
   }
 
   render() {
     return (
       <Fragment>
         {this.errorDialog}
+
         <div className={"signup-panel page"}>
+          <div>
+            <MarketplaceLogo></MarketplaceLogo>
+          </div>
           <div className="email-password-form">
-            <form method='post' onSubmit={() => this.submitNewUser()}>
+            <form method='post' onSubmit={(e) => {
+              this.submitNewUser();
+              e.preventDefault();
+            }}>
               <div>
                 <LoginFormControl
                   id={"username"}
@@ -104,6 +107,12 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
                   text={"Email"}
                   value={this.state.emailPasswordForm.email}
                   required={true}
+                  onChange={
+                    (str) => {
+                      this.state.emailPasswordForm.email = str;
+                      this.forceUpdate();
+                    }
+                  }
                 ></LoginFormControl>
               </div>
               <div>
@@ -113,6 +122,12 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
                   text={"Password"}
                   value={this.state.emailPasswordForm.password}
                   required={true}
+                  onChange={
+                    (str) => {
+                      this.state.emailPasswordForm.password = str;
+                      this.forceUpdate();
+                    }
+                  }
                 ></LoginFormControl>
               </div>
               <div>

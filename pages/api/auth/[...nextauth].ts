@@ -17,13 +17,13 @@ import fetch  from 'node-fetch';
 import {
   toPojo
 } from '@thirdact/to-pojo';
+import {encodeOptions} from "../../common/_encoder";
 /**
  * Connection to redis used for session stuff
  */
+
 export const sessionRedis = new Redis(process.env.SESSION_REDIS_URI);
-export const sessionDb = levelup(new IORedisDown('blah', {
-  serializationFormat: 'cbor' as any
-}, { redis: sessionRedis } as any));
+export const sessionDb = levelup(new IORedisDown('blah', encodeOptions() as any, { redis: sessionRedis } as any));
 
 
 /**
@@ -253,7 +253,9 @@ export async function ensureUser(
   };
 }
 
-type Profile = ProfileBase;
+type Profile = ProfileBase&{
+  atticAccessToken: IFormalAccessToken
+};
 
 export default NextAuth({
   jwt: {
@@ -281,11 +283,16 @@ export default NextAuth({
      * @param profile
      * @param isNewUser
      */
-    async jwt(token: MarketplaceToken, user?: User, account?: Account, profile?: ProfileBase, isNewUser?: boolean): Promise<MarketplaceToken>  {
+    async jwt(token: MarketplaceToken, user?: User, account?: Account, profile?: Profile, isNewUser?: boolean): Promise<MarketplaceToken>  {
       if (token?.userId || user?.marketplaceUser) token.userId  =user?.marketplaceUser._id.toString() as string ||  token.userId;
       if (token?.atticUserId || user?.atticUser._id || token.atticUserId) token.atticUserId =  user?.atticUser._id || token.atticUserId;
-      if (account) token.atticAccessToken = account as unknown as IFormalAccessToken;
-      if (account?.provider) token.provider = account.provider;
+      if (user?.atticAccessToken) (token as any).atticAccessToken = user?.atticAccessToken;
+      else if (account) token.atticAccessToken = account as unknown as IFormalAccessToken;
+      if (!token.provider && !account?.provider) {
+        token.provider = 'marketplace-local';
+      }
+      if (account?.provider)
+        token.provider = account.provider;
 
       return token;
     },
@@ -312,10 +319,11 @@ export default NextAuth({
 
         const agent = session.getAtticAgent();
         if (!session.user?.atticUser) {
-        const { RPCProxy: rpcProxy } = agent.createRPCProxy({
-          grant_type: 'refresh_token',
-          refresh_token: token.atticAccessToken.refresh_token
-        });
+        const { RPCProxy: rpcProxy } = agent.createRPCProxy({} as any, {
+          headers: [
+            [ 'Authorization', `Bearer ${session.token.atticAccessToken.access_token as any}`]
+          ]
+        } as any);
 
         const atticUser = await rpcProxy.getSelfUser() as AtticUser;
 
@@ -366,24 +374,51 @@ export default NextAuth({
       async authorize(credentials, req): Promise<Profile|null> {
         try {
           //  Use the local agent to get an access token
-          const token = await localRecord.agent.getAccessToken({
-            "username": credentials.username,
-            "password": credentials.password,
-            "grant_type": "password",
-            "client_id": atticLocalClientId,
-            "client_secret": atticLocalClientSecret,
-            "redirect_uri": atticLocalRedirectUri,
-            scope
-          }) as AtticAccessToken;
+          const tokenResp = await fetch(`${process.env.ATTIC_URI}/auth/token`, {
+            method: 'POST',
+            body: JSON.stringify({
+              "username": credentials.username,
+              "password": credentials.password,
+              "grant_type": "password",
+              "client_id": atticLocalClientId,
+              "client_secret": atticLocalClientSecret,
+              "redirect_uri": atticLocalRedirectUri,
+              scope: scope
+            }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (tokenResp.status === 403) {
+            throw {
+              httpCode: 403,
+              message: 'Invalid email or password'
+            };
+          } else if (tokenResp.status !== 200) {
+            throw {
+              httpCode: 500,
+              message: 'Unexpected login error'
+            };
+          }
+
+          const token: IFormalAccessToken = await tokenResp.json();
 
           // Use the RPC interface to get the current user
-          const {RPCProxy: atticRpc} = localRecord.agent.createRPCProxy();
+          // @ts-ignore
+          const {RPCProxy: atticRpc, RPCClient: atticClient} = localRecord.agent.createRPCProxy({}, {
+            headers: [
+              [ 'Authorization', `Bearer ${token.access_token}`]
+            ]
+          });
+
+
           const atticUser: AtticUser = await atticRpc.getSelfUser() as AtticUser;
-          atticUser.identities = await (atticRpc as any).findSelfEntities() as any;
           const marketplaceUser = await syncUser(atticUser);
 
           return {
             id: atticUser.id,
+            atticAccessToken: token,
             name: atticUser.username,
             atticUser,
             marketplaceUser: marketplaceUser.toJSON() as unknown as IUser
@@ -444,7 +479,8 @@ export default NextAuth({
             name: atticUser.username,
             email: atticUser.username,
             atticUser,
-            marketplaceUser
+            marketplaceUser,
+            atticAccessToken: tokens
           };
         },
         clientId: clientId,

@@ -7,6 +7,7 @@ export interface LoginFormControlProps<V> {
   id: string;
   text: string;
   required: boolean|undefined;
+  onChange?(val: string): void;
 }
 
 export class LoginFormControl extends PureComponent<LoginFormControlProps<any>>  {
@@ -20,7 +21,7 @@ export class LoginFormControl extends PureComponent<LoginFormControlProps<any>> 
     // )
     return (
       <FormControl className={'form-control login-form-control'}>
-        <TextField required={this.props.required || false} variant={"filled"} label={this.props.text} className={'form-input login-form-input'} type={this.props.type} id={this.props.id} value={this.props.value} name={this.props.id} />
+        <TextField onChange={ this.props.onChange ? (e) => this.props.onChange(e.currentTarget.value) : void(0) } required={this.props.required || false} variant={"filled"} label={this.props.text} className={'form-input login-form-input'} type={this.props.type} id={this.props.id} value={this.props.value} name={this.props.id} />
       </FormControl>
     )
   }

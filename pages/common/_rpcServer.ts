@@ -1,0 +1,203 @@
+import {
+  EncodeToolsSerializer,
+  Transport,
+  ServerSideTransport,
+  ClientRequest,
+  Serializer,
+  Response,
+  Message,
+  Request, InternalError
+} from 'multi-rpc-common';
+import * as _ from 'lodash';
+import {
+
+  Server,
+  HTTPTransport,
+} from 'multi-rpc';
+
+import type { NextApiRequest, NextApiResponse } from 'next'
+import {encodeOptions, MakeSerializer} from "./_encoder";
+
+import {
+  SimpleModelInterface,
+  ModelInterface,
+  RPCInterface,
+  ModelInterfaceRequestMethods
+} from '@thirdact/simple-mongoose-interface';
+import { DEFAULT_REST_INTERFACE_OPTIONS } from '@thirdact/simple-mongoose-interface/lib/RESTInterfaceHandler';
+import {IUser, User} from "../common/_user";
+import {MakeEncoder} from "../common/_encoder";
+import {HTTPError, MarketplaceAPI, UnauthorizedRequest} from "./_rpcCommon";
+import {MarketplaceSession} from "../api/auth/[...nextauth]";
+import {getSession} from "next-auth/client";
+import Redis from "ioredis";
+import levelup from "levelup";
+import {IORedisDown} from "@etomon/ioredisdown";
+import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
+import {LRUMap} from 'lru_map';
+import atticConfig from "../../misc/attic-config/config.json";
+
+type RequestData = {
+  req: NextApiRequest,
+  res: NextApiResponse<Response>,
+  session: MarketplaceSession
+}
+
+type MarketplaceClientRequest = ClientRequest&{
+  additionalData: RequestData
+}
+
+
+/**
+ * @author znetstar - https://github.com/znetstar/multi-rpc-express-transport
+ */
+export class RPCTransport extends Transport implements ServerSideTransport {
+  /**
+   * Creates an express router transport
+   * @param serializer - Serializer
+   * @param router - Underlying express router, will create if not given.
+   */
+  constructor(public serializer: Serializer) {
+    super(serializer);
+  }
+
+  protected requestIds = new LRUMap(1e3);
+
+  public async onRequest(req: NextApiRequest, res: NextApiResponse<Response>) {
+    if (req.headers['x-marketplace-idempotency-key'] && this.requestIds.has(req.headers['x-marketplace-idempotency-key'])) {
+      res.statusCode = 409;
+      res.end();
+
+      return;
+    }
+
+    this.requestIds.set(req.headers['x-marketplace-idempotency-key'], true);
+
+    const jsonData = await new Promise<Buffer>((resolve, reject) => {
+      let buf: Buffer[] = [];
+      req.on('data', (chunk: Buffer) =>   { buf.push(Buffer.from(chunk)); });
+      req.once('error', (err) => reject(err));
+      req.once('end', () => resolve(Buffer.concat(buf)));
+    })
+
+    const rawReq = new Uint8Array(jsonData);
+    const clientRequest = new ClientRequest(req.headers['x-marketplace-idempotency-key'] || Transport.uniqueId(), (response?: Response) => {
+      const headers: any = {};
+
+      if (response) {
+        headers["Content-Type"] = this.serializer.content_type;
+
+        res.writeHead(200, headers);
+        res.end(this.serializer.serialize(response));
+      } else {
+        res.writeHead(204, headers);
+        res.end();
+      }
+    }, { req, res, session: await getSession({  req }) });
+
+    this.receive(rawReq, clientRequest);
+  }
+
+  public send(message: Message): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  public async listen(): Promise<void> {
+    return;
+  }
+
+  public async close(): Promise<void> {
+    return;
+  }
+}
+
+// Create attic user
+export function mkAtticService() {
+  const sessionRedis = new Redis(process.env.SERVICE_OAUTH_REDIS_URI);
+  const sessionDb = levelup(new IORedisDown('blah', encodeOptions() as any, { redis: sessionRedis } as any));
+
+  const atticService =  new OAuthAgent(process.env.ATTIC_URI as string, {
+    client_id: process.env.SERVICE_CLIENT_ID as string,
+    client_secret: process.env.SERVICE_CLIENT_SECRET as string,
+    redirect_uri: process.env.SERVICE_REDIRECT_URI as string,
+  }, sessionDb, [
+    'client_credentials'
+  ]);
+
+  return atticService;
+}
+
+export function atticServiceRpcProxy() {
+  const { RPCProxy } =  mkAtticService().createRPCProxy({
+    grant_type: 'client_credentials',
+    scope: ['.*'],
+    username: process.env.SERVICE_USERNAME
+  });
+
+  return RPCProxy;
+}
+
+export type MarketplaceAPIMethods = MarketplaceAPI&{ [name: string]: Function };
+
+const authorizedMethods = [
+  'db:User:create',
+  'db:User:patch'
+]
+
+const anonymousMethods: string[] = [
+  'marketplace:createUser'
+]
+
+export class MarketplaceRPCServer extends Server {
+  public get methods(): MarketplaceAPIMethods {
+    return this.createMethodsObject() as any;
+  }
+  protected async invoke(request: Request, clientRequest?: MarketplaceClientRequest): Promise<void> {
+    try {
+
+      if (!clientRequest) {
+        throw new HTTPError(400);
+      }
+      // Do auth stuff here
+      if (!authorizedMethods.concat(anonymousMethods).includes(request.method)) {
+        throw new UnauthorizedRequest(`Unauthorized request: ${request.method}`);
+      }
+
+      if (!anonymousMethods.includes(request.method) && !clientRequest) {
+        throw new HTTPError(403)
+      }
+
+
+      if (request.method.match(/db:User:(patch)$/)) {
+        _.set(request, 'params.0.query._id', clientRequest.additionalData.session.user?.marketplaceUser?._id)
+      }
+
+      return super.invoke(request, clientRequest);
+    } catch (err) {
+      if (!clientRequest || !clientRequest.respond) throw err;
+      const resp = new Response(request.id, new InternalError(err));
+      clientRequest.respond(resp);
+    }
+  }
+}
+
+
+export const rpcTransport = new RPCTransport(MakeSerializer());
+export const rpcServer: MarketplaceRPCServer = new MarketplaceRPCServer(rpcTransport as any) as MarketplaceRPCServer;
+
+export function exposeModel(modelName: string, simpleInterface: any) {
+  new RPCInterface(simpleInterface as any, rpcServer, 'db:');
+  for (let k of Object.getOwnPropertyNames((simpleInterface as any).__proto__)) {
+    if (k === 'constructor' || k === 'execute') continue;
+    // @ts-ignore
+    const fn: any =  (simpleInterface as any)[k];
+    if (typeof(fn) !== 'function') continue;
+    // @ts-ignore
+    (rpcServer as any).methodHost.set(`db:${modelName}:${k}`, fn.bind(simpleInterface));
+  }
+}
+
+
+
+
+export default rpcServer;

@@ -137,7 +137,7 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
               <MarketplaceLogo></MarketplaceLogo>
             </div>
             <div>
-              <h1>Let&amp;apos;s get Started!</h1>
+              <h1>Let's get Started!</h1>
               <div>Choose a method to sign in</div>
             </div>
             <div className={"login-panel-buttons"}>

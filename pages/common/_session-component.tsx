@@ -11,12 +11,16 @@ import {
 import {MakeEncoder} from "./_encoder";
 import {Snackbar} from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
+import { RPCProxy } from './_rpcClient';
 import {ModelInterfaceResponse} from "@thirdact/simple-mongoose-interface";
 import {Buffer} from "buffer";
+import * as _ from 'lodash'
+import {NextRouter} from "next/router";
 
 export interface SessionComponentProps {
   session: MarketplaceSession;
   loading: any;
+  router: NextRouter;
 }
 
 export const withSession = (component: any) => (props: any) => {
@@ -35,6 +39,8 @@ export const withSession = (component: any) => (props: any) => {
 
 export interface SessionComponentState {
   errorMessage?: string|null
+  errorSeverity?: 'success'|'error'|null;
+
 }
 
 export class RESTError extends Error {
@@ -52,6 +58,10 @@ export class RESTError extends Error {
 export abstract class SessionComponent<P extends SessionComponentProps, S extends SessionComponentState> extends Component<P, S> {
   protected constructor(props: P) {
     super(props);
+
+    this.state = {
+      ...(this.state || {})
+    };
   }
 
   public enc: EncodeTools = MakeEncoder();
@@ -59,54 +69,17 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
     return SerializationFormatMimeTypes.get(this.enc.options.serializationFormat as SerializationFormat) as string;
   }
 
-  handleError = (err: Error) => {
-    this.setState({ ...this.state, errorMessage: err.toString() })
+  handleError = (err: unknown, severity: 'success'|'error' = 'error') => {
+    this.setState({
+      ...this.state,
+      errorMessage:  _.get(err, 'data.message') || _.get(err, 'innerError.message') || (err as Object).toString(),
+      errorSeverity: severity
+    })
     this.forceUpdate();
   }
 
-  async apiRequest<T>(url: RequestInfo, req: RequestInit): Promise<T|{_id: string}|null> {
-    let body: { result: T }|{ error: { message: string } }|null = null;
-
-    req.headers = {
-      ...req.headers,
-      'Content-Type': this.serializationMimeType,
-      'Accept': this.serializationMimeType
-    };
-
-    const resp = await fetch(url, {
-      ...req
-    });
-
-    let serializationFormat = this.enc.options.serializationFormat as SerializationFormat;
-
-    if (resp.headers.get('content-type')) {
-      let mime = resp.headers.get('content-type');
-      if (mime) {
-        serializationFormat = MimeTypesSerializationFormat.has(mime) ? MimeTypesSerializationFormat.get(mime) as SerializationFormat : serializationFormat;
-      }
-    }
-
-    if (resp.body) {
-      body = this.enc.deserializeObject<{ result: T }|{ error: { message: string } }>(await resp.arrayBuffer(), serializationFormat);
-    }
-
-    if (resp.status === 200 && resp.body) {
-      return (body as { result: T }).result;
-    }
-    else if (resp.status === 204) {
-      return null;
-    }
-    else if (resp.status >= 400 && resp.status < 600) {
-      let message: string|undefined;
-      if (body) {
-        message = (body as { error: { message: string } }).error.message;
-      }
-      throw new RESTError(message, resp.status);
-    } else if (resp.status === 201) {
-      return { _id: (( resp.headers.get('location') as string).split('/').pop() as string).split('&').shift() } as { _id: string };
-    } else {
-      throw new RESTError(`Invalid Response Format`, resp.status)
-    }
+  get rpc() {
+    return RPCProxy(this.handleError);
   }
 
   public static getSession(context: any): Promise<MarketplaceSession|null> {
@@ -116,7 +89,7 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
   get errorDialog() {
     return (
       this.state.errorMessage ? <Snackbar open={Boolean(this.state.errorMessage)} autoHideDuration={6000} onClose={() => this.setState({ errorMessage: null })}>
-          <Alert onClose={() => this.setState({ errorMessage: null })} severity="error">
+          <Alert onClose={() => this.setState({ errorMessage: null, errorSeverity: null })} severity={this.state.errorSeverity || 'error'}>
             {this.state.errorMessage}
           </Alert>
         </Snackbar> : null

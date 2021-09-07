@@ -24,6 +24,7 @@ export type ProfileProps = SessionComponentProps&{
 
 export type ProfileState = SessionComponentState&{
   userForm: IUser
+  isCompleted: boolean;
   errorMessage: string|null;
 };
 
@@ -32,6 +33,7 @@ export type ProfileState = SessionComponentState&{
 export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   imageSize = { width: 200 }
   state = {
+    isCompleted: false,
     errorMessage: null,
     userForm: {
       ...this.props.session?.user?.marketplaceUser as IPOJOUser,
@@ -43,7 +45,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
         } : {}
       )
     }
-  }
+  } as ProfileState
 
   get userForm(): IUser {
     return this.state.userForm;
@@ -62,13 +64,35 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     super(props);
   }
 
+  componentDidMount() {
+    this.updateIsCompleted();
+
+    this.state.errorMessage = this.isCompleted ? null : 'Please fill out required fields';
+  }
+
+
+  get isCompleted() {
+    return this.state.isCompleted;
+  }
+
   onImageChange = async (file: File) => {
     let user = this.userForm as IUser;
     let buf = Buffer.from(await file.arrayBuffer());
     this.forceUpdate();
+    this.changedImage = true;
   }
 
+  changedImage: boolean = false;
 
+  updateIsCompleted() {
+    this.state.isCompleted = Boolean(
+      this.state.userForm?.email &&
+      this.state.userForm?.firstName &&
+      this.state.userForm?.lastName
+    );
+
+    this.forceUpdate();
+  }
 
   updateForm = () => {
     (async () => {
@@ -83,23 +107,33 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
       patches = patches
         .filter(f => f.path.substr(0, '/image'.length) !== '/image');
 
-      if (imagePatches.length && userForm.image) {
+      if (this.changedImage && userForm.image) {
         patches.push({
           op: 'replace',
           path: '/image',
-          value: userForm.image.buffer
+          value: userForm.image
         })
       }
 
-      await this.apiRequest<null>(`/api/user/${userForm._id}`, {
-        method: 'PATCH',
-        body: Buffer.from(this.enc.serializeObject({
-          patches
-        }))
-      })
+      await this.rpc["db:User:patch"]({} as any, patches as any)
+        .then(() => {
+          this.handleError('Save success', 'success');
+          this.changedImage = false;
+        })
         .catch(this.handleError);
     })()
+      .then(() => {
+        this.updateIsCompleted();
+      })
 
+  }
+
+  get fakeEmail() {
+    return (
+      this.atticIdentity &&
+        // Make dynamic!
+        this.userForm?.email?.indexOf('@profile.thirdact.digital') !== -1
+    );
   }
 
   render() {
@@ -117,6 +151,8 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                 <MarketplaceAvatar
                   image={this.userForm.image}
                   onChange={(image) => {
+
+                    this.changedImage = true;
                     this.state.userForm.image = image;
                     this.forceUpdate();
                   }}
@@ -124,14 +160,10 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                   resizeImage={this.imageSize}
                   allowUpload={true}
                 ></MarketplaceAvatar>
-                {
-                  Boolean(this.atticIdentity) ? (
-                    <TextField required={true} disabled={true} value={this.atticIdentity?.clientName} className={'form-input'} type={"text"} variant={"filled"} name={"email"} label="Social Login" />
-                  ) : (
-                    <TextField required={true} value={this.userForm.email} className={'form-input'} type={"email"} variant={"filled"} name={"email"} label="Email" />
-                  )
-                }
-                <TextField required={true} disabled={Boolean(this.atticIdentity)} className={'form-input'} type={"password"} variant={"filled"} name={"password"} label="Password" />
+                <TextField required={true} value={
+                  this.fakeEmail ? null : this.userForm.email
+                }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={'form-input'} type={"email"} variant={"filled"} name={"email"} label="Email" />
+                <TextField onChange={(e) => { (this as any).state.userForm.password = e.currentTarget.value; this.forceUpdate(); }} required={false} className={'form-input'} type={"password"} variant={"filled"} name={"password"} label="Password" />
               </FormControl>
             </div>
             <div>
@@ -157,6 +189,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     );
   }
 }
+
 
 export async function getServerSideProps(context: any) {
   const { res } = context;
