@@ -1,4 +1,4 @@
-
+ 
 ## Installing
 
 Install Node.js 14 (preferably by downloading [NVM](https://github.com/nvm-sh/nvm) and running `nvm install 14 && nvm use 14`) and [Docker](https://www.docker.com/).

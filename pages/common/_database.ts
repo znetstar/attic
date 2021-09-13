@@ -3,6 +3,9 @@ import {
   Schema
 } from 'mongoose';
 
+/**
+ * Global mongoose object
+ */
 export const mongoose = <Mongoose>(<any>require('mongoose'));
 mongoose.connect(process.env.MONGO_URI as string, {
   useNewUrlParser: true,

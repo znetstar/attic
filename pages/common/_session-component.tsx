@@ -1,23 +1,25 @@
-import { Session } from "next-auth";
 import {Component} from "react";
 import {useSession, getSession} from "next-auth/client";
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
 import {
   EncodeTools,
-  MimeTypesSerializationFormat,
   SerializationFormat,
   SerializationFormatMimeTypes
 } from "@etomon/encode-tools/lib/EncodeTools";
-import {MakeEncoder} from "./_encoder";
+import {makeEncoder} from "./_encoder";
 import {Snackbar} from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import { RPCProxy } from './_rpcClient';
-import {ModelInterfaceResponse} from "@thirdact/simple-mongoose-interface";
-import {Buffer} from "buffer";
 import * as _ from 'lodash'
 import {NextRouter} from "next/router";
 
+/**
+ * User-related props will be accessible on every page
+ */
 export interface SessionComponentProps {
+  /**
+   * The actively logged-in session
+   */
   session: MarketplaceSession;
   loading: any;
   router: NextRouter;
@@ -38,11 +40,19 @@ export const withSession = (component: any) => (props: any) => {
 };
 
 export interface SessionComponentState {
-  errorMessage?: string|null
-  errorSeverity?: 'success'|'error'|null;
-
+  /**
+   * Message that will be showed to the user as a floating notification
+    */
+  notifyMessage?: string|null
+  /**
+   * The severity of the message that will be showed to the user
+   */
+  notifySeverity?: 'success'|'error'|null;
 }
 
+/**
+ * Represents a REST API error
+ */
 export class RESTError extends Error {
   public message: string;
 
@@ -55,6 +65,9 @@ export class RESTError extends Error {
   }
 }
 
+/**
+ * Base `Component` to be used in all Components that are rendered with user session data (i.e., all pages).
+ */
 export abstract class SessionComponent<P extends SessionComponentProps, S extends SessionComponentState> extends Component<P, S> {
   protected constructor(props: P) {
     super(props);
@@ -64,16 +77,28 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
     };
   }
 
-  public enc: EncodeTools = MakeEncoder();
+  /**
+   * `Encode Tools`  instance used to serialize data between the client/server
+   */
+  public enc: EncodeTools = makeEncoder();
+
+  /**
+   * MIME type of the data serialization format (e.g., "application/json")
+   */
   get serializationMimeType() {
     return SerializationFormatMimeTypes.get(this.enc.options.serializationFormat as SerializationFormat) as string;
   }
 
-  handleError = (err: unknown, severity: 'success'|'error' = 'error') => {
+  /**
+   * Displays an error as a notification
+   * @param err Error object
+   * @param severity
+   */
+  handleError = (err: Error|{ message: string, [name: string]: unknown }|{data:{message:string, [name: string]: unknown}, [name: string]: unknown}|{innerError:{message:string, [name: string]: unknown}, [name: string]: unknown}|string, severity: 'success'|'error' = 'error') => {
     this.setState({
       ...this.state,
-      errorMessage:  _.get(err, 'data.message') || _.get(err, 'innerError.message') || (err as Object).toString(),
-      errorSeverity: severity
+      notifyMessage:  _.get(err, 'data.message') || _.get(err, 'innerError.message') || (err as Object).toString(),
+      notifySeverity: severity
     })
     this.forceUpdate();
   }
@@ -88,9 +113,9 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
 
   get errorDialog() {
     return (
-      this.state.errorMessage ? <Snackbar open={Boolean(this.state.errorMessage)} autoHideDuration={6000} onClose={() => this.setState({ errorMessage: null })}>
-          <Alert onClose={() => this.setState({ errorMessage: null, errorSeverity: null })} severity={this.state.errorSeverity || 'error'}>
-            {this.state.errorMessage}
+      this.state.notifyMessage ? <Snackbar open={Boolean(this.state.notifyMessage)} autoHideDuration={6000} onClose={() => this.setState({ notifyMessage: null })}>
+          <Alert onClose={() => this.setState({ notifyMessage: null, notifySeverity: null })} severity={this.state.notifySeverity || 'error'}>
+            {this.state.notifyMessage}
           </Alert>
         </Snackbar> : null
     )

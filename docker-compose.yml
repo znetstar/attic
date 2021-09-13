@@ -25,7 +25,7 @@ services:
       - mongo
       - attic
   mongo:
-    image: "mongo:5"
+    image: "mongo:4.4"
     ports:
       - "127.0.0.1:8201:27017"
     volumes:

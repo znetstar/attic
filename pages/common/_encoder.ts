@@ -1,7 +1,13 @@
 import {EncodeTools, EncodingOptions} from '@etomon/encode-tools/lib/EncodeTools';
 import {ImageFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
 import {EncodeToolsSerializer} from "multi-rpc-common";
+import {EncodeToolsAuto} from "@etomon/encode-tools";
 
+/**
+ * Default options passed to `@etomon/encode-tools`
+ *
+ * These options are important, and determine the client/server communication format for the entire application
+ */
 export function encodeOptions() {
   return {
     serializationFormat: SerializationFormat.msgpack,
@@ -9,10 +15,18 @@ export function encodeOptions() {
   } as EncodingOptions;
 }
 
-export function MakeEncoder(): EncodeTools {
-  return new EncodeTools(encodeOptions());
+/**
+ * Creates a new `EncodeTools` instance with the default encode options
+ * @constructor
+ */
+export function makeEncoder(): EncodeTools {
+  return new EncodeToolsAuto(encodeOptions());
 }
 
-export function MakeSerializer() {
+/**
+ * Creates a `multi-rpc` serializer with the default encode options
+ * @constructor
+ */
+export function makeSerializer() {
   return new EncodeToolsSerializer(encodeOptions());
 }

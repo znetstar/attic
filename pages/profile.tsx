@@ -1,40 +1,41 @@
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
-import {Avatar, Button, FormControl, Snackbar, TextField} from "@material-ui/core";
-import {
-  ImageFormat,
-  ImageFormatMimeTypes,
-  EncodeTools,
-  SerializationFormatMimeTypes,
-  SerializationFormat
-} from '@etomon/encode-tools/lib/EncodeTools';
+import { Button, FormControl, TextField} from "@material-ui/core";
 import {IPOJOUser, IUser} from "./common/_user";
 import {Buffer} from 'buffer';
-import {MakeEncoder} from "./common/_encoder";
 import { IUser as AtticUser } from '@znetstar/attic-common';
 import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
-import {JSONPatchOp} from "@thirdact/simple-mongoose-interface";
 import {diff, jsonPatchPathConverter} from 'just-diff';
 import {MarketplaceAvatar} from "./common/_avatar";
-import Alert from "@material-ui/lab/Alert";
 
 
 export type ProfileProps = SessionComponentProps&{
 
 };
 
+/**
+ * Internal state for the profile page
+ */
 export type ProfileState = SessionComponentState&{
+  /**
+   * Fields for the profile being modified
+   */
   userForm: IUser
+  /**
+   * Is `true` when all required fields have ben satisfied
+   */
   isCompleted: boolean;
-  errorMessage: string|null;
+  notifyMessage: string|null;
 };
 
 
-
 export class Profile extends SessionComponent<ProfileProps, ProfileState> {
+  /**
+   * Size of the profile image
+   */
   imageSize = { width: 200 }
   state = {
     isCompleted: false,
-    errorMessage: null,
+    notifyMessage: null,
     userForm: {
       ...this.props.session?.user?.marketplaceUser as IPOJOUser,
       ...(
@@ -47,14 +48,25 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     }
   } as ProfileState
 
+  /**
+   * Fields for the user being edited
+   */
   get userForm(): IUser {
     return this.state.userForm;
   }
 
+  /**
+   * Fields for the attic user being edited
+   */
   get atticUser(): AtticUser {
     return this.props.session?.user?.atticUser as AtticUser;
   }
 
+  /**
+   * The Attic `IdentityEntity` of the user logged in.
+   * This object contains provider specific info like, for example,
+   * the user's GMail address if the user logged in  with Google.
+   */
   get atticIdentity(): IIdentityEntity|null {
     return (this.atticUser.identities || [])[0]||null as IIdentityEntity | null;
   }
@@ -67,14 +79,21 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   componentDidMount() {
     this.updateIsCompleted();
 
-    this.state.errorMessage = this.isCompleted ? null : 'Please fill out required fields';
+    this.state.notifyMessage = this.isCompleted ? null : 'Please fill out required fields';
   }
 
 
+  /**
+   * Is `true` when all required fields are complete
+   */
   get isCompleted() {
     return this.state.isCompleted;
   }
 
+  /**
+   * Is called when the profile image is changed
+   * @param file
+   */
   onImageChange = async (file: File) => {
     let user = this.userForm as IUser;
     let buf = Buffer.from(await file.arrayBuffer());
@@ -82,9 +101,13 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     this.changedImage = true;
   }
 
-  changedImage: boolean = false;
+  protected changedImage: boolean = false;
 
-  updateIsCompleted() {
+  /**
+   * Updates the `isCompleted` field.
+   * @protected
+   */
+  protected updateIsCompleted() {
     this.state.isCompleted = Boolean(
       this.state.userForm?.email &&
       this.state.userForm?.firstName &&
@@ -94,6 +117,11 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     this.forceUpdate();
   }
 
+  /**
+   * Updates the user object on the server with the modified fields in the `userForm`
+   * by creating an array of JSONPatch entries for each change, and submitting the patch
+   * over rpc.
+   */
   updateForm = () => {
     (async () => {
       const userForm: IUser = {
@@ -128,11 +156,14 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
 
   }
 
+  /**
+   * Is `true` if the user logged in using a social provider, like Google
+   */
   get fakeEmail() {
     return (
       this.atticIdentity &&
         // Make dynamic!
-        this.userForm?.email?.indexOf('@profile.thirdact.digital') !== -1
+        this.userForm?.email?.indexOf('@social') !== -1
     );
   }
 

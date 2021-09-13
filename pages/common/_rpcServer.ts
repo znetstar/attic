@@ -10,23 +10,15 @@ import {
 } from 'multi-rpc-common';
 import * as _ from 'lodash';
 import {
-
-  Server,
-  HTTPTransport,
+  Server
 } from 'multi-rpc';
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import {encodeOptions, MakeSerializer} from "./_encoder";
+import {encodeOptions, makeSerializer} from "./_encoder";
 
 import {
-  SimpleModelInterface,
-  ModelInterface,
   RPCInterface,
-  ModelInterfaceRequestMethods
 } from '@thirdact/simple-mongoose-interface';
-import { DEFAULT_REST_INTERFACE_OPTIONS } from '@thirdact/simple-mongoose-interface/lib/RESTInterfaceHandler';
-import {IUser, User} from "../common/_user";
-import {MakeEncoder} from "../common/_encoder";
 import {HTTPError, MarketplaceAPI, UnauthorizedRequest} from "./_rpcCommon";
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
 import {getSession} from "next-auth/client";
@@ -35,7 +27,6 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
-import atticConfig from "../../misc/attic-config/config.json";
 
 type RequestData = {
   req: NextApiRequest,
@@ -49,6 +40,7 @@ type MarketplaceClientRequest = ClientRequest&{
 
 
 /**
+ * `multi-rpc` ExpressTransport object, modified for use in Next.js
  * @author znetstar - https://github.com/znetstar/multi-rpc-express-transport
  */
 export class RPCTransport extends Transport implements ServerSideTransport {
@@ -61,8 +53,17 @@ export class RPCTransport extends Transport implements ServerSideTransport {
     super(serializer);
   }
 
+  /**
+   * A list of unique ids given to each request to prevent accidental re-runs
+   * @protected
+   */
   protected requestIds = new LRUMap(1e3);
 
+  /**
+   * Services each request from Next.js
+   * @param req
+   * @param res
+   */
   public async onRequest(req: NextApiRequest, res: NextApiResponse<Response>) {
     if (req.headers['x-marketplace-idempotency-key'] && this.requestIds.has(req.headers['x-marketplace-idempotency-key'])) {
       res.statusCode = 409;
@@ -111,8 +112,10 @@ export class RPCTransport extends Transport implements ServerSideTransport {
   }
 }
 
-// Create attic user
-export function mkAtticService() {
+/**
+ * Creates an Attic `OAuthAgent` with superuser permissions
+ */
+export function createAtticService() {
   const sessionRedis = new Redis(process.env.SERVICE_OAUTH_REDIS_URI);
   const sessionDb = levelup(new IORedisDown('blah', encodeOptions() as any, { redis: sessionRedis } as any));
 
@@ -127,8 +130,11 @@ export function mkAtticService() {
   return atticService;
 }
 
+/**
+ * Creates an Attic RPC client with superuser permissions
+ */
 export function atticServiceRpcProxy() {
-  const { RPCProxy } =  mkAtticService().createRPCProxy({
+  const { RPCProxy } =  createAtticService().createRPCProxy({
     grant_type: 'client_credentials',
     scope: ['.*'],
     username: process.env.SERVICE_USERNAME
@@ -139,19 +145,38 @@ export function atticServiceRpcProxy() {
 
 export type MarketplaceAPIMethods = MarketplaceAPI&{ [name: string]: Function };
 
+/**
+ * Important!
+ *
+ * These are the RPC methods the user is allowed to access AFTER logging one
+ */
 const authorizedMethods = [
-  'db:User:create',
+  /**
+   * Allows the user to update their profile
+   */
   'db:User:patch'
 ]
 
+/**
+ * Important!
+ *
+ * These are the RPC methods the user is allowed to access BEFORE logging one
+ */
 const anonymousMethods: string[] = [
+  /**
+   * Allows the user to create a new account
+   */
   'marketplace:createUser'
 ]
 
+/**
+ * `multi-rpc` RPC server modified for the marketplace
+ */
 export class MarketplaceRPCServer extends Server {
   public get methods(): MarketplaceAPIMethods {
     return this.createMethodsObject() as any;
   }
+
   protected async invoke(request: Request, clientRequest?: MarketplaceClientRequest): Promise<void> {
     try {
 
@@ -182,11 +207,16 @@ export class MarketplaceRPCServer extends Server {
 }
 
 
-export const rpcTransport = new RPCTransport(MakeSerializer());
+export const rpcTransport = new RPCTransport(makeSerializer());
 export const rpcServer: MarketplaceRPCServer = new MarketplaceRPCServer(rpcTransport as any) as MarketplaceRPCServer;
 
+/**
+ * Allows clients to interact with the mongoose model via the RPC interface
+ * @param modelName
+ * @param simpleInterface
+ */
 export function exposeModel(modelName: string, simpleInterface: any) {
-  new RPCInterface(simpleInterface as any, rpcServer, 'db:');
+  new RPCInterface(simpleInterface as any, rpcServer as Server, 'db:');
   for (let k of Object.getOwnPropertyNames((simpleInterface as any).__proto__)) {
     if (k === 'constructor' || k === 'execute') continue;
     // @ts-ignore

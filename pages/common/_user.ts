@@ -1,18 +1,18 @@
 import mongoose from '../common/_database';
 import {Document, ObjectId, Schema} from "mongoose";
 import {ToPojo} from "@thirdact/to-pojo";
-import rpcServer, {atticServiceRpcProxy, exposeModel, mkAtticService} from "./_rpcServer";
-import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
+import rpcServer, {atticServiceRpcProxy, exposeModel} from "./_rpcServer";
 import {ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
-import Redis from "ioredis";
-import levelup from "levelup";
-import {IORedisDown} from "@etomon/ioredisdown";
-
 import atticConfig from '../../misc/attic-config/config.json';
+import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {makeEncoder} from "./_encoder";
+import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
 const { DEFAULT_USER_SCOPE } = atticConfig;
 
-
+/**
+ * Model for the user profile, with the fields present on each user object
+ */
 export interface IUser {
   _id: ObjectId|string;
   id: ObjectId|string;
@@ -23,11 +23,24 @@ export interface IUser {
 
   email?: string;
   atticUserId: string;
-
+  /**
+   * Image as a `Buffer`
+   */
   image?: Buffer
+
+  /**
+   * The password here is a placeholder and does nothing
+   *
+   * Attic handles password login.
+   */
+  password?: string;
 }
 
+
 export type IPOJOUser= IUser&{
+  /**
+   * Image as a data uri
+   */
   image?: string;
 }
 
@@ -42,6 +55,7 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
 }));
 
 UserSchema.pre<IUser&{ password?: string }>('save', async function () {
+  // Changing the password will update the password on the attic server
   if (this.password) {
     const atticRpc = atticServiceRpcProxy();
 
@@ -56,6 +70,10 @@ UserSchema.pre<IUser&{ password?: string }>('save', async function () {
 type ToUserParsable = (Document<IUser>&IUser)|IUser|Document<IUser>;
 export const ToUserPojo = new ToPojo<ToUserParsable, IPOJOUser>();
 
+/**
+ * Returns a POJO copy of the user object. This converts the image to a data URI
+ * @param marketplaceUser
+ */
 export function toUserPojo(marketplaceUser: ToUserParsable): IPOJOUser {
   return ToUserPojo.toPojo(marketplaceUser, {
     conversions: [
@@ -65,7 +83,10 @@ export function toUserPojo(marketplaceUser: ToUserParsable): IPOJOUser {
           return !!item.image;
         },
         transform: (item: Document<IUser>&IUser) => {
-          return `data:image/jpeg;base64,${Buffer.from(item.image as Buffer).toString('base64')}`
+          const enc = makeEncoder();
+
+          const mime = ImageFormatMimeTypes.get(enc.options.imageFormat as ImageFormat) as string;
+          return `data:${mime};base64,${Buffer.from(item.image as Buffer).toString('base64')}`
         }
       }
     ],
@@ -80,9 +101,12 @@ exposeModel(
   new SimpleModelInterface<IUser>(new ModelInterface<IUser>(User))
 );
 
-
-
-(rpcServer as any).methodHost.set('marketplace:createUser', async (form: any) => {
+/**
+ * Creates a new user using the provided fields first on the attic server,
+ * and then in the marketplace database
+ * @param form Fields for the new user
+ */
+export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}) {
   try {
     const atticRpc = atticServiceRpcProxy();
 
@@ -102,4 +126,5 @@ exposeModel(
   } catch (err) {
     throw new HTTPError(500, err.message);
   }
-});
+}
+(rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);

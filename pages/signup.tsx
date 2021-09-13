@@ -1,17 +1,11 @@
-import {ClientSafeProvider, getCsrfToken, getProviders, signIn} from 'next-auth/client'
+import { getCsrfToken, getProviders} from 'next-auth/client'
 import {MarketplaceLogo} from "./common/_logo";
-import {Component, Fragment, ReactNode} from "react";
-import {Button, FormControl, TextField, InputLabel, Input, Icon, Snackbar} from '@material-ui/core';
-import EmailIcon from '@material-ui/icons/Email';
+import {Fragment} from "react";
+import {Button} from '@material-ui/core';
 import LoginFormControl from "./common/_login-common";
-import Alert, { AlertProps } from '@material-ui/lab/Alert';
-const URL = require('core-js/web/url');
 
 import {NextRouter, withRouter} from "next/router"
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
-import {IUser} from "./common/_user";
-import {diff, jsonPatchPathConverter} from "just-diff";
-import {Buffer} from "buffer";
 
 export async function getServerSideProps(context: any){
   const providers = await getProviders();
@@ -33,11 +27,6 @@ export async function getServerSideProps(context: any){
   }
 }
 
-enum LoginPanelSlides {
-  login = 0,
-  emailPassword = 1
-}
-
 export type SignupPanelProps = SessionComponentProps&{
   classes: any;
   router: NextRouter;
@@ -45,18 +34,24 @@ export type SignupPanelProps = SessionComponentProps&{
 
 export type SignupPanelState = SessionComponentState&{
   emailPasswordForm: {
+    /**
+     * User email
+     */
     email: string|null,
+    /**
+     * User password
+     */
     password: string|null
   },
-  errorMessage: string|null
+  /**
+   * Notification if fails
+   */
+  notifyMessage: string|null
 }
 
-const styles = {
-  root: {
-
-  }
-}
-
+/**
+ * Component to handle email/password signup
+ */
 export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> {
   async componentDidMount() {
 
@@ -70,11 +65,14 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
         email: null,
         password: null
       },
-      errorMessage: (this.props.router.query?.error || null) as string | null
+      notifyMessage: (this.props.router.query?.error || null) as string | null
     };
   }
 
 
+  /**
+   * Submits a request to create a new user, via the RPC
+   */
   submitNewUser = async () => {
     (async () => {
       await this.rpc['marketplace:createUser'](this.state.emailPasswordForm)

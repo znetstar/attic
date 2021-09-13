@@ -11,7 +11,9 @@ import {NextRouter, withRouter} from "next/router"
 import Profile from "./profile";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
 
-
+/**
+ * Various login provider (e.g., Google)
+ */
 interface AuthProviders {
   [name: string]: ClientSafeProvider
 }
@@ -38,6 +40,9 @@ export async function getServerSideProps(context: any){
   }
 }
 
+/**
+ * Slides for the login page
+ */
 enum LoginPanelSlides {
   login = 0,
   emailPassword = 1
@@ -51,13 +56,28 @@ export type LoginPanelProps = SessionComponentProps&{
   router: NextRouter;
 };
 
+/**
+ * Internal state for the login panel
+ */
 export type LoginPanelState = SessionComponentState&{
+  /**
+   * Current slide
+   */
   slide: LoginPanelSlides,
   emailPasswordForm: {
+    /**
+     * User email
+     */
     email: string|null,
+    /**
+     * User password
+     */
     password: string|null
   },
-  errorMessage: string|null
+  /**
+   * Notification if fails
+   */
+  notifyMessage: string|null
 }
 
 const styles = {
@@ -66,6 +86,9 @@ const styles = {
   }
 }
 
+/**
+ * Component to handle login
+ */
 export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
   async componentDidMount() {
 
@@ -80,10 +103,13 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
         email: null,
         password: null
       },
-      errorMessage: (this.props.router.query?.error || null) as string | null
+      notifyMessage: (this.props.router.query?.error || null) as string | null
     };
   }
 
+  /**
+   * All login providers (e.g., Google)
+   */
   get providers(): ProviderType {
     return this.props.providers;
   }

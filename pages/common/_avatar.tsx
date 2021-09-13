@@ -4,16 +4,38 @@ import {Avatar} from "@material-ui/core";
 import {ImageDims} from "@etomon/encode-tools/lib/IEncodeTools";
 
 
-
 export interface MarketplaceAvatarProps {
+  /**
+   * The actual profile image
+   */
   image?: Buffer;
+  /**
+   * Called whenever the profile image chnages
+   * @param image
+   */
   onChange: (image: Buffer) => void;
+  /**
+   * Image format to convert image to upon upload
+   */
   imageFormat?: ImageFormat;
+  /**
+   * Whether to allow the image be replaced by the user
+   */
   allowUpload?: boolean;
+  /**
+   * Called if an exception is thrown
+   * @param error
+   */
   onError?: (error: Error) => void;
+  /**
+   * Dimensions to resize the image to upon upload
+   */
   resizeImage?: ImageDims
 }
 
+/**
+ * Displays the User's avatar (profile photo) and allows the user to upload a new profile image
+ */
 export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
   public encoder: EncodeTools = new EncodeTools({
     imageFormat: this.props.imageFormat
@@ -25,6 +47,10 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
     super(props);
   }
 
+  /**
+   * Called when the file input associated with the image has been changed
+   * @param e
+   */
   onFileChange(e: ChangeEvent<any>): void {
     const file = Array.from(e.currentTarget.files as FileList)[0];
 
@@ -66,10 +92,16 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
     );
   }
 
+  /**
+   * Data URI of the image
+   */
   public get imageUrl(): string|undefined {
     return this.props.image ? `data:${this.mimeType};base64,${this.props.image.toString('base64')}` : void(0);
   }
 
+  /**
+   * Acceptable input types, must be accepted by `jimp`
+   */
   get imageAccept(): string {
     return [
       ImageFormatMimeTypes.get(ImageFormat.jpeg),

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docs": "typedoc pages/_app.tsx pages/common/* pages/api/*"
   },
   "dependencies": {
     "@etomon/encode-tools": "^2.7.7",
@@ -31,9 +32,8 @@
     "lru_map": "^0.4.1",
     "mongodb": "^3.5.9",
     "mongoose": "^5.13.7",
-    "multi-rpc": "^1.7.8",
-    "multi-rpc-browser": "^1.4.9",
-    "multi-rpc-common": "^2.4.3",
+    "multi-rpc": "^1.8.1",
+    "multi-rpc-browser": "^1.5.1",
     "next": "^11.1.0",
     "next-auth": "^3.27.3",
     "next-compose-plugins": "^2.2.1",
@@ -43,7 +43,8 @@
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "sass": "^1.38.0",
-    "styled-jsx": "^4.0.0"
+    "styled-jsx": "^4.0.0",
+    "typedoc": "^0.21.9"
   },
   "devDependencies": {
     "@types/ejs": "^3.0.7",

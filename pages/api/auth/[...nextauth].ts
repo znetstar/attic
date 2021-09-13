@@ -125,7 +125,8 @@ export const oauthConsumerByName = new Map<string, DBInitRecordWithAgent>(
 oauthConsumerByName.set('local', {
   ...localRecord,
   agent: agentFromRecord(localRecord)
-})
+});
+
 /**
  * A list of all OAuth Providers by name
  */
@@ -166,9 +167,21 @@ export type MarketplaceToken = JWT&{
   userId: string;
 };
 
+/**
+ * Represents a single session of the user logged in
+ */
 export type MarketplaceSession = Session&{
+  /**
+   * Represents the current JWT token logged in
+   */
   token: MarketplaceToken;
+  /**
+   * Represents the arbitrary data stored throughout the user's time logged in
+   */
   data: MarketplaceSessionData;
+  /**
+   * The actual user object retrieved from the database
+   */
   user: User,
   /**
    * Save the session data to redis
@@ -178,10 +191,16 @@ export type MarketplaceSession = Session&{
    * Load the session data from redis
    */
   load: () => Promise<void>;
-
+  /**
+   * Gets the OAuth agent used to communicate with the attic server
+   */
   getAtticAgent(): OAuthAgent;
 };
 
+/**
+ * Locates the `MarketplaceUser` that corresponds to the user in the attic server, or creates one of not found
+ * @param atticUser
+ */
 async function syncUser(atticUser: AtticUser): Promise<Document<IUser>> {
   let marketplaceUser: Document<IUser>|null = await MarketplaceUser.findOne({ atticUserId: atticUser._id }).exec();
 
@@ -200,7 +219,7 @@ async function syncUser(atticUser: AtticUser): Promise<Document<IUser>> {
 
   return marketplaceUser as Document<IUser>;
 }
-
+/*
 export async function ensureUser(
   input: MarketplaceToken|MarketplaceSession,
   opts: { user?: User, session?: MarketplaceSession, account?: Account } = {}
@@ -252,6 +271,7 @@ export async function ensureUser(
     atticUser: atticUser as AtticUser
   };
 }
+*/
 
 type Profile = ProfileBase&{
   atticAccessToken: IFormalAccessToken
