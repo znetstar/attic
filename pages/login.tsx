@@ -168,7 +168,10 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
             </div>
             <div className={"login-panel-buttons"}>
               {this.providers ? Object.values(this.providers).map(provider => (
-                <div key={provider.name}>
+                <div
+                  // @ts-ignore
+                  provider={provider.name}
+                  key={provider.name}>
                   {
                     (provider as any).id === 'credentials' ? (
                       <Button startIcon={<EmailIcon/>} onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}  variant="contained">Continue with {provider.name}</Button>

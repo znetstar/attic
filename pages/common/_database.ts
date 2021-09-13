@@ -7,7 +7,7 @@ import {
  * Global mongoose object
  */
 export const mongoose = <Mongoose>(<any>require('mongoose'));
-mongoose.connect(process.env.MONGO_URI as string, {
+mongoose.connect(process.env.MARKETPLACE_MONGO_URI as string, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: true,
