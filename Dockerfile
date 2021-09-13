@@ -22,7 +22,7 @@ ENV HOST '0.0.0.0'
 ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 
-ENV EMAIL_HOSTNAME profile.thirdact.digital
+ENV EMAIL_HOSTNAME social
 
 EXPOSE 80
 
