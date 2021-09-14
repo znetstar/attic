@@ -20,6 +20,7 @@ import {
 } from 'multi-rpc';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
 import {asyncMiddleware} from "./Common";
+import * as cors from 'cors';
 
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
 
@@ -142,9 +143,14 @@ export let WebSocketPaths = new Map<string, ws.Server>([
   [ '/sync', WebSocketServer ]
 ]);
 
+
 export async function loadWebServer() {
     await ApplicationContext.emitAsync('launch.loadWebServer.start');
     WebExpress = express();
+
+    if (Config.cors) {
+      WebExpress.use(cors(Config.cors as any));
+    }
 
     WebSocketServer = new ws.Server({ noServer: true });
 

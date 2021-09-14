@@ -66,6 +66,7 @@ export interface IConfig {
     promptUnauthenticatedToLogin?: boolean;
     rootGroups?: string[];
 
+    cors?: unknown;
 
     /**
      * Port the RPC server will listen on
