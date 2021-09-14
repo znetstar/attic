@@ -1,6 +1,5 @@
-# Attic 
+# Attic
 
-Attic is a framework for building link resolvers (think bitly) and link managers (think del.icio.us).
+Attic is an extensible multi-purpose application server written in Node.js.
 
-Will provide more documentation in the coming weeks. 
-
+The project provides building blocks for several use-cases, such as OAuth login severs, or API servers.

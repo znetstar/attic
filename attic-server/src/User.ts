@@ -20,11 +20,8 @@ import {
 import * as crypto from "crypto";
 import {ScopeAccessTokenPair,ScopeFormalAccessTokenPair } from "@znetstar/attic-common/lib/IAccessToken";
 import {CouldNotLocateUserError} from "@znetstar/attic-common/lib/Error/Auth";
-import {IHTTPResponse} from "./Drivers/HTTPCommon";
-import {ILocation} from "./Location";
-import {getHttpResponse} from "./Web/ResolverMiddleware";
-import Entity from "./Entity";
 import {UserHasBeenDisabledError} from "@znetstar/attic-common/lib/Error/Auth";
+import {UserAlreadyExistsError} from "@znetstar/attic-common/lib/Error";
 
 const Sentencer = require('sentencer');
 
@@ -391,9 +388,17 @@ RPCServer.methods.findUsers = async (query: BasicFindOptions) =>  {
 }
 
 RPCServer.methods.createUser = async (fields: any) => {
+  try {
     let users = await User.create(fields);
 
     return users.id;
+  } catch (err){
+    if (err?.message && err?.message.match(/E11000 duplicate key error collection:.*index: username/)) {
+      throw new UserAlreadyExistsError(`Cannot create user. The username "${fields.username}" already exists`);
+    } else {
+      throw err;
+    }
+  }
 }
 
 RPCServer.methods.deleteUsers = async (query: BasicFindQueryOptions) => {
