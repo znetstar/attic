@@ -4,6 +4,7 @@ import Constructible from "../Constructible";
 import IConfig, {LogLevels} from "./IConfig";
 import IRPC from "../IRPC";
 import {Middleware, middlewareCreator, restrictScopeMiddleware,asyncMiddleware} from "./Middleware";
+import {IErrorBroker} from "./IErrorBroker";
 
 export type LogFunction = (entry: any, options?: unknown) => void;
 
@@ -39,6 +40,7 @@ export type IApplicationContext = IApplicationHookEmitter&{
     package: unknown;
     webSocketServer: unknown;
     webSocketPaths: Map<string, unknown>;
+    errors: IErrorBroker;
     middleware: {
        [name: string]: middlewareCreator;
        restrictScopeMiddleware: restrictScopeMiddleware;

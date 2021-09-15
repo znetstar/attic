@@ -95,7 +95,7 @@ async function getIdentityEntity(id: ObjectId|string): Promise<IIdentityEntity&D
 RPCServer.methods.getIdentityEntity = async function getIdentityEntityRpc(id: string): Promise<IIdentityEntity> {
     const entity = await getIdentityEntity(id);
     let result =  entity ? entity.toJSON({ virtuals: true }) : void(0);
-    if (!result) throw new NotFoundError();
+    if (!result) throw new ((global as any).ApplicationContext.errors.getErrorByName('NotFoundError') as any)();
     result.user = result.user._id;
     result.client = result.client._id;
 
@@ -104,9 +104,9 @@ RPCServer.methods.getIdentityEntity = async function getIdentityEntityRpc(id: st
 
 RPCServer.methods.findIdentityEntity = async function findIdentityEntityRpc(query: any): Promise<IIdentityEntity> {
     const entity = await findIdentityEntity(query);
-    if (!entity) throw new NotFoundError();
+    if (!entity) throw new ((global as any).ApplicationContext.errors.getErrorByName('NotFoundError') as any)();
     let result =  entity ? entity.toJSON({ virtuals: true }) : void(0);
-    if (!result) throw new NotFoundError();
+    if (!result) throw new ((global as any).ApplicationContext.errors.getErrorByName('NotFoundError') as any)();
     result.user = result.user._id;
     result.client = result.client._id;
     return result;

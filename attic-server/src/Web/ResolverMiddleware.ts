@@ -33,7 +33,7 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
         if (scopeContext.user.username === Config.unauthorizedUserName) {
             throw new UnauthorizedUserDoesNotHavePermissionToAccessResourceError()
         } else {
-            throw new UserDoesNotHavePermissionToAccessResourceError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('UserDoesNotHavePermissionToAccessResourceError') as any)();
         }
     }
 

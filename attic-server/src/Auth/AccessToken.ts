@@ -278,7 +278,7 @@ AccessTokenSchema.methods.accessTokenFromRefresh = async function () {
 RPCServer.methods.accessTokenFromRefresh = async function (id: string) {
     let token = await AccessToken.findById(id).exec();
 
-    if (!token) throw new AccessTokenNotFoundError();
+    if (!token) throw new ((global as any).ApplicationContext.errors.getErrorByName('AccessTokenNotFoundError') as any)();
 
     return accessTokenFromRefresh(token);
 }
@@ -287,7 +287,7 @@ RPCServer.methods.selfAccessTokenFromRefresh = async function (id: string) {
     let { user } = userFromRpcContext(this);
     let token = await AccessToken.findOne({ _id: new ObjectId(id), user: user._id }).exec();
 
-    if (!token) throw new AccessTokenNotFoundError();
+    if (!token) throw new ((global as any).ApplicationContext.errors.getErrorByName('AccessTokenNotFoundError') as any)();
 
     return accessTokenFromRefresh(token);
 }

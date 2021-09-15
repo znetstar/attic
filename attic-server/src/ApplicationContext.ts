@@ -37,6 +37,7 @@ import {DBInitRecordMongo, DBInitRecordMongoose} from "@znetstar/attic-common/li
 
 import {asyncMiddleware} from "./Web/Common";
 import {ObjectId} from "mongodb";
+import {ErrorBroker} from "./ErrorBroker";
 
 export interface ListenStatus {
     urls: string[];
@@ -178,6 +179,12 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
 
     get mongoose() {
         return mongoose;
+    }
+
+    protected _errorBroker = new ErrorBroker();
+
+    get errors(): ErrorBroker {
+      return this._errorBroker;
     }
 
     get redis() { return redis; }

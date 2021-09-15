@@ -139,9 +139,9 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
     if (user instanceof ObjectId || typeof(user) === 'string')
         user = await User.findById(user).exec();
 
-    if (!user) throw new CouldNotLocateUserError();
+    if (!user) throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateUserError') as any)();
     else if (user.disabled) {
-      throw new UserHasBeenDisabledError();
+      throw new ((global as any).ApplicationContext.errors.getErrorByName('UserHasBeenDisabledError') as any)();
     }
 
 

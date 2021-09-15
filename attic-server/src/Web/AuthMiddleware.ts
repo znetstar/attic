@@ -56,7 +56,7 @@ export function restrictScopeMiddleware(scope: string): RequestHandler {
     return function (req: any, res: any, next: any) {
         (async () => {
             if (!req.user) {
-                throw new CouldNotLocateUserError();
+                throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateUserError') as any)();
             } else {
                 const context = req.scopeContext as IScopeContext;
                 let user: IUser = context.user = req.user;
@@ -107,7 +107,7 @@ AuthMiddleware.use(asyncMiddleware(async function (req: any, res: any, next: any
             req.user = context.user = await mongoose.models.User.findById(token.user);
             if (token.isModified) await token.save();
         } else if (!tempToken) {
-            throw new InvalidAccessTokenError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidAccessTokenError') as any)();
         }
     }
 
@@ -115,7 +115,7 @@ AuthMiddleware.use(asyncMiddleware(async function (req: any, res: any, next: any
         req.user = context.user = unauthorizedUser = req.user || unauthorizedUser || await mongoose.models.User.findOne({ username: UNAUTHROIZED_USERNAME }).exec();
 
         if (!req.user) {
-            throw new CouldNotLocateUserError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateUserError') as any)();
         }
 
         context.accessToken = { scope: req.user.scope.slice(0) } as any;
@@ -170,19 +170,19 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.authorizatio
     } = getAccessTokenForm(req);
 
     if (!code) {
-        throw new MalformattedTokenRequestError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
     }
     let stateKey = `auth.token.${code}`;
     let state = await redis.hgetall(stateKey);
     if (!Object.keys(state).length || !state) {
-        throw new CouldNotLocateStateError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateStateError') as any)();
     }
     await redis.del(stateKey);
 
     let user = await User.findById(state.user).exec();
 
     if (!user || state.client !== client.id || client.redirectUri !== redirectUri) {
-        throw new InvalidClientOrProviderError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
         return ;
     }
 
@@ -245,7 +245,7 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
     let grantEvent = `Web.AuthMiddleware.getAccessToken.grantTypes.${grantType || ''}`;
 
     if (!grantType || !clientId || !clientSecret || (enforceRedirectUri && !redirectUri) || !(ApplicationContext).eventNames().includes(grantEvent)) {
-        throw new MalformattedTokenRequestError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
     }
 
     const q: any = {
@@ -262,7 +262,7 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
 
 
     if (!client) {
-        throw new InvalidClientOrProviderError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
     }
 
     let output = await ApplicationContext.triggerHookSingle<{ accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document  }>(grantEvent, client, form);
@@ -302,7 +302,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.refresh_toke
     } = getAccessTokenForm(req);
 
     if (!refreshTokenCode) {
-        throw new MalformattedTokenRequestError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
     }
 
     refreshToken = await ( AccessToken.findOne({
@@ -339,7 +339,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
 
     if (!user) {
         if (!password || !username) {
-            throw new MalformattedTokenRequestError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
         }
 
         user = await User.findOne({
@@ -347,7 +347,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
         });
 
         if (!user || !await user.checkPassword(password)) {
-            throw new CouldNotLocateUserError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateUserError') as any)();
         }
     }
 
@@ -406,11 +406,11 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_crede
     } = getAccessTokenForm(req);
 
     if (!clientSecret || !clientId || !scope || !scope.length) {
-        throw new MalformattedTokenRequestError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
     }
 
     if (!client)
-        throw new InvalidClientOrProviderError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
 
     let groups = client.scope.map((s: string) => s.match(/^group\.(.*)/)).filter(Boolean).map((g: string[]) => g[1]);
 
@@ -422,7 +422,7 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_crede
     }).exec();
 
     if (!user) {
-        throw new ClientOrProviderDoesNotHaveAccessToGroupError();
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('ClientOrProviderDoesNotHaveAccessToGroupError') as any)();
     }
 
     let scopes = checkScopePermission([].concat(scope), client, user);
@@ -519,9 +519,9 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
         if (!existingState) {
             if (req.query.response_type !== 'code') {
-                throw new InvalidResponseTypeError();
+                throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidResponseTypeError') as any)();
             } else {
-                throw new CouldNotLocateStateError();
+                throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateStateError') as any)();
             }
         } else {
             await redis.del(stateKey);
@@ -531,7 +531,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             ]);
 
             if (!client || !provider) {
-                throw new InvalidClientOrProviderError();
+                throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
                 return;
             }
 
@@ -567,7 +567,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             let identity = await getIdentityEntityByAccessToken(accessToken);
 
             if (!identity) {
-                throw new CouldNotLocateIdentityError();
+                throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateIdentityError') as any)();
             } else if (identity.user) {
                 await identity.populate('user').execPopulate();
             }
@@ -589,7 +589,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
                           ],
                       });
                 } else {
-                    throw new ProviderDoesNotAllowRegistrationError();
+                    throw new ((global as any).ApplicationContext.errors.getErrorByName('ProviderDoesNotAllowRegistrationError') as any)();
                 }
             } else {
                 user = await User.findById(existingState.user).exec();
@@ -657,7 +657,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         if (req.query.atticAccessToken)
             req.session.atticAccessToken = req.query.atticAccessToken;
         if (req.query.response_type !== 'code') {
-            throw new InvalidResponseTypeError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidResponseTypeError') as any)();
         }
 
         let provider = await Client.findOne({
@@ -666,7 +666,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         }).exec();
 
         if (!provider) {
-            throw new InvalidClientOrProviderError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
         }
 
         let client = await Client.findOne({
@@ -676,7 +676,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         }).exec();
 
         if (!client) {
-            throw new InvalidClientOrProviderError();
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
         }
 
         let pipeline = redis.pipeline();
