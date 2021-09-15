@@ -49,7 +49,7 @@ export class MarketplaceTesting implements IPlugin {
           image: Buffer.from(emp.blobs?.mainImage?.blob).toString('base64')
         };
       }
-      rpcMethods.marketplaceDbFind = async function(collection: string, query: unknown): Promise<unknown[]> {
+      rpcMethods.marketplaceDbFind = async function(collection: string, query: any): Promise<unknown[]> {
         return db.collection(collection).find(query).toArray();
       }
 
