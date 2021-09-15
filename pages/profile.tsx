@@ -137,7 +137,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
 
       if (this.changedImage && userForm.image) {
         patches.push({
-          op: 'replace',
+          op: 'add',
           path: '/image',
           value: userForm.image
         })
@@ -222,7 +222,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <Button type={"submit"} variant="contained" onClick={() => history.back()} color="primary">
+                <Button variant="contained" onClick={() => history.back()} color="primary">
                   Back
                 </Button>
                 <Button type={"submit"} variant="contained" color="primary">

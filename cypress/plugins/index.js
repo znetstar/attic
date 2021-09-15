@@ -24,6 +24,6 @@ module.exports = (on, config) => {
   // `config` is the resolved Cypress config
   config = dotenvPlugin(config, {
     path: require('path').join(__dirname, '..', '..', '.env')
-  }, true)
+  }, true);
   return config;
 }

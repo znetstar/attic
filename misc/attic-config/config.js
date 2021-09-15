@@ -39,7 +39,7 @@ const DEFAULT_USER_SCOPE = Object.freeze([
 const template =  {
   "clientId" : "marketplace-app",
   "name" : "marketplace-app",
-  "redirectUri" : "https://thirdact.digital/api/auth/callback/marketplace-app",
+  "redirectUri" : process.env.SITE_URI+"/api/auth/callback/marketplace-app",
   "scope" : DEFAULT_USER_SCOPE,
   "role" : [
     "consumer"
@@ -84,10 +84,14 @@ for  (const clientId in clients) {
 module.exports = {
   "plugins": [
     "@etomon/attic-server-google",
-    "@znetstar/attic-server-rest"
+    "@znetstar/attic-server-rest",
+    [
+      '@thirdact/marketplace-testing', '/opt/thirdact-marketplace-testing'
+    ]
   ],
   siteUri: process.env.ATTIC_URI,
   DEFAULT_USER_SCOPE,
+  cors: {},
   dbInit//,
   // _oauth_clients_: clients
 }

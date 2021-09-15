@@ -1,6 +1,6 @@
-FROM znetstar/attic-server
+FROM public.ecr.aws/b1q3c8q0/attic-server:latest
 
-FROM node:14
+FROM node:12
 
 COPY --from=0 /opt/attic /opt/attic
 
@@ -21,8 +21,15 @@ ENV HOST '0.0.0.0'
 
 ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
+ADD ./marketplace-testing /opt/thirdact-marketplace-testing
+
+RUN cd /opt/thirdact-marketplace-testing && \
+    npm ci && \
+    npm run build
 
 ENV EMAIL_HOSTNAME social
+
+ENV LOG_LEVEL "info"
 
 EXPOSE 80
 

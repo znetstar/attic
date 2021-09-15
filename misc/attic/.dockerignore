@@ -1,1 +1,5 @@
 config/config.json
+marketplace-testing/.tscache
+marketplace-testing/lib
+marketplace-testing/node_modules
+marketplace-testing/.git

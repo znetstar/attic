@@ -9,6 +9,7 @@ import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import {makeEncoder} from "./_encoder";
 import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
 const { DEFAULT_USER_SCOPE } = atticConfig;
+import * as _ from 'lodash';
 
 /**
  * Model for the user profile, with the fields present on each user object
@@ -124,7 +125,9 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
 
     await marketplaceUser.save();
   } catch (err) {
-    throw new HTTPError(500, err.message);
+    throw new HTTPError(500, (
+      _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
+    ));
   }
 }
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
