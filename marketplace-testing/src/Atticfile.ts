@@ -25,7 +25,7 @@ export type IRPC = IRPCBase&{
 export class MarketplaceTesting implements IPlugin {
     constructor(
       public applicationContext: IApplicationContext,
-      public marketplaceMongoUri = process.env.MARKETPLACE_MONGO_URI
+      public marketplaceMongoUri = (process.env.ATTIC_MARKETPLACE_MONGO_URI || process.env.MARKETPLACE_MONGO_URI || process.env.MONGO_URI) as string
     ) {
     }
     public async init(): Promise<void> {
