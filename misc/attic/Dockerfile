@@ -1,4 +1,4 @@
-FROM public.ecr.aws/b1q3c8q0/attic-server:latest
+FROM public.ecr.aws/b1q3c8q0/attic-server:3.5.0
 
 FROM node:12
 
