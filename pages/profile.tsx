@@ -6,6 +6,7 @@ import { IUser as AtticUser } from '@znetstar/attic-common';
 import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
 import {diff, jsonPatchPathConverter} from 'just-diff';
 import {MarketplaceAvatar} from "./common/_avatar";
+import {MarketplaceLogo} from "./common/_logo";
 
 
 export type ProfileProps = SessionComponentProps&{
@@ -173,24 +174,34 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
       <div className={"page profile"}>
         {this.errorDialog}
         <header>
-          <h1>Profile Information</h1>
+          <div>
+            <MarketplaceLogo></MarketplaceLogo>
+          </div>
+          <div>Please fill out the information below</div>
         </header>
         <div>
           <form onSubmit={(e) => { this.updateForm(); e.preventDefault(); }}>
             <div>
               <FormControl className={'form-control'}>
-                <MarketplaceAvatar
-                  image={this.userForm.image}
-                  onChange={(image) => {
+                <div className={"avatar-wrapper"}>
+                  <div>
+                    <MarketplaceAvatar
+                      image={this.userForm.image}
+                      onChange={(image) => {
 
-                    this.changedImage = true;
-                    this.state.userForm.image = image;
-                    this.forceUpdate();
-                  }}
-                  imageFormat={this.enc.options.imageFormat}
-                  resizeImage={this.imageSize}
-                  allowUpload={true}
-                ></MarketplaceAvatar>
+                        this.changedImage = true;
+                        this.state.userForm.image = image;
+                        this.forceUpdate();
+                      }}
+                      imageFormat={this.enc.options.imageFormat}
+                      resizeImage={this.imageSize}
+                      allowUpload={true}
+                    ></MarketplaceAvatar>
+                  </div>
+                  <div>
+                    <small>Add image (optional)</small>
+                  </div>
+                </div>
               </FormControl>
             </div>
             <div>
@@ -222,11 +233,11 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <Button variant="contained" onClick={() => history.back()} color="primary">
-                  Back
-                </Button>
-                <Button type={"submit"} variant="contained" color="primary">
-                  Update
+                {/*<Button variant="contained" onClick={() => history.back()} color="primary">*/}
+                {/*  Back*/}
+                {/*</Button>*/}
+                <Button style={{ width: '100%' }} type={"submit"} variant="contained" color="primary">
+                  Continue
                 </Button>
               </FormControl>
             </div>

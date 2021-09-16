@@ -174,9 +174,9 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
                   key={provider.name}>
                   {
                     (provider as any).id === 'credentials' ? (
-                      <Button startIcon={<EmailIcon/>} onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}  variant="contained">Continue with {provider.name}</Button>
+                      <Button color={'primary'} startIcon={<EmailIcon/>} onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}  variant="contained">Continue with {provider.name}</Button>
                     ) : (
-                      <Button onClick={() => signIn(provider.id)}  variant="contained">Continue with {provider.name}</Button>
+                      <Button color={'primary'} onClick={() => signIn(provider.id)}  variant="contained">Continue with {provider.name}</Button>
                     )
                   }
 
@@ -190,7 +190,10 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
         (
           <Fragment>
             <div>
-              <div>Choose a method to sign in</div>
+              <MarketplaceLogo></MarketplaceLogo>
+            </div>
+            <div>
+              <div>Please login below</div>
             </div>
             {this.emailPasswordForm}
           </Fragment>

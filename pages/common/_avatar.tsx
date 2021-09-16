@@ -1,7 +1,9 @@
 import EncodeTools, {ImageFormat, ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import React, {ChangeEvent, PureComponent} from "react";
-import {Avatar} from "@material-ui/core";
+import {Avatar, Theme} from "@material-ui/core";
 import {ImageDims} from "@etomon/encode-tools/lib/IEncodeTools";
+import {createStyles, makeStyles} from "@material-ui/styles";
+
 
 
 export interface MarketplaceAvatarProps {
@@ -109,15 +111,29 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
     ].join(',');
   }
 
+
+  get classes(): any {
+    return makeStyles((theme: Theme) =>
+      createStyles({
+        image: {
+          minHeight: this.props.resizeImage?.height,
+          minWidth: this.props.resizeImage?.width
+        }
+      }),
+    );
+  }
+
   render() {
     return (
-      <div className={"image-wrapper"} onClick={() =>{
+      <div className={"avatar-image-wrapper"} onClick={() =>{
         if (this.props.allowUpload) {
           (this.inputRef.current as any).click();
         }
       }}>
         <input style={{ display: 'hidden' }} disabled={!this.props.allowUpload} ref={this.inputRef as any} accept={this.imageAccept} type={'file'} name={"file-input"} onChange={(e) => this.onFileChange(e)}></input>
-        <Avatar src={ this.imageUrl } />
+        <Avatar
+          className={this.classes.image}
+          src={ this.imageUrl } />
       </div>
     )
   }

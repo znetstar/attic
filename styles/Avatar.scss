@@ -1,0 +1,14 @@
+.avatar-image-wrapper {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .MuiAvatar-root {
+    min-height: 125px;
+    min-width:125px;
+  }
+}
