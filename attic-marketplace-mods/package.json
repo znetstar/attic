@@ -37,7 +37,7 @@
     "devDependencies": {
         "@types/express": "^4.17.13",
         "@types/lodash": "^4.14.172",
-        "@znetstar/attic-common": "^3.9.0",
+        "@znetstar/attic-common": "^3.10.0",
         "docdash": "^1.2.0",
         "grunt": "^1.4.1",
         "grunt-contrib-clean": "^2.0.0",

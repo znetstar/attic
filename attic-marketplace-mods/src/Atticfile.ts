@@ -6,6 +6,7 @@ const {
   emperors
 } = require('@dailynodemodule/emperor-data/src/index');
 import * as _ from 'lodash';
+import {CouldNotLocateUserError} from "@znetstar/attic-common/lib/Error";
 
 export type IApplicationContext = IApplicationContextBase&{
   marketplaceMongo:MongoClient,
@@ -21,6 +22,12 @@ export type IRPC = IRPCBase&{
     image: string
   }>;
 };
+
+class MarketplaceCouldNotLocateUserError extends CouldNotLocateUserError {
+  constructor() {
+    super(`Invalid email or password, please try again`);
+  }
+}
 
 export class MarketplaceTesting implements IPlugin {
     constructor(
@@ -39,6 +46,13 @@ export class MarketplaceTesting implements IPlugin {
       await ctx.triggerHook('MarketplaceTesting.marketplaceDb.start');
       const db = ctx.marketplaceDb = mongo.db(dbName);
       await ctx.triggerHook('MarketplaceTesting.marketplaceDb.complete', db);
+
+      ctx.errors.setError(
+        MarketplaceCouldNotLocateUserError,
+        {
+          name: 'CouldNotLocateUserError'
+        }
+      );
 
       const rpcMethods: IRPC = ctx.rpcServer.methods as IRPC;
       rpcMethods.marketplaceRandomProfile = async function() {
@@ -62,7 +76,7 @@ export class MarketplaceTesting implements IPlugin {
     }
 
     public get name(): string {
-        return '@thirdact/marketplace-testing';
+        return '@thirdact/attic-marketplace-mods';
     }
 }
 

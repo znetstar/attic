@@ -21,9 +21,9 @@ ENV HOST '0.0.0.0'
 
 ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
-ADD ./marketplace-testing /opt/thirdact-marketplace-testing
+ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
 
-RUN cd /opt/thirdact-marketplace-testing && \
+RUN cd /opt/attic-marketplace-mods && \
     npm ci && \
     npm run build
 
