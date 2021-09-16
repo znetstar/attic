@@ -142,11 +142,11 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
             ></LoginFormControl>
           </div>
           <div>
-            <Button variant="contained" onClick={() => this.setState({  slide: LoginPanelSlides.login })}>
-              Back
-            </Button>
-            <Button type={"submit"} variant="contained" onClick={this.onLoginClick} color="primary">
-              Login
+            {/*<Button variant="contained" onClick={() => this.setState({  slide: LoginPanelSlides.login })}>*/}
+            {/*  Back*/}
+            {/*</Button>*/}
+            <Button style={{ width: '100%' }} type={"submit"} variant="contained" onClick={this.onLoginClick} color="primary">
+              Continue
             </Button>
           </div>
         </form>
