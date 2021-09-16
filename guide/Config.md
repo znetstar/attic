@@ -25,3 +25,7 @@ Make sure to change the various client secrets to random values, and to add the 
 
 The Marketplace and Attic both depend on MongoDB and Redis. In total, you will need
 two MongoDB databases, and three Redis databases (they can reside on the same instance).
+
+## JWT
+
+To get the value for `JWT_SIGNING_PRIVATE_KEY` follow the instructions [here](https://github.com/nextauthjs/next-auth/issues/484#issuecomment-664098144). 

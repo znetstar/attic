@@ -86,7 +86,7 @@ module.exports = {
     "@etomon/attic-server-google",
     "@znetstar/attic-server-rest",
     [
-      '@thirdact/marketplace-testing', '/opt/thirdact-marketplace-testing'
+      '@thirdact/attic-marketplace-mods', '/opt/attic-marketplace-mods'
     ]
   ],
   siteUri: process.env.ATTIC_URI,

@@ -9,7 +9,7 @@ import {IUser} from "./_user";
  * RPC API exposed by the server
  */
 export interface MarketplaceAPI {
-  'db:User:patch': (...args: any[]) => Promise<void>;
+  'marketplace:patchUser': (...args: any[]) => Promise<void>;
   'marketplace:createUser': (...args: any[]) => Promise<void>
 }
 

@@ -1,7 +1,7 @@
 import mongoose from '../common/_database';
-import {Document, ObjectId, Schema} from "mongoose";
+import {Document, Model, Schema} from "mongoose";
 import {ToPojo} from "@thirdact/to-pojo";
-import rpcServer, {atticServiceRpcProxy, exposeModel} from "./_rpcServer";
+import rpcServer, {atticServiceRpcProxy, exposeModel, MarketplaceClientRequest, RequestData} from "./_rpcServer";
 import {ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
 import atticConfig from '../../misc/attic-config/config.json';
@@ -10,7 +10,8 @@ import {makeEncoder} from "./_encoder";
 import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
 const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
-
+import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
+import { ObjectId } from 'mongodb';
 /**
  * Model for the user profile, with the fields present on each user object
  */
@@ -96,11 +97,21 @@ export function toUserPojo(marketplaceUser: ToUserParsable): IPOJOUser {
 }
 
 export const User = mongoose.models.User || mongoose.model<IUser&Document>('User', UserSchema);
+const simpleInterface = new SimpleModelInterface<IUser>(new ModelInterface<IUser>(User));
 
-exposeModel(
-  'User',
-  new SimpleModelInterface<IUser>(new ModelInterface<IUser>(User))
-);
+export async function defineAbilitiesFor(user: IUser): Promise<Ability> {
+  const { can, cannot, rules } = new AbilityBuilder(Ability);
+
+  can('marketplace:getUser', 'User', { id: user.id });
+  can('marketplace:patchUser', 'User', [
+    'firstName',
+    'middleName',
+    'lastName',
+    'email'
+    ], { id: user.id });
+  cannot('marketplace:deleteUser', 'User', { id: user.id });
+  return new Ability(rules);
+}
 
 /**
  * Creates a new user using the provided fields first on the attic server,
@@ -110,7 +121,6 @@ exposeModel(
 export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}) {
   try {
     const atticRpc = atticServiceRpcProxy();
-
 
     const atticUserId = await atticRpc.createUser({
       username: form.email,
@@ -130,4 +140,49 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
     ));
   }
 }
+
+/**
+ * Applies a set of JSON patches to the current user
+ * @param args
+ */
+export async function marketplacePatchUser(...args: any[]): Promise<void> {
+  // Extract the session data
+  // @ts-ignore
+  const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+  const additionalData: RequestData = clientRequest.additionalData;
+
+  // additionalData has the raw req/res, in addition to the session
+
+  // Get the user from the session object
+  const user: IUser = additionalData?.session?.user.marketplaceUser as IUser;
+  if (!user) throw new HTTPError(401);
+
+  // Here you could check if the user has permission to execute
+
+  // Filter out invalid fields
+  const restrictedFields  = [
+    '/atticUserId',
+    '/createdAt',
+    '/updatedAt'
+  ]
+
+  for (let k of restrictedFields) {
+    for (let kk of args[1]) {
+      if (kk.path.indexOf(k) !== -1) continue;
+    }
+  }
+
+  // Make sure to restrict all writes/deletes to the current user id
+  args[0] = {
+    query: {
+      _id: new ObjectId(user._id as string)
+    }
+  }
+
+  // Execute the request
+  // @ts-ignore
+  await simpleInterface.patch(...args);
+}
+
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
+(rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);

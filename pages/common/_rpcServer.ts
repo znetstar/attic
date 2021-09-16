@@ -28,13 +28,13 @@ import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
 
-type RequestData = {
+export type RequestData = {
   req: NextApiRequest,
   res: NextApiResponse<Response>,
   session: MarketplaceSession
 }
 
-type MarketplaceClientRequest = ClientRequest&{
+export  type MarketplaceClientRequest = ClientRequest&{
   additionalData: RequestData
 }
 
@@ -154,7 +154,7 @@ const authorizedMethods = [
   /**
    * Allows the user to update their profile
    */
-  'db:User:patch'
+  'marketplace:patchUser'
 ]
 
 /**
@@ -189,7 +189,7 @@ export class MarketplaceRPCServer extends Server {
       }
 
       if (!anonymousMethods.includes(request.method) && !clientRequest) {
-        throw new HTTPError(403)
+        throw new HTTPError(403);
       }
 
 
@@ -226,8 +226,6 @@ export function exposeModel(modelName: string, simpleInterface: any) {
     (rpcServer as any).methodHost.set(`db:${modelName}:${k}`, fn.bind(simpleInterface));
   }
 }
-
-
 
 
 export default rpcServer;

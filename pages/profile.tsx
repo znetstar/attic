@@ -143,7 +143,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
         })
       }
 
-      await this.rpc["db:User:patch"]({} as any, patches as any)
+      await this.rpc["marketplace:patchUser"]({} as any, patches as any)
         .then(() => {
           this.handleError('Save success', 'success');
           this.changedImage = false;
@@ -195,7 +195,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField required={true} value={
+                <TextField required={false} value={
                   this.fakeEmail ? null : this.userForm.email
                 }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={'form-input'} type={"email"} variant={"filled"} name={"email"} label="Email" />
               </FormControl>

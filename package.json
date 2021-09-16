@@ -12,6 +12,8 @@
     "test": "cypress run"
   },
   "dependencies": {
+    "@casl/ability": "^5.4.3",
+    "@casl/mongoose": "^5.0.0",
     "@etomon/encode-tools": "^2.7.7",
     "@etomon/ioredisdown": "^1.2.2",
     "@fontsource/poppins": "^4.5.0",
@@ -22,7 +24,7 @@
     "@thirdact/simple-mongoose-interface": "^1.1.7",
     "@types/core-js": "^2.5.5",
     "@znetstar/attic-cli-common": "^3.1.44",
-    "@znetstar/attic-common": "^3.8.1",
+    "@znetstar/attic-common": "^3.10.0",
     "core-js": "^3.16.2",
     "corejs": "^1.0.0",
     "cross-fetch": "^3.1.4",

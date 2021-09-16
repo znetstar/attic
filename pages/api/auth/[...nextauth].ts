@@ -286,7 +286,7 @@ export default NextAuth({
   pages: {
     signIn: '/login',
     signOut: '/logout',
-    error: '/error',
+    error: '/api/auth-error',
     newUser: '/signup'
   },
   callbacks: {
@@ -410,16 +410,19 @@ export default NextAuth({
             }
           });
 
-          if (tokenResp.status === 403) {
-            throw {
-              httpCode: 403,
-              message: 'Invalid email or password'
-            };
-          } else if (tokenResp.status !== 200) {
-            throw {
-              httpCode: 500,
-              message: 'Unexpected login error'
-            };
+         if (tokenResp.status !== 200) {
+           let err =  {
+             httpCode: 500,
+             message: 'Unexpected login error'
+           };
+
+           if (tokenResp.headers.get('content-type')?.indexOf('application/json') !== -1) {
+             let body = await tokenResp.json();
+             if (body?.error)
+               err = body?.error;
+           }
+
+           throw new Error(err.message);
           }
 
           const token: IFormalAccessToken = await tokenResp.json();
