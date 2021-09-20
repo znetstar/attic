@@ -22,7 +22,7 @@ export interface INFTData {
   /**
    * Image as a `Buffer`
    */
-  nft_item: Buffer;
+  nftItem: Buffer;
 
   title: string;
   description?: string;
@@ -39,7 +39,7 @@ export interface INFTData {
 }
 
 interface Royalty {
-  Owed_to : string;
+  owedTo: string;
   percent: number;
 }
 
@@ -47,13 +47,13 @@ export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   title: { type: String, required: true },
   description: { type: String, required: false },
   tags: { type: Array, required: false },
-  supply: { type: Number, required: true },
-  nftFor: {type: String, required: true},
-  royalties: {Owed_to: { type: String, required: true},
-              percent: { type: Number, required: true}
+  supply: { type: Number, required: true, min:[1, 'Should be atleast 1 item'] },
+  nftFor: {type: String, required: true, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
+  royalties: {owedTo: { type: String, required: true},
+              percent: { type: Number, required: true, min:[0, "Royalty can't be less than 0%"], max: [100, "Royalty can't be more than 100%"]}
               },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true, ref: 'User' },
-  nft_item: { type: Buffer, required: true }
+  nftItem: { type: Buffer, required: true }
 }));
 
 export const NFT = mongoose.models.NFT || mongoose.model<INFTData>('NFT', NftDataSchema);
@@ -73,7 +73,7 @@ export async function marketplaceCreateNft (form: INFTData) {
       nftFor: form.nftFor,
       royalties: form.royalties,
       userId: form.userId,
-      nft_item: form.nft_item
+      nftItem: form.nftItem
     });
 
     await marketplaceNft.save();
