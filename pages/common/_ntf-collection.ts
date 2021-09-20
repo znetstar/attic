@@ -25,9 +25,10 @@ export interface INFTData {
   nft_item: Buffer;
 
   title: string;
-  description: string;
+  description?: string;
   tags?: string[];
   supply: number;
+  nftFor: string;
 
   royalties: Royalty;
 
@@ -44,9 +45,10 @@ interface Royalty {
 
 export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   title: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, required: false },
   tags: { type: Array, required: false },
   supply: { type: Number, required: true },
+  nftFor: {type: String, required: true},
   royalties: {Owed_to: { type: String, required: true},
               percent: { type: Number, required: true}
               },
@@ -68,6 +70,7 @@ export async function marketplaceCreateNft (form: INFTData) {
       description: form.description,
       tags: form.tags,
       supply: form.supply,
+      nftFor: form.nftFor,
       royalties: form.royalties,
       userId: form.userId,
       nft_item: form.nft_item
