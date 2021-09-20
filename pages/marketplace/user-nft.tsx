@@ -1,6 +1,6 @@
 import {Component} from "react";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./../common/_session-component";
-import { Button, FormControl, TextField, ToggleButton } from "@material-ui/core";
+import { Button, FormControl, TextField, Switch } from "@material-ui/core";
 import {Buffer} from 'buffer';
 import { IUser as AtticUser } from '@znetstar/attic-common';
 import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
@@ -39,6 +39,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
     isCompleted: false,
     notifyMessage: null,
     nftForm: {
+
       // ...this.props.session?.user?.marketplaceUser as IPOJOUser,
       // ...(
       //   this.props.session?.user?.marketplaceUser?.image ? {
@@ -126,10 +127,10 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
                 <div className={"avatar-wrapper"}>
                   <div>
                     <MarketplaceAvatar
-                      image={this.nftForm.nft_item}
+                      image={this.nftForm.nftItem}
                       onChange={(image) => {
 
-                        this.state.nftForm.nft_item = image;
+                        this.state.nftForm.nftItem = image;
                         this.forceUpdate();
                       }}
                       imageFormat={this.enc.options.imageFormat}
@@ -153,7 +154,17 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.nftForm.supply = Math.floor(parseInt(e.currentTarget.value)); this.forceUpdate(); }} value={this.nftForm.supply} type="number" required={true} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
+                <TextField onChange={(e) => { this.state.nftForm.tags = [...e.currentTarget.value.split(' ')]; this.forceUpdate(); }} value={this.nftForm.tags} required={false} className={'form-input'}  variant={"filled"} name={"tags"} label="Show tags" />
+              </FormControl>
+            </div>
+            <div>
+              <FormControl className={'form-control'}>
+                <TextField onChange={(e) => { this.state.nftForm.supply = Math.floor(parseInt(e.currentTarget.value)); this.forceUpdate(); console.log(this.nftForm)}} value={this.nftForm.supply} type="number" required={true} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
+              </FormControl>
+            </div>
+            <div>
+              <FormControl className={'form-control'}>
+                <Switch defaultChecked onChange={console.log('sale')} label="Sale"/>
               </FormControl>
             </div>
             <div>

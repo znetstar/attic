@@ -46,7 +46,7 @@ interface Royalty {
 export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   title: { type: String, required: true },
   description: { type: String, required: false },
-  tags: { type: Array, required: false },
+  tags: { type: [String], required: false },
   supply: { type: Number, required: true, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: true, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
   royalties: {owedTo: { type: String, required: true},
@@ -77,7 +77,7 @@ export async function marketplaceCreateNft (form: INFTData) {
     });
 
     await marketplaceNft.save();
-  } catch (err) {
+  } catch (err:any) {
     throw new HTTPError(500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
     ));
