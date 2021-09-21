@@ -1,7 +1,7 @@
 import { getCsrfToken, getProviders} from 'next-auth/client'
 import {MarketplaceLogo} from "./common/_logo";
 import {Fragment} from "react";
-import {Button} from '@material-ui/core';
+import Button  from '@mui/material/Button';
 import LoginFormControl from "./common/_login-common";
 
 import {NextRouter, withRouter} from "next/router"
@@ -78,7 +78,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
       await this.rpc['marketplace:createUser'](this.state.emailPasswordForm)
         .then(() => {
           this.handleError('Create success', 'success');
-          (document as any).location.href = '/login';
+          (document as any).location.href = '/login?email='+this.state.emailPasswordForm.email;
         })
     })()
      .catch(this.handleError);
@@ -132,7 +132,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
                 <Button variant="contained" onClick={() => history.back()}>
                   Back
                 </Button>
-                <Button type={"submit"} variant="contained" onClick={this.submitNewUser} color="primary">
+                <Button type={"submit"} variant="contained" color="primary">
                   Signup
                 </Button>
               </div>

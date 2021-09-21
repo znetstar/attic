@@ -192,11 +192,6 @@ export class MarketplaceRPCServer extends Server {
         throw new HTTPError(403);
       }
 
-
-      if (request.method.match(/db:User:(patch)$/)) {
-        _.set(request, 'params.0.query._id', clientRequest.additionalData.session.user?.marketplaceUser?._id)
-      }
-
       return super.invoke(request, clientRequest);
     } catch (err) {
       if (!clientRequest || !clientRequest.respond) throw err;

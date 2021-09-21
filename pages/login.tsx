@@ -1,14 +1,13 @@
 import {ClientSafeProvider, getCsrfToken, getProviders, signIn} from 'next-auth/client'
 import {MarketplaceLogo} from "./common/_logo";
 import {Component, Fragment, ReactNode} from "react";
-import {Button, FormControl, TextField, InputLabel, Input, Icon, Snackbar} from '@material-ui/core';
-import EmailIcon from '@material-ui/icons/Email';
+import Button  from '@mui/material/Button';
+import EmailIcon from '@mui/icons-material/Email';
 import LoginFormControl from "./common/_login-common";
-import Alert, { AlertProps } from '@material-ui/lab/Alert';
 const URL = require('core-js/web/url');
 
 import {NextRouter, withRouter} from "next/router"
-import Profile from "./profile";
+import Profile from "./[...profile]";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
 
 /**
@@ -22,8 +21,15 @@ type ProviderType = AuthProviders|null;
 
 export async function getServerSideProps(context: any){
   const providers = await getProviders();
-  const { res } = context;
+  const { res, req } = context;
   const session = await Login.getSession(context);
+
+  if (req.url.indexOf('callbackUrl=') !== -1) {
+    res.setHeader('Location', (req.url.split('callbackUrl=').pop() as string).split('&').shift() as string);
+    res.statusCode = 302;
+    res.end();
+    return { props: {} };
+  }
 
   if (session) {
     res.setHeader('Location', '/profile');
@@ -94,16 +100,21 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
 
   }
 
+
+  fromQueryString(key: string): string|null {
+    return (this.props.router.query && this.props.router.query[key] || null) as string | null;
+  }
+
   constructor(props: LoginPanelProps) {
     super(props);
 
     this.state = {
-      slide: props.initialSlide || LoginPanelSlides.login,
+      slide: this.fromQueryString('email') ? LoginPanelSlides.emailPassword : (props.initialSlide || LoginPanelSlides.login),
       emailPasswordForm: {
-        email: null,
+        email: this.fromQueryString('email'),
         password: null
       },
-      notifyMessage: (this.props.router.query?.error || null) as string | null
+      notifyMessage: this.fromQueryString('error')
     };
   }
 
@@ -174,7 +185,11 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
                   key={provider.name}>
                   {
                     (provider as any).id === 'credentials' ? (
-                      <Button color={'primary'} startIcon={<EmailIcon/>} onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}  variant="contained">Continue with {provider.name}</Button>
+                      <Button
+                        color={'primary'}
+                        startIcon={<EmailIcon/>}
+                        onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}
+                        variant="contained">Continue with {provider.name}</Button>
                     ) : (
                       <Button color={'primary'} onClick={() => signIn(provider.id)}  variant="contained">Continue with {provider.name}</Button>
                     )

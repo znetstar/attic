@@ -1,4 +1,4 @@
-import {Component} from "react";
+import {Component, PureComponent} from "react";
 import {useSession, getSession} from "next-auth/client";
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
 import {
@@ -7,11 +7,55 @@ import {
   SerializationFormatMimeTypes
 } from "@etomon/encode-tools/lib/EncodeTools";
 import {makeEncoder} from "./_encoder";
-import {Snackbar} from "@material-ui/core";
-import Alert from "@material-ui/lab/Alert";
+import Snackbar  from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import { RPCProxy } from './_rpcClient';
 import * as _ from 'lodash'
 import {NextRouter} from "next/router";
+import {MarketplaceAPI} from "./_rpcCommon";
+import {IEncodeTools} from "@etomon/encode-tools";
+
+export type NotifySeverity = 'success'|'error';
+export type HandleErrorFunction = (err: Error|{ message: string, [name: string]: unknown }|{data:{message:string, [name: string]: unknown}, [name: string]: unknown}|{innerError:{message:string, [name: string]: unknown}, [name: string]: unknown}|string, severity?: NotifySeverity) => void;
+
+
+export type ErrorDialogProps = {
+  notifyMessage?: string|null,
+  autoHideDuration?: number,
+  onClose: () => void;
+  notifySeverity?: NotifySeverity
+}
+
+
+export type SubcomponentProps = {
+  session?: MarketplaceSession;
+  rpc: MarketplaceAPI;
+  handleError: HandleErrorFunction;
+  errorDialog: JSX.Element;
+  enc: IEncodeTools
+}
+
+export type AuthenticatedSubcomponentProps = SubcomponentProps&{
+  session: MarketplaceSession;
+}
+
+export class ErrorDialog extends PureComponent<ErrorDialogProps> {
+  render() {
+    return (
+      this.props.notifyMessage ? <Snackbar
+        open={Boolean(this.props.notifyMessage)}
+        autoHideDuration={this.props.autoHideDuration||10e3}
+        anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+      >
+        <Alert
+          onClose={this.props.onClose}
+          severity={(this.props.notifySeverity || 'error')}  >
+          {this.props.notifyMessage}
+        </Alert>
+      </Snackbar> : null
+    )
+  }
+}
 
 /**
  * User-related props will be accessible on every page
@@ -47,7 +91,7 @@ export interface SessionComponentState {
   /**
    * The severity of the message that will be showed to the user
    */
-  notifySeverity?: 'success'|'error'|null;
+  notifySeverity?: NotifySeverity
 }
 
 /**
@@ -113,12 +157,22 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
 
   get errorDialog() {
     return (
-      this.state.notifyMessage ? <Snackbar open={Boolean(this.state.notifyMessage)} autoHideDuration={6000} onClose={() => this.setState({ notifyMessage: null })}>
-          <Alert onClose={() => this.setState({ notifyMessage: null, notifySeverity: null })} severity={this.state.notifySeverity || 'error'}>
-            {this.state.notifyMessage}
-          </Alert>
-        </Snackbar> : null
+      <ErrorDialog
+        notifyMessage={this.state.notifyMessage}
+        onClose={() => this.setState({ notifyMessage: null, notifySeverity: 'error' }) }
+        notifySeverity={this.state.notifySeverity}
+      ></ErrorDialog>
     )
+  }
+
+  protected get subcomponentProps(): SubcomponentProps {
+    return {
+      enc: this.enc,
+      session: this.props.session,
+      errorDialog: this.errorDialog,
+      rpc: this.rpc,
+      handleError: this.handleError
+    }
   }
 }
 

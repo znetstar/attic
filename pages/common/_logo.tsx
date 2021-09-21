@@ -1,4 +1,4 @@
-import {PureComponent, Fragment, Component} from "react";
+import { Component} from "react";
 
 export class MarketplaceLogo extends Component {
   render() {

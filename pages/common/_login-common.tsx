@@ -1,4 +1,5 @@
-import {FormControl, Input, InputLabel, TextField} from "@material-ui/core";
+import FormControl  from '@mui/material/FormControl';
+import TextField  from '@mui/material/TextField';
 import {PureComponent} from "react";
 
 

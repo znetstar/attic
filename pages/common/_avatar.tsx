@@ -1,10 +1,8 @@
 import EncodeTools, {ImageFormat, ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import React, {ChangeEvent, PureComponent} from "react";
-import {Avatar, Theme} from "@material-ui/core";
+import Avatar from "@mui/material/Avatar";
 import {ImageDims} from "@etomon/encode-tools/lib/IEncodeTools";
-import {createStyles, makeStyles} from "@material-ui/styles";
-
-
+import {createStyles, makeStyles } from "@mui/styles";
 
 export interface MarketplaceAvatarProps {
   /**
@@ -15,7 +13,7 @@ export interface MarketplaceAvatarProps {
    * Called whenever the profile image chnages
    * @param image
    */
-  onChange: (image: Buffer) => void;
+  onChange?: (image: Buffer) => void;
   /**
    * Image format to convert image to upon upload
    */
@@ -89,7 +87,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
       }
     }
 
-    this.props.onChange(
+    this.props.onChange && this.props.onChange(
       Buffer.from(newBuffer)
     );
   }
@@ -113,7 +111,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
 
 
   get classes(): any {
-    return makeStyles((theme: Theme) =>
+    return makeStyles((theme: any) =>
       createStyles({
         image: {
           minHeight: this.props.resizeImage?.height,

@@ -1,22 +1,31 @@
-import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
-import { Button, FormControl, TextField} from "@material-ui/core";
-import {IPOJOUser, IUser} from "./common/_user";
-import {Buffer} from 'buffer';
-import { IUser as AtticUser } from '@znetstar/attic-common';
+import { Component } from 'react';
+import {
+  AuthenticatedSubcomponentProps,
+  SubcomponentProps
+} from "./_session-component";
+import {IPOJOUser, IUser} from "./_user";
+import {Buffer} from "buffer";
+import {ProfileState} from "../[...profile]";
 import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
-import {diff, jsonPatchPathConverter} from 'just-diff';
-import {MarketplaceAvatar} from "./common/_avatar";
-import {MarketplaceLogo} from "./common/_logo";
+import {IUser as AtticUser} from "@znetstar/attic-common";
+import {diff, jsonPatchPathConverter} from "just-diff";
+import {MarketplaceSession} from "../api/auth/[...nextauth]";
+import {MarketplaceAPI} from "./_rpcCommon";
+import {MarketplaceLogo} from "./_logo";
+import Button  from '@mui/material/Button';
+import FormControl  from '@mui/material/FormControl';
+import TextField  from '@mui/material/TextField';
+import {MarketplaceAvatar} from "./_avatar";
+import {IEncodeTools} from "@etomon/encode-tools";
 
-
-export type ProfileProps = SessionComponentProps&{
+export type EditProfileProps = AuthenticatedSubcomponentProps&{
 
 };
 
 /**
  * Internal state for the profile page
  */
-export type ProfileState = SessionComponentState&{
+export type EditProfileState = {
   /**
    * Fields for the profile being modified
    */
@@ -29,7 +38,8 @@ export type ProfileState = SessionComponentState&{
 };
 
 
-export class Profile extends SessionComponent<ProfileProps, ProfileState> {
+
+export class EditProfile extends Component<EditProfileProps, EditProfileState> {
   /**
    * Size of the profile image
    */
@@ -41,13 +51,14 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
       ...this.props.session?.user?.marketplaceUser as IPOJOUser,
       ...(
         this.props.session?.user?.marketplaceUser?.image ? {
-           image: (
-              Buffer.from(this.props.session?.user?.marketplaceUser?.image, 'base64')
-           )
+          image: (
+            Buffer.from(this.props.session?.user?.marketplaceUser?.image, 'base64')
+          )
         } : {}
       )
     }
-  } as ProfileState
+  } as EditProfileState;
+
 
   /**
    * Fields for the user being edited
@@ -63,6 +74,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     return this.props.session?.user?.atticUser as AtticUser;
   }
 
+
   /**
    * The Attic `IdentityEntity` of the user logged in.
    * This object contains provider specific info like, for example,
@@ -72,15 +84,10 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     return (this.atticUser.identities || [])[0]||null as IIdentityEntity | null;
   }
 
-
-  constructor(props: ProfileProps) {
-    super(props);
-  }
-
   componentDidMount() {
     this.updateIsCompleted();
 
-    this.state.notifyMessage = this.isCompleted ? null : 'Please fill out required fields';
+    this.setState({ notifyMessage: this.isCompleted ? null : 'Please fill out required fields' });
   }
 
 
@@ -90,6 +97,10 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   get isCompleted() {
     return this.state.isCompleted;
   }
+
+  protected changedImage: boolean = false;
+
+
 
   /**
    * Is called when the profile image is changed
@@ -102,20 +113,18 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     this.changedImage = true;
   }
 
-  protected changedImage: boolean = false;
-
   /**
    * Updates the `isCompleted` field.
    * @protected
    */
   protected updateIsCompleted() {
-    this.state.isCompleted = Boolean(
-      this.state.userForm?.email &&
-      this.state.userForm?.firstName &&
-      this.state.userForm?.lastName
-    );
-
-    this.forceUpdate();
+    this.setState({
+      isCompleted: Boolean(
+        this.state.userForm?.email &&
+        this.state.userForm?.firstName &&
+        this.state.userForm?.lastName
+      )
+    });
   }
 
   /**
@@ -144,12 +153,12 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
         })
       }
 
-      await this.rpc["marketplace:patchUser"]({} as any, patches as any)
+      await this.props.rpc["marketplace:patchUser"]({} as any, patches as any)
         .then(() => {
-          this.handleError('Save success', 'success');
+          this.props.handleError('Save success', 'success');
           this.changedImage = false;
         })
-        .catch(this.handleError);
+        .catch((err)=>this.props.handleError(err));
     })()
       .then(() => {
         this.updateIsCompleted();
@@ -157,22 +166,22 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
 
   }
 
+
   /**
    * Is `true` if the user logged in using a social provider, like Google
    */
   get fakeEmail() {
     return (
       this.atticIdentity &&
-        // Make dynamic!
-        this.userForm?.email?.indexOf('@social') !== -1
+      // Make dynamic!
+      this.userForm?.email?.indexOf('@social') !== -1
     );
   }
 
   render() {
-
     return (
-      <div className={"page profile"}>
-        {this.errorDialog}
+      <div className={"edit-profile"}>
+        {this.props.errorDialog}
         <header>
           <div>
             <MarketplaceLogo></MarketplaceLogo>
@@ -190,10 +199,14 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                       onChange={(image) => {
 
                         this.changedImage = true;
-                        this.state.userForm.image = image;
-                        this.forceUpdate();
+                        this.setState({
+                          userForm: {
+                            ...this.state.userForm,
+                            image
+                          }
+                        })
                       }}
-                      imageFormat={this.enc.options.imageFormat}
+                      imageFormat={this.props.enc.options.imageFormat}
                       resizeImage={this.imageSize}
                       allowUpload={true}
                     ></MarketplaceAvatar>
@@ -218,17 +231,42 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.userForm.firstName = e.currentTarget.value; this.forceUpdate(); }}  value={this.userForm.firstName} required={true} className={'form-input'} variant={"filled"} name={"first-name"} label="First Name" />
+                <TextField onChange={(e) => {
+                  this.setState({
+                    userForm: {
+                      ...this.state.userForm,
+                      firstName: e.currentTarget.value
+                    }
+                  })
+                }}  value={this.userForm.firstName} required={true} className={'form-input'} variant={"filled"} name={"first-name"} label="First Name" />
               </FormControl>
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.userForm.middleName = e.currentTarget.value; this.forceUpdate(); }}   value={this.userForm.middleName} required={false} className={'form-input'}  variant={"filled"} name={"middle-name"} label="Middle Name" />
+                <TextField
+                  onChange={(e) => {
+                    this.setState({
+                      userForm: {
+                        ...this.state.userForm,
+                        middleName: e.currentTarget.value
+                      }
+                    })
+                  }}
+                  value={this.userForm.middleName} required={false} className={'form-input'}  variant={"filled"} name={"middle-name"} label="Middle Name" />
               </FormControl>
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.userForm.lastName = e.currentTarget.value; this.forceUpdate(); }} value={this.userForm.lastName}  required={true} className={'form-input'}  variant={"filled"} name={"last-name"} label="Last Name" />
+                <TextField
+                  onChange={(e) => {
+                    this.setState({
+                      userForm: {
+                        ...this.state.userForm,
+                        lastName: e.currentTarget.value
+                      }
+                    })
+                  }}
+                  value={this.userForm.lastName}  required={true} className={'form-input'}  variant={"filled"} name={"last-name"} label="Last Name" />
               </FormControl>
             </div>
             <div>
@@ -246,31 +284,6 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
       </div>
     );
   }
+
 }
-
-
-export async function getServerSideProps(context: any) {
-  const { res } = context;
-  const session = await Profile.getSession(context);
-
-  if (!session) {
-    res.setHeader('Location', '/login');
-    res.statusCode = 302;
-    res.end();
-    return { props: {} };
-  }
-  if (!session.token?.userId) {
-    res.setHeader('Location', '/signup');
-    res.statusCode = 302;
-    res.end();
-    return { props: {} };
-  }
-  return {
-    props: {
-      session
-    }
-  }
-}
-
-
-export default Profile;
+export default EditProfile;

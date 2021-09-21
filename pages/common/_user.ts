@@ -2,7 +2,7 @@ import mongoose from '../common/_database';
 import {Document, Model, Schema} from "mongoose";
 import {ToPojo} from "@thirdact/to-pojo";
 import rpcServer, {atticServiceRpcProxy, exposeModel, MarketplaceClientRequest, RequestData} from "./_rpcServer";
-import {ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
+import {JSONPatch, JSONPatchOp, ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
 import atticConfig from '../../misc/attic-config/config.json';
 import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
@@ -12,6 +12,7 @@ const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
+import {MarketplaceSession} from "../api/auth/[...nextauth]";
 /**
  * Model for the user profile, with the fields present on each user object
  */
@@ -25,6 +26,8 @@ export interface IUser {
 
   email?: string;
   atticUserId: string;
+
+  public: boolean;
   /**
    * Image as a `Buffer`
    */
@@ -53,7 +56,8 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
   lastName: { type: String, required: false },
   email: { type: String, required: true, unique: true },
   atticUserId: { type: String, required: true },
-  image: { type: Buffer, required: false }
+  image: { type: Buffer, required: false },
+  public: { type: Boolean, required: true, default: () => false }
 }));
 
 UserSchema.pre<IUser&{ password?: string }>('save', async function () {
@@ -96,20 +100,44 @@ export function toUserPojo(marketplaceUser: ToUserParsable): IPOJOUser {
   });
 }
 
+export const userPubFields = [
+  'firstName',
+  'lastName',
+  'image',
+  'public'
+];
+export const userPrivFields = [
+  ...userPubFields,
+  'middleName',
+  'email',
+  'password'
+];
+
 export const User = mongoose.models.User || mongoose.model<IUser&Document>('User', UserSchema);
 const simpleInterface = new SimpleModelInterface<IUser>(new ModelInterface<IUser>(User));
 
-export async function defineAbilitiesFor(user: IUser): Promise<Ability> {
+export function userAcl(user?: IUser, session?: MarketplaceSession|null): Ability {
   const { can, cannot, rules } = new AbilityBuilder(Ability);
 
-  can('marketplace:getUser', 'User', { id: user.id });
-  can('marketplace:patchUser', 'User', [
-    'firstName',
-    'middleName',
-    'lastName',
-    'email'
-    ], { id: user.id });
-  cannot('marketplace:deleteUser', 'User', { id: user.id });
+  if (user) {
+    if (session?.user?.marketplaceUser?._id.toString() === user?._id.toString()) {
+      can('marketplace:getUser', 'User', userPrivFields, {
+        _id: new ObjectId(user.id)
+      });
+
+      can('marketplace:patchUser', 'User', userPrivFields, {id: user.id});
+    } else {
+      can('marketplace:getUser', 'User', userPubFields, {
+        _id: new ObjectId(user.id),
+        public: true
+      });
+    }
+  }
+  
+  if (!session) {
+    can('marketplace:createUser', 'User',  userPubFields);
+  }
+
   return new Ability(rules);
 }
 
@@ -119,6 +147,12 @@ export async function defineAbilitiesFor(user: IUser): Promise<Ability> {
  * @param form Fields for the new user
  */
 export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}) {
+  const acl = userAcl();
+
+  for (const k in form) {
+    acl.can('marketplace:createUser', 'User', k);
+  }
+
   try {
     const atticRpc = atticServiceRpcProxy();
 
@@ -132,8 +166,6 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
       email: form.email,
       atticUserId
     });
-
-    await marketplaceUser.save();
   } catch (err) {
     throw new HTTPError(500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
@@ -156,20 +188,11 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
   // Get the user from the session object
   const user: IUser = additionalData?.session?.user.marketplaceUser as IUser;
   if (!user) throw new HTTPError(401);
+  const acl = userAcl(user, additionalData?.session);
 
   // Here you could check if the user has permission to execute
-
-  // Filter out invalid fields
-  const restrictedFields  = [
-    '/atticUserId',
-    '/createdAt',
-    '/updatedAt'
-  ]
-
-  for (let k of restrictedFields) {
-    for (let kk of args[1]) {
-      if (kk.path.indexOf(k) !== -1) continue;
-    }
+  for (const k of args[0].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
+    acl.can('marketplace:patchUser', 'User', k);
   }
 
   // Make sure to restrict all writes/deletes to the current user id
