@@ -1,0 +1,15 @@
+.header_wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  color: red;
+}
+
+.steps {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+}

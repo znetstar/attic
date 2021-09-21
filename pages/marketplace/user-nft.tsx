@@ -7,7 +7,10 @@ import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
 import {diff, jsonPatchPathConverter} from 'just-diff';
 import {MarketplaceAvatar} from "./../common/_avatar";
 import {MarketplaceLogo} from "./../common/_logo";
+
 import { INFTData } from "./../common/_ntf-collection";
+import NFTImg from '../common/user-nft-page-subComponents/_nft-Img'
+import CreateNFTHeader from "../common/user-nft-page-subComponents/_nft-createHeader";
 
 
 export type UserNFTProps = SessionComponentProps&{
@@ -27,6 +30,7 @@ export type UserNFTState = SessionComponentState&{
    */
   isCompleted: boolean;
   notifyMessage: string|null;
+  stepNum: number;
 };
 
 
@@ -36,6 +40,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
    */
   imageSize = { width: 200 }
   state = {
+    stepNum: 0,
     isCompleted: false,
     notifyMessage: null,
     nftForm: {
@@ -70,7 +75,6 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
   }
 
   componentDidMount() {
-    console.log('ooo', this)
     this.state.notifyMessage = this.state.isCompleted ? null : 'Please fill out required fields';
   }
 
@@ -118,28 +122,11 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
     return (
       <div className={"page createNft"}>
         {this.errorDialog}
-          <form onSubmit={(e) => { this.updateForm(); e.preventDefault(); }}>
+        {/* <CreateNFTHeader stepNum={2} /> */}
+        <NFTImg allowUpload={true}/>
+          {/* <form onSubmit={(e) => { this.updateForm(); e.preventDefault(); }}>
             <aside>
-              <header>
-                THIRD ACT
-              </header>
-              <FormControl className={'form-control'}>
-                <div className={"avatar-wrapper"}>
-                  <div>
-                    <MarketplaceAvatar
-                      image={this.nftForm.nftItem}
-                      onChange={(image) => {
-
-                        this.state.nftForm.nftItem = image;
-                        this.forceUpdate();
-                      }}
-                      imageFormat={this.enc.options.imageFormat}
-                      resizeImage={this.imageSize}
-                      allowUpload={true}
-                    ></MarketplaceAvatar>
-                  </div>
-                </div>
-              </FormControl>
+              <NFTImg />
            </aside>
 
            <div>
@@ -164,7 +151,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <Switch defaultChecked onChange={console.log('sale')} label="Sale"/>
+                <Switch defaultChecked onChange={(e) => { this.state.nftForm.nftFor = (this.state.nftForm.nftFor === 'sale') ? 'auction' : 'auction'}}/>
               </FormControl>
             </div>
             <div>
@@ -179,7 +166,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
                 </Button>
               </FormControl>
             </div>
-          </form>
+          </form> */}
         </div>
     );
   }
