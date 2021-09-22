@@ -13,16 +13,17 @@ import ListItemText from "@mui/material/ListItemText";
 import SettingsIcon from "@mui/icons-material/Settings";
 import * as React from "react";
 import {Component, PureComponent} from "react";
-import {SubcomponentProps} from "./_session-component";
+import {SubcomponentProps, SubcomponentPropsWithRouter} from "./_session-component";
 import CloseIcon from "@mui/icons-material/Close";
+import {NextRouter} from "next/router";
 
-export type AppBarProps =  SubcomponentProps&{
+export type AppBarProps =  SubcomponentPropsWithRouter&{
   rightSideOfAppbar: JSX.Element|null;
   pageTitle: string;
 }
 export type AppBarState =  {}
 
-export class SettingsSidebar extends PureComponent<SubcomponentProps&{
+export class SettingsSidebar extends PureComponent<SubcomponentPropsWithRouter&{
   open: boolean,
   onClose: () => void,
   onProfileOpen:() => void;
@@ -38,7 +39,11 @@ export class SettingsSidebar extends PureComponent<SubcomponentProps&{
           {
             this.props.session ? (
               <React.Fragment>
-                <ListItem key={'Profile'} onClick={() => this.props.onProfileOpen()}>
+                <ListItem
+                  key={'Profile'}
+                  onClick={() => this.props.router.push(`/profile/self`)}
+                  button
+                >
                   <ListItemIcon>
                     <PersonIcon />
                   </ListItemIcon>
@@ -53,7 +58,7 @@ export class SettingsSidebar extends PureComponent<SubcomponentProps&{
   }
 }
 
-export class SettingsButton extends PureComponent<SubcomponentProps&{ open: boolean, onClose: () => void, onOpen: () => void, onProfileOpen: () => void }, { }> {
+export class SettingsButton extends PureComponent<SubcomponentPropsWithRouter&{ open: boolean, onClose: () => void, onOpen: () => void, onProfileOpen: () => void }, { }> {
   public render() {
     return (
       <React.Fragment>
@@ -100,8 +105,7 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
             <Toolbar>
               <IconButton
                 onClick={() => {
-                  if (typeof(window) !== 'undefined')
-                    window.history.back();
+                    this.props.router.back();
                 }}
                 size="large"
                 edge="start"

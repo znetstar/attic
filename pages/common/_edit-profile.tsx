@@ -35,6 +35,7 @@ export type EditProfileState = {
    */
   isCompleted: boolean;
   notifyMessage: string|null;
+  test:  number;
 };
 
 
@@ -48,6 +49,9 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
     isCompleted: false,
     notifyMessage: null,
     userForm: {
+      middleName: null,
+      email:  null,
+      password: null,
       ...this.props.session?.user?.marketplaceUser as IPOJOUser,
       ...(
         this.props.session?.user?.marketplaceUser?.image ? {
@@ -56,7 +60,8 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
           )
         } : {}
       )
-    }
+    },
+    test: 0
   } as EditProfileState;
 
 
@@ -143,7 +148,16 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
       let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
 
       patches = patches
-        .filter(f => f.path.substr(0, '/image'.length) !== '/image');
+        .filter(f => f.path.substr(0, '/image'.length) !== '/image')
+        .map((f) => {
+          if (f.value === '')
+            return {
+              ...f,
+              value: null
+            }
+          return f;
+
+        });
 
       if (this.changedImage && userForm.image) {
         patches.push({
@@ -183,9 +197,6 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
       <div className={"edit-profile"}>
         {this.props.errorDialog}
         <header>
-          <div>
-            <MarketplaceLogo></MarketplaceLogo>
-          </div>
           <div>Please fill out the information below</div>
         </header>
         <div>
@@ -221,7 +232,7 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
               <FormControl className={'form-control'}>
                 <TextField required={false} value={
                   this.fakeEmail ? null : this.userForm.email
-                }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={'form-input'} type={"email"} variant={"filled"} name={"email"} label="Email" />
+                }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={'form-input'} type={"email"}  variant={"filled"} name={"email"} label="Email" />
               </FormControl>
             </div>
             <div>

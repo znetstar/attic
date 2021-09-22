@@ -24,6 +24,7 @@
     "@mui/icons-material": "^5.0.0",
     "@mui/material": "^5.0.0",
     "@mui/styles": "^5.0.0",
+    "@reduxjs/toolkit": "^1.6.1",
     "@thirdact/simple-mongoose-interface": "^1.1.7",
     "@types/core-js": "^2.5.5",
     "@znetstar/attic-cli-common": "^3.1.44",

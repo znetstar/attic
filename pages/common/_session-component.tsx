@@ -33,6 +33,10 @@ export type SubcomponentProps = {
   handleError: HandleErrorFunction;
   errorDialog: JSX.Element;
   enc: IEncodeTools
+  router?: NextRouter;
+}
+export type SubcomponentPropsWithRouter  = SubcomponentProps&{
+  router: NextRouter;
 }
 
 export type AuthenticatedSubcomponentProps = SubcomponentProps&{
@@ -147,6 +151,11 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
     this.forceUpdate();
   }
 
+
+  protected fromQueryString(key: string): string|null {
+    return (this.props.router.query && this.props.router.query[key] || null) as string | null;
+  }
+
   get rpc() {
     return RPCProxy(this.handleError);
   }
@@ -165,7 +174,7 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
     )
   }
 
-  protected get subcomponentProps(): SubcomponentProps {
+  protected subcomponentProps(): SubcomponentProps {
     return {
       enc: this.enc,
       session: this.props.session,

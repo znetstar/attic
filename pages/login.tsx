@@ -8,7 +8,11 @@ const URL = require('core-js/web/url');
 
 import {NextRouter, withRouter} from "next/router"
 import Profile from "./[...profile]";
-import SessionComponent, {SessionComponentProps, SessionComponentState} from "./common/_session-component";
+import SessionComponent, {
+  SessionComponentProps,
+  SessionComponentState,
+  SubcomponentProps, SubcomponentPropsWithRouter
+} from "./common/_session-component";
 
 /**
  * Various login provider (e.g., Google)
@@ -100,9 +104,11 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
 
   }
 
-
-  fromQueryString(key: string): string|null {
-    return (this.props.router.query && this.props.router.query[key] || null) as string | null;
+  protected subcomponentProps(): SubcomponentPropsWithRouter {
+    return {
+      ...super.subcomponentProps(),
+      router: this.props.router
+    }
   }
 
   constructor(props: LoginPanelProps) {

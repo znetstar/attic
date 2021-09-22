@@ -39,6 +39,11 @@ export interface IUser {
    * Attic handles password login.
    */
   password?: string;
+
+  handle?: string;
+  followers?: number;
+  following?: number;
+  bio?: string;
 }
 
 
@@ -50,14 +55,46 @@ export type IPOJOUser= IUser&{
 }
 
 export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
-  firstName: { type: String, required: false },
-  password: { type: String, required: false },
-  middleName: { type: String, required: false },
-  lastName: { type: String, required: false },
-  email: { type: String, required: true, unique: true },
-  atticUserId: { type: String, required: true },
+  firstName: {
+    type: String,
+    required: false
+  },
+  password: {
+    type: String,
+    required: false
+  },
+  middleName: {
+    type: String,
+    required: false
+  },
+  lastName: {
+    type: String,
+    required: false
+  },
+  email: {
+    type: String,
+    required: false,
+    unique: true
+  },
+  atticUserId: { type: String, required: true, unique: true },
   image: { type: Buffer, required: false },
-  public: { type: Boolean, required: true, default: () => false }
+  public: { type: Boolean, required: true, default: () => false },
+  follower: {
+    type: Number,
+    required: false
+  },
+  following: {
+    type: Number,
+    required: false
+  },
+  handle: {
+    type: String,
+    required: false
+  },
+  bio: {
+    type: String,
+    required: false
+  }
 }));
 
 UserSchema.pre<IUser&{ password?: string }>('save', async function () {
@@ -133,7 +170,7 @@ export function userAcl(user?: IUser, session?: MarketplaceSession|null): Abilit
       });
     }
   }
-  
+
   if (!session) {
     can('marketplace:createUser', 'User',  userPubFields);
   }
@@ -191,7 +228,7 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
   const acl = userAcl(user, additionalData?.session);
 
   // Here you could check if the user has permission to execute
-  for (const k of args[0].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
+  for (const k of args[1].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
     acl.can('marketplace:patchUser', 'User', k);
   }
 

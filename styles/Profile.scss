@@ -10,5 +10,20 @@
     & > * {
       padding: 10px 0;
     }
+
+
+    .avatar-box {
+      min-height: 120px;
+      justify-content: flex-start;
+      & > * {
+        margin: 7px 0;
+      }
+      .following-bar {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+      }
+    }
   }
 }

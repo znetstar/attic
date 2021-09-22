@@ -96,7 +96,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
    * Data URI of the image
    */
   public get imageUrl(): string|undefined {
-    return this.props.image ? `data:${this.mimeType};base64,${this.props.image.toString('base64')}` : void(0);
+    return this.props.image ? `data:${this.mimeType};base64,${Buffer.from(this.props.image).toString('base64')}` : void(0);
   }
 
   /**

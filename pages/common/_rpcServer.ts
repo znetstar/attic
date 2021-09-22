@@ -88,8 +88,14 @@ export class RPCTransport extends Transport implements ServerSideTransport {
       if (response) {
         headers["Content-Type"] = this.serializer.content_type;
 
+        // @ts-ignore
+      if (response.error?.data)
+        // @ts-ignore
+        response.error.data = JSON.parse(JSON.stringify(response.error?.data));
+
+        const val = this.serializer.serialize(response);
         res.writeHead(200, headers);
-        res.end(this.serializer.serialize(response));
+        res.end(val);
       } else {
         res.writeHead(204, headers);
         res.end();
@@ -192,7 +198,7 @@ export class MarketplaceRPCServer extends Server {
         throw new HTTPError(403);
       }
 
-      return super.invoke(request, clientRequest);
+      const res = await super.invoke(request, clientRequest);
     } catch (err) {
       if (!clientRequest || !clientRequest.respond) throw err;
       const resp = new Response(request.id, new InternalError(err));
