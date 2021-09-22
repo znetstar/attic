@@ -1,16 +1,12 @@
-import {Component} from "react";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./../common/_session-component";
-import { Button, FormControl, TextField, Switch } from "@material-ui/core";
-import {Buffer} from 'buffer';
 import { IUser as AtticUser } from '@znetstar/attic-common';
-import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
 import {diff, jsonPatchPathConverter} from 'just-diff';
-import {MarketplaceAvatar} from "./../common/_avatar";
-import {MarketplaceLogo} from "./../common/_logo";
+
 
 import { INFTData } from "./../common/_ntf-collection";
 import NFTImg from '../common/user-nft-page-subComponents/_nft-Img'
 import CreateNFTHeader from "../common/user-nft-page-subComponents/_nft-createHeader";
+import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 
 
 export type UserNFTProps = SessionComponentProps&{
@@ -43,17 +39,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
     stepNum: 0,
     isCompleted: false,
     notifyMessage: null,
-    nftForm: {
-
-      // ...this.props.session?.user?.marketplaceUser as IPOJOUser,
-      // ...(
-      //   this.props.session?.user?.marketplaceUser?.image ? {
-      //      image: (
-      //         Buffer.from(this.props.session?.user?.marketplaceUser?.image, 'base64')
-      //      )
-      //   } : {}
-      // )
-    }
+    nftForm: {}
   } as UserNFTState
 
   /**
@@ -83,18 +69,18 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
    * by creating an array of JSONPatch entries for each change, and submitting the patch
    * over rpc.
    */
-  updateForm = () => {
-    (async () => {
-      const nftForm: INFTData = {
-        ...this.nftForm
-      };
+  updateAssetForm = () => {
+    // (async () => {
+    //   const nftForm: INFTData = {
+    //     ...this.nftForm
+    //   };
 
-      let patches = diff((this as any).props.session.user.marketplaceUser, nftForm, jsonPatchPathConverter);
+    //   let patches = diff((this as any).props.session.user.marketplaceUser, nftForm, jsonPatchPathConverter);
 
-      let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
+    //   let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
 
-      patches = patches
-        .filter(f => f.path.substr(0, '/image'.length) !== '/image');
+    //   patches = patches
+    //     .filter(f => f.path.substr(0, '/image'.length) !== '/image');
 
     //   if (this.changedImage && userForm.image) {
     //     patches.push({
@@ -114,8 +100,16 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
     //   .then(() => {
     //     this.updateIsCompleted();
     //   })
+    // })
+    console.log('next form')
+  }
 
-  })}
+  onFormChange = (formName: Partial<INFTData>, formValue: any) => {
+    let { nftForm} = this.state
+    nftForm[formName] = formValue
+    this.forceUpdate()
+    console.log('main', this.nftForm, formName)
+  }
 
   render() {
 
@@ -124,49 +118,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
         {this.errorDialog}
         {/* <CreateNFTHeader stepNum={2} /> */}
         <NFTImg allowUpload={true}/>
-          {/* <form onSubmit={(e) => { this.updateForm(); e.preventDefault(); }}>
-            <aside>
-              <NFTImg />
-           </aside>
-
-           <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.nftForm.title = e.currentTarget.value; this.forceUpdate(); }} value={this.nftForm.title}  required={true} className={'form-input'}  variant={"filled"} name={"title"} label="Title" />
-              </FormControl>
-            </div>
-            <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.nftForm.description = e.currentTarget.value; this.forceUpdate(); }} value={this.nftForm.description}  required={false} className={'form-input'}  variant={"filled"} name={"description"} label="Description" />
-              </FormControl>
-            </div>
-            <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.nftForm.tags = [...e.currentTarget.value.split(' ')]; this.forceUpdate(); }} value={this.nftForm.tags} required={false} className={'form-input'}  variant={"filled"} name={"tags"} label="Show tags" />
-              </FormControl>
-            </div>
-            <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { this.state.nftForm.supply = Math.floor(parseInt(e.currentTarget.value)); this.forceUpdate(); console.log(this.nftForm)}} value={this.nftForm.supply} type="number" required={true} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
-              </FormControl>
-            </div>
-            <div>
-              <FormControl className={'form-control'}>
-                <Switch defaultChecked onChange={(e) => { this.state.nftForm.nftFor = (this.state.nftForm.nftFor === 'sale') ? 'auction' : 'auction'}}/>
-              </FormControl>
-            </div>
-            <div>
-            <FormControl className={'form-control'}>
-                <Button style={{ width: '50%' }} type={"button"} variant="contained" color="primary">
-                  Back
-                </Button>
-              </FormControl>
-              <FormControl className={'form-control'}>
-                <Button style={{ width: '50%' }} type={"submit"} variant="contained" color="primary">
-                  Next
-                </Button>
-              </FormControl>
-            </div>
-          </form> */}
+        <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/>
         </div>
     );
   }
