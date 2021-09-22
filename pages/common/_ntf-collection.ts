@@ -30,7 +30,11 @@ export interface INFTData {
   supply: number;
   nftFor: string;
 
+  listOn: Date;
   royalties: Royalty;
+  priceStart?: number;
+  priceBuyNow?: number;
+
 
   /**
    * Author of the item
@@ -53,7 +57,10 @@ export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
               percent: { type: Number, required: true, min:[0, "Royalty can't be less than 0%"], max: [100, "Royalty can't be more than 100%"]}
               },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true, ref: 'User' },
-  nftItem: { type: Buffer, required: true }
+  nftItem: { type: Buffer, required: true },
+  listOn: { type: Date, required: true },
+  priceStart: {type: Number, required: false},
+  priceBuyNow: {type: Number, required: false}
 }));
 
 export const NFT = mongoose.models.NFT || mongoose.model<INFTData>('NFT', NftDataSchema);
@@ -73,7 +80,10 @@ export async function marketplaceCreateNft (form: INFTData) {
       nftFor: form.nftFor,
       royalties: form.royalties,
       userId: form.userId,
-      nftItem: form.nftItem
+      nftItem: form.nftItem,
+      listOn: form.listOn,
+      priceStart: form.priceStart,
+      priceBuyNow: form.priceBuyNow
     });
 
     await marketplaceNft.save();
