@@ -71,38 +71,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
    * over rpc.
    */
   updateAssetForm = () => {
-    // (async () => {
-    //   const nftForm: INFTData = {
-    //     ...this.nftForm
-    //   };
-
-    //   let patches = diff((this as any).props.session.user.marketplaceUser, nftForm, jsonPatchPathConverter);
-
-    //   let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
-
-    //   patches = patches
-    //     .filter(f => f.path.substr(0, '/image'.length) !== '/image');
-
-    //   if (this.changedImage && userForm.image) {
-    //     patches.push({
-    //       op: 'add',
-    //       path: '/image',
-    //       value: userForm.image
-    //     })
-    //   }
-
-    //   await this.rpc["marketplace:patchUser"]({} as any, patches as any)
-    //     .then(() => {
-    //       this.handleError('Save success', 'success');
-    //       this.changedImage = false;
-    //     })
-    //     .catch(this.handleError);
-    // })()
-    //   .then(() => {
-    //     this.updateIsCompleted();
-    //   })
-    // })
-    console.log('next form')
+    this.setState({ stepNum: 1 })
   }
 
   onFormChange = (formName: Partial<INFTData>, formValue: any) => {
@@ -117,8 +86,10 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
         {this.errorDialog}
         {/* <CreateNFTHeader stepNum={2} /> */}
         <NFTImg allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
-        <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/>
-        <NFTPricingForm nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
+        {!this.state.stepNum ?        
+          <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> : 
+          <NFTPricingForm nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
+        }
         </div>
     );
   }

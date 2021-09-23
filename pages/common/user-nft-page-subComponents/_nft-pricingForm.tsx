@@ -30,19 +30,17 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
     coOwner: {
       owedToId: '',
       owedTo: '',
-      percent: null
+      percent: 0
     },
     royaltyList: []
   }
 
-  componentDidMount() {
-    let currTime = new Date();
-    console.log(currTime)
-  }
-
   scheduleDateTime = () => {
-    const currDate = new Date();
-    console.log(this.state, currDate);
+    let currTime = new Date(new Date().toString().split('GMT')[0]+' UTC').toISOString()
+    console.log('currTime',currTime, new Date(), this.state.scheduleDate, this.state.scheduleTime);
+    if(this.state.scheduleDate && this.state.scheduleTime) {
+      // console.log(this.state.scheduleDate.join())
+    }
   }
 
   menuItemClick = (user) => {
@@ -66,7 +64,7 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
   }
 
   addCoOwner = (e) => {
-    if(this.state.coOwner.owedToId) {
+    if(this.state.coOwner.owedToId && this.state.coOwner.percent > 0) {
       this.state.royaltyList.push(this.state.coOwner)
       this.setState({coOwner: {...this.state.coOwner, owedToId: '', owedTo: '', percent: 0}})
       this.props.onFormChange('royalties', this.state.royaltyList)
@@ -77,7 +75,38 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
 
   updatePricingForm = () => {
     this.scheduleDateTime();
-    console.log('check and submit time!!!')
+    console.log('check and submit time!!!', this.props.nftForm)
+        // (async () => {
+    //   const nftForm: INFTData = {
+    //     ...this.nftForm
+    //   };
+
+    //   let patches = diff((this as any).props.session.user.marketplaceUser, nftForm, jsonPatchPathConverter);
+
+    //   let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
+
+    //   patches = patches
+    //     .filter(f => f.path.substr(0, '/image'.length) !== '/image');
+
+    //   if (this.changedImage && userForm.image) {
+    //     patches.push({
+    //       op: 'add',
+    //       path: '/image',
+    //       value: userForm.image
+    //     })
+    //   }
+
+    //   await this.rpc["marketplace:patchUser"]({} as any, patches as any)
+    //     .then(() => {
+    //       this.handleError('Save success', 'success');
+    //       this.changedImage = false;
+    //     })
+    //     .catch(this.handleError);
+    // })()
+    //   .then(() => {
+    //     this.updateIsCompleted();
+    //   })
+    // })
   }
 
   render() {
@@ -92,7 +121,7 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
                 defaultValue="listOnSubmit"
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
-                                    this.setState({ showScheduleInputs: false })} 
+                                    this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })} 
                                    else {this.setState({ showScheduleInputs : true })}}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />
@@ -103,10 +132,10 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
             {(this.state.showScheduleInputs) ? (
                           <div>
                           <FormControl className={'form-control'}>
-                            <TextField onChange={(e) => { this.setState({ scheduleDate: e.target.value});}} value={this.state.scheduleDate} required={true} className={'form-input'}  variant={"filled"} name={"listOnDate"} label="Date" type="date" />
+                            <TextField onChange={(e) => { this.setState({ scheduleDate: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleDate} required={true} className={'form-input'}  variant={"filled"} name={"listOnDate"} label="Date" type="date" />
                           </FormControl>
                           <FormControl className={'form-control'}>
-                            <TextField onChange={(e) => { this.setState({ scheduleTime: e.target.value});}} value={this.state.scheduleTime}  required={true} className={'form-input'}  variant={"filled"} name={"listOnTime"} label="Time" type="time" />
+                          <TextField onChange={(e) => { this.setState({ scheduleTime: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleTime}  required={true} className={'form-input'}  variant={"filled"} name={"listOnTime"} label="Time" type="time" InputProps={{ inputProps: { step: 1}}}/>
                           </FormControl>
                         </div>
             ) : ''}
