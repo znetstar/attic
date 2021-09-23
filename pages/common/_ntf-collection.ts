@@ -14,6 +14,13 @@ import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {IUser, userAcl, userPrivFields, userPubFields} from "./_user";
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
+import {Royalty, IRoyalty,IDestination,Destination} from "./_wallet";
+
+export enum SaleTypes {
+  sale = 'sale',
+  auction = 'auction'
+}
+
 /**
  * Model for the nft creation and it's metaData, with the fields present on each nft object
  */
@@ -30,10 +37,10 @@ export interface INFTData {
   description?: string;
   tags?: string[];
   supply: number;
-  nftFor: string;
+  nftFor: SaleTypes;
 
   listOn: Date;
-  royalties: Royalty[];
+  royalties: IRoyalty[];
   priceStart?: number;
   priceBuyNow?: number;
 
@@ -45,33 +52,36 @@ export interface INFTData {
   public?: boolean;
 }
 
-interface Destination {
-  userId: ObjectId|string;
-  walletId: ObjectId|string;
+export class RoyaltiesMustBe100 extends Error {
+  constructor()  { super(`All royalty destinations must equal 100%`);  }
 }
 
-interface Royalty {
-  owedTo: Destination;
-  percent: number;
-}
-
-
-
-export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
+export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   title: { type: String, required: true },
   description: { type: String, required: false },
   tags: { type: [String], required: false },
   supply: { type: Number, required: true, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: true, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
   royalties: {
-    owedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User'
-    },
-    percent: { type: Number, required: true, min:[0, "Royalty can't be less than 0%"], max: [100, "Royalty can't be more than 100%"]}
+    type: [Royalty],
+    validate: (royalties: IRoyalty[]) => {
+      if (!royalties.length) return true;
+
+      let pct: number = 0;
+      for (const royalty of royalties)
+        pct += royalty.percent;
+      if (pct !== 1)
+        throw new RoyaltiesMustBe100();
+
+      return true;
+    }
   },
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true, ref: 'User' },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    unique: true,
+    ref: 'User'
+  },
   nftItem: { type: Buffer, required: true },
   listOn: { type: Date, required: true },
   priceStart: {type: Number, required: false},
@@ -79,16 +89,25 @@ export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   public: {type: Boolean, required: false}
 }));
 
-export const NFT = mongoose.models.NFT || mongoose.model<INFTData>('NFT', NftDataSchema);
+export const NFT = mongoose.models.NFT || mongoose.model<INFTData>('NFT', NFTDataSchema);
 const nftInterface = new SimpleModelInterface<INFTData>(new ModelInterface<INFTData>(NFT));
 
 const nftPubFields = [
-  'title','description', 'tags', 'supply','listOn', 'priceStart', 'priceBuyNow', 'userId', 'public'
+  'title',
+  'description',
+  'tags',
+  'supply',
+  'listOn',
+  'priceStart',
+  'priceBuyNow',
+  'userId',
+  'public'
 ]
 
 const nftPrivFields = [
   ...nftPubFields,
-  'royalties', 'nftItem'
+  'royalties',
+  'nftItem'
 ]
 
 export function nftAcl(nft?: INFTData, session?: MarketplaceSession|null): Ability {
