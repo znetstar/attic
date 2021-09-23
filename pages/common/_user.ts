@@ -13,6 +13,11 @@ import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
+
+export interface UserPermissions {
+  createNFT: boolean
+}
+
 /**
  * Model for the user profile, with the fields present on each user object
  */
@@ -44,6 +49,8 @@ export interface IUser {
   followers?: number;
   following?: number;
   bio?: string;
+
+  permissions?: UserPermissions
 }
 
 
@@ -94,6 +101,12 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
   bio: {
     type: String,
     required: false
+  },
+  permissions: {
+    createNFT: {
+      type: Boolean,
+      required: false
+    }
   }
 }));
 
@@ -203,6 +216,8 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
       email: form.email,
       atticUserId
     });
+
+    return marketplaceUser._id.toString();
   } catch (err) {
     throw new HTTPError(500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
@@ -241,7 +256,7 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
 
   // Execute the request
   // @ts-ignore
-  await simpleInterface.patch(...args);
+  const resp = await simpleInterface.patch(...args);
 }
 
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);

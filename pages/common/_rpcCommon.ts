@@ -1,16 +1,22 @@
 import {
   SimpleModelInterface,
   CreateModelInterfaceRequestBody,
-  PatchModelInterfaceRequestBody
+  PatchModelInterfaceRequestBody, JSONPatchOp
 } from "@thirdact/simple-mongoose-interface";
 import {IUser} from "./_user";
+import {INFTData} from "./_ntf-collection";
 
 /**
  * RPC API exposed by the server
  */
 export interface MarketplaceAPI {
-  'marketplace:patchUser': (...args: any[]) => Promise<void>;
-  'marketplace:createUser': (...args: any[]) => Promise<void>
+  'marketplace:patchUser': (patches: JSONPatchOp) => Promise<void>;
+  'marketplace:createUser': (user: IUser) => Promise<string>;
+
+  'marketplace:getNFT': (id: string) => Promise<INFTData>;
+  'marketplace:getNFTs': (q: unknown) => Promise<INFTData[]>;
+  'marketplace:patchNFT': (patches: JSONPatchOp) => Promise<void>;
+  'marketplace:createNFT': (nft: INFTData) => Promise<string>;
 }
 
 /**
