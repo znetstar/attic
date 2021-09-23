@@ -1,5 +1,5 @@
 import React, {PureComponent} from "react";
-import { Button, FormControl, TextField, Switch, Typography } from "@material-ui/core";
+import { Button, FormControl, TextField, Switch, Typography } from "@mui/material";
 
 import { INFTData } from "./../_ntf-collection";
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-assetForm.module.css"

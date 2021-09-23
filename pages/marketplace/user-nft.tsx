@@ -105,10 +105,6 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
     console.log('next form')
   }
 
-  updatePricingForm = () => {
-    console.log('check and submit time!!!')
-  }
-
   onFormChange = (formName: Partial<INFTData>, formValue: any) => {
     this.setState({ nftForm: { ...this.state.nftForm, [formName]: formValue } })
     console.log('main', this.nftForm, formName)
@@ -120,9 +116,9 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
       <div className={"page createNft"}>
         {this.errorDialog}
         {/* <CreateNFTHeader stepNum={2} /> */}
-        <NFTImg allowUpload={true}/>
+        <NFTImg allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
         <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/>
-        <NFTPricingForm nftForm={this.state.nftForm} updatePricingForm={this.updatePricingForm} onFormChange={this.onFormChange} />
+        <NFTPricingForm nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
         </div>
     );
   }
