@@ -40,7 +40,11 @@ export interface INFTData {
   nftFor: SaleTypes;
 
   listOn: Date;
+<<<<<<< HEAD
   royalties: IRoyalty[];
+=======
+  royalties: [Royalty];
+>>>>>>> origin/TAA-2_create-nft-pages
   priceStart?: number;
   priceBuyNow?: number;
 

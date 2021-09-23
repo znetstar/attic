@@ -1,5 +1,5 @@
 import React, {PureComponent} from "react";
-import { Button, FormControl, TextField, Switch, Typography } from "@material-ui/core";
+import { Button, FormControl, TextField, Switch, Typography } from "@mui/material";
 
 import { INFTData } from "./../_ntf-collection";
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-assetForm.module.css"
@@ -39,15 +39,13 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
                 <TextField onChange={(e) => { let tags = e.target.value.split(' '); onFormChange(e.target.name, tags) }} value={nftForm.tags ? nftForm.tags.join(' ') : nftForm.tags} required={false} className={'form-input'}  variant={"filled"} name={"tags"} label="Show tags" />
               </FormControl>
             </div>
-            
-            {/* Math.floor not working when input is typed in; also decimal points */}
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.supply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
+                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.supply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
               </FormControl>
             </div>
             <div>
-              <FormControl className={'form-control'}>
+              <FormControl className={styles.formSwitch}>
                 <Typography>Sale</Typography>
                 <Switch onChange={(e) => {let nftFor = e.target.checked ? 'auction' : 'sale'; onFormChange(e.target.name, nftFor)}} className={'form-input'} name={"nftFor"} />
                 <Typography>Auction</Typography>

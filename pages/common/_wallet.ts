@@ -3,7 +3,7 @@ import {Schema} from "mongoose";
 import mongoose from "./_database";
 import {INFTData} from "./_ntf-collection";
 
-export interface IDestination {
+export  interface IDestination {
   userId: ObjectId|string;
   // walletId?: ObjectId|string;
 }
