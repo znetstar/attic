@@ -5,10 +5,12 @@ import {INFTData} from "./_ntf-collection";
 
 export  interface IDestination {
   userId: ObjectId|string;
+  _id: ObjectId;
   // walletId?: ObjectId|string;
 }
 
 export interface IRoyalty {
+  _id: ObjectId;
   owedTo: IDestination;
   percent: number;
 }

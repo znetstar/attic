@@ -10,7 +10,7 @@ import {EncodeToolsAuto} from "@etomon/encode-tools";
  */
 export function encodeOptions() {
   return {
-    serializationFormat: SerializationFormat.msgpack,
+    serializationFormat: SerializationFormat.json,
     imageFormat: ImageFormat.jpeg
   } as EncodingOptions;
 }

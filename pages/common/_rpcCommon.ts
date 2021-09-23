@@ -13,8 +13,7 @@ export interface MarketplaceAPI {
   'marketplace:patchUser': (patches: JSONPatchOp) => Promise<void>;
   'marketplace:createUser': (user: IUser) => Promise<string>;
 
-  'marketplace:getNFT': (id: string) => Promise<INFTData>;
-  'marketplace:getNFTs': (q: unknown) => Promise<INFTData[]>;
+  'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<INFTData[]>;
   'marketplace:patchNFT': (patches: JSONPatchOp) => Promise<void>;
   'marketplace:createNFT': (nft: INFTData) => Promise<string>;
 }

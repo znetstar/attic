@@ -1,6 +1,6 @@
 import mongoose from './_database';
 import {Document, Model, Schema} from "mongoose";
-import {ToPojo} from "@thirdact/to-pojo";
+import {toPojo, ToPojo} from "@thirdact/to-pojo";
 import rpcServer, {atticServiceRpcProxy, exposeModel, MarketplaceClientRequest, RequestData} from "./_rpcServer";
 import {JSONPatch, ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
@@ -12,9 +12,10 @@ const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
-import {IUser, userAcl, userPrivFields, userPubFields} from "./_user";
+import {IUser, userAcl, userPrivFields, userPubFields, UserRoles} from "./_user";
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
 import {Royalty, IRoyalty,IDestination,Destination} from "./_wallet";
+import {number} from "prop-types";
 
 export enum SaleTypes {
   sale = 'sale',
@@ -40,11 +41,7 @@ export interface INFTData {
   nftFor: SaleTypes;
 
   listOn: Date;
-<<<<<<< HEAD
   royalties: IRoyalty[];
-=======
-  royalties: [Royalty];
->>>>>>> origin/TAA-2_create-nft-pages
   priceStart?: number;
   priceBuyNow?: number;
 
@@ -101,7 +98,6 @@ const nftPubFields = [
   'description',
   'tags',
   'supply',
-  'listOn',
   'priceStart',
   'priceBuyNow',
   'userId',
@@ -111,33 +107,43 @@ const nftPubFields = [
 const nftPrivFields = [
   ...nftPubFields,
   'royalties',
-  'nftItem'
+  'nftItem',
+  'listOn'
 ]
 
-export function nftAcl(nft?: INFTData, session?: MarketplaceSession|null): Ability {
+export interface NFTACLOptions {
+  nft?: { userId: ObjectId, public?: boolean };
+  session?: MarketplaceSession|null;
+}
+
+export function nftAcl(options?: NFTACLOptions): Ability {
   const { can, cannot, rules } = new AbilityBuilder(Ability);
 
-  if (nft?.public &&) {
-    can('marketplace:getNFT', { _id: new ObjectId(nft._id) });
-    can('marketplace:getNFTs', {  });
+  if (options?.session?.user?.marketplaceUser?.roles?.includes(UserRoles.nftAdmin)) {
+    can([
+      'marketplace:getNFT',
+      'marketplace:createNFT',
+      'marketplace:patchNFT',
+      'marketplace:deleteNFT'
+    ], 'NFT', 'all');
   }
-  if (user) {
-    if (session?.user?.marketplaceUser?._id.toString() === user?._id.toString()) {
-      can('marketplace:getUser', 'User', userPrivFields, {
-        _id: new ObjectId(user.id)
-      });
+  else {
+    /// Anyone can view public NFT info
+    can('marketplace:getNFT', 'NFT', nftPubFields, {
+      public: true
+    });
 
-      can('marketplace:patchUser', 'User', userPrivFields, {id: user.id});
-    } else {
-      can('marketplace:getUser', 'User', userPubFields, {
-        _id: new ObjectId(user.id),
-        public: true
+    // Owner can see their own NFTs  even if not  public
+    if (options?.nft?.userId &&
+      options?.session?.user?.marketplaceUser?._id &&
+      options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.userId.toString()) {
+
+      can([
+        'marketplace:getNFT'
+      ], 'NFT', nftPubFields, {
+        userId: options?.session?.user?.marketplaceUser?._id
       });
     }
-  }
-
-  if (!session) {
-    can('marketplace:createUser', 'User',  userPubFields);
   }
 
   return new Ability(rules);
@@ -160,7 +166,7 @@ export async function marketplaceCreateNft (form: INFTData) {
     // Get the user from the session object
     const user: IUser = additionalData?.session?.user.marketplaceUser as IUser;
     if (!user) throw new HTTPError(401);
-    const acl = nftAcl(user, additionalData?.session);
+    const acl = nftAcl({  session: additionalData?.session });
 
     // Here you could check if the user has permission to execute
     for (const k in form) {
@@ -180,13 +186,48 @@ export async function marketplaceCreateNft (form: INFTData) {
       priceStart: form.priceStart,
       priceBuyNow: form.priceBuyNow
     });
-
-    await marketplaceNft.save();
   } catch (err:any) {
-    throw new HTTPError(500, (
+    throw new HTTPError(err?.httpCode || 500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
     ));
   }
 }
 
-(rpcServer as any).methodHost.set('marketplace:createNft', marketplaceCreateNft);
+
+/**
+ * Creates a new nft document using the provided fields in the marketplace database,
+ * @param form Fields for the new ntf document
+ */
+export async function marketplaceGetNft (query: unknown, getOpts?: { limit?: number, skip?: number }) {
+  try {
+    // Extract the session data
+    // @ts-ignore
+    const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+    const additionalData: RequestData = clientRequest.additionalData;
+
+    const acl = nftAcl({ session: additionalData?.session, nft: query as any });
+
+    // Here you could check if the user has permission to execute
+    for (const k in query as any) {
+      if (!acl.can('marketplace:getNFT', 'NFT', k))
+        throw new HTTPError(403, `You do have permission get NFT information`);
+    }
+
+    const cur = NFT.find(query as any);
+    if (typeof(getOpts?.limit) === 'number') {
+      cur.limit(getOpts.limit)
+    }
+    if (typeof(getOpts?.skip) === 'number') {
+      cur.skip(getOpts.skip)
+    }
+    const nfts = await cur.exec();
+
+    const pojo = toPojo(nfts);
+    return pojo;
+  } catch (err:any) {
+    throw new HTTPError(err?.httpCode || 500, (
+      _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
+    ));
+  }
+}
+

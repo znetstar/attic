@@ -14,8 +14,8 @@ import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {MarketplaceSession} from "../api/auth/[...nextauth]";
 
-export interface UserPermissions {
-  createNFT: boolean
+export enum UserRoles {
+  nftAdmin = 'nftAdmin'
 }
 
 /**
@@ -50,7 +50,7 @@ export interface IUser {
   following?: number;
   bio?: string;
 
-  permissions?: UserPermissions
+  roles?: UserRoles[]
 }
 
 
@@ -60,6 +60,7 @@ export type IPOJOUser= IUser&{
    */
   image?: string;
 }
+
 
 export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
   firstName: {
@@ -102,11 +103,12 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
     type: String,
     required: false
   },
-  permissions: {
-    createNFT: {
-      type: Boolean,
-      required: false
-    }
+  roles: {
+    type: String,
+    required: false,
+    enum: [
+      'nftAdmin'
+    ]
   }
 }));
 
@@ -200,7 +202,8 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
   const acl = userAcl();
 
   for (const k in form) {
-    acl.can('marketplace:createUser', 'User', k);
+    if (!acl.can('marketplace:createUser', 'User', k))
+      throw new HTTPError(403, `You do have permission to create a user`);
   }
 
   try {
@@ -219,7 +222,7 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
 
     return marketplaceUser._id.toString();
   } catch (err) {
-    throw new HTTPError(500, (
+    throw new HTTPError(err?.httpCode || 500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
     ));
   }
@@ -244,7 +247,8 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
 
   // Here you could check if the user has permission to execute
   for (const k of args[1].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
-    acl.can('marketplace:patchUser', 'User', k);
+    if (!acl.can('marketplace:patchUser', 'User', k))
+      throw new HTTPError(403, `You do have permission to patch a user`);
   }
 
   // Make sure to restrict all writes/deletes to the current user id
@@ -259,5 +263,3 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
   const resp = await simpleInterface.patch(...args);
 }
 
-(rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
-(rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);

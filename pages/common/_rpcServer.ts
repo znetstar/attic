@@ -27,6 +27,8 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
+import {marketplaceCreateNft, marketplaceGetNft} from "./_ntf-collection";
+import {marketplaceCreateUser, marketplacePatchUser} from "./_user";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -160,7 +162,11 @@ const authorizedMethods = [
   /**
    * Allows the user to update their profile
    */
-  'marketplace:patchUser'
+  'marketplace:patchUser',
+  'marketplace:createNFT',
+  'marketplace:patchNFT',
+  'marketplace:deleteNFT',
+  'marketplace:getNFT'
 ]
 
 /**
@@ -172,7 +178,8 @@ const anonymousMethods: string[] = [
   /**
    * Allows the user to create a new account
    */
-  'marketplace:createUser'
+  'marketplace:createUser',
+  'marketplace:getNFT'
 ]
 
 /**
@@ -228,5 +235,9 @@ export function exposeModel(modelName: string, simpleInterface: any) {
   }
 }
 
+(rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
+(rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
+(rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
+(rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
 
 export default rpcServer;
