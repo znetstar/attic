@@ -31,7 +31,7 @@ export interface INFTData {
   nftFor: string;
 
   listOn: Date;
-  royalties: Royalty;
+  royalties: [Royalty];
   priceStart?: number;
   priceBuyNow?: number;
 
@@ -53,9 +53,9 @@ export const NftDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   tags: { type: [String], required: false },
   supply: { type: Number, required: true, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: true, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
-  royalties: {owedTo: { type: String, required: true},
+  royalties: [{owedTo: { type: String, required: true},
               percent: { type: Number, required: true, min:[0, "Royalty can't be less than 0%"], max: [100, "Royalty can't be more than 100%"]}
-              },
+              }],
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true, ref: 'User' },
   nftItem: { type: Buffer, required: true },
   listOn: { type: Date, required: true },
