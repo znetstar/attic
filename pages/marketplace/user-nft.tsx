@@ -110,9 +110,7 @@ export class UserNFT extends SessionComponent<UserNFTProps, UserNFTState> {
   }
 
   onFormChange = (formName: Partial<INFTData>, formValue: any) => {
-    // nftForm[formName] = formValue
     this.setState({ nftForm: { ...this.state.nftForm, [formName]: formValue } })
-    // this.forceUpdate()
     console.log('main', this.nftForm, formName)
   }
 
