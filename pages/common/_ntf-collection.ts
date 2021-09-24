@@ -13,7 +13,7 @@ import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {IUser, userAcl, userPrivFields, userPubFields, UserRoles} from "./_user";
-import {MarketplaceSession} from "../api/auth/[...nextauth]";
+import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {Royalty, IRoyalty,IDestination,Destination} from "./_wallet";
 import {number} from "prop-types";
 
@@ -27,21 +27,20 @@ export enum SaleTypes {
  */
 export interface INFTData {
   _id: ObjectId|string;
-  id: ObjectId|string;
 
   /**
    * Image as a `Buffer`
    */
-  nftItem: Buffer;
+  nftItem?: Buffer;
 
-  title: string;
+  title?: string;
   description?: string;
   tags?: string[];
-  supply: number;
+  supply?: number;
   nftFor: SaleTypes;
 
-  listOn: Date;
-  royalties: IRoyalty[];
+  listOn?: Date;
+  royalties?: IRoyalty[];
   priceStart?: number;
   priceBuyNow?: number;
 
@@ -58,11 +57,11 @@ export class RoyaltiesMustBe100 extends Error {
 }
 
 export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
-  title: { type: String, required: true },
+  title: { type: String, required: false },
   description: { type: String, required: false },
   tags: { type: [String], required: false },
-  supply: { type: Number, required: true, min:[1, 'Should be atleast 1 item'] },
-  nftFor: {type: String, required: true, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
+  supply: { type: Number, required: false, min:[1, 'Should be atleast 1 item'] },
+  nftFor: {type: String, required: false, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
   royalties: {
     type: [Royalty],
     validate: (royalties: IRoyalty[]) => {
@@ -83,8 +82,8 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
     unique: true,
     ref: 'User'
   },
-  nftItem: { type: Buffer, required: true },
-  listOn: { type: Date, required: true },
+  nftItem: { type: Buffer, required: false },
+  listOn: { type: Date, required: false },
   priceStart: {type: Number, required: false},
   priceBuyNow: {type: Number, required: false},
   public: {type: Boolean, required: false}
@@ -93,7 +92,8 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
 export const NFT = mongoose.models.NFT || mongoose.model<INFTData>('NFT', NFTDataSchema);
 const nftInterface = new SimpleModelInterface<INFTData>(new ModelInterface<INFTData>(NFT));
 
-const nftPubFields = [
+export const nftPubFields = [
+  '_id',
   'title',
   'description',
   'tags',
@@ -104,7 +104,7 @@ const nftPubFields = [
   'public'
 ]
 
-const nftPrivFields = [
+export const nftPrivFields = [
   ...nftPubFields,
   'royalties',
   'nftItem',
@@ -112,20 +112,24 @@ const nftPrivFields = [
 ]
 
 export interface NFTACLOptions {
-  nft?: { userId: ObjectId, public?: boolean };
+  nft?: { userId: ObjectId|string, public?: boolean };
   session?: MarketplaceSession|null;
 }
 
-export function nftAcl(options?: NFTACLOptions): Ability {
+export async function nftAcl(options?: NFTACLOptions): Promise<Ability> {
   const { can, cannot, rules } = new AbilityBuilder(Ability);
+  const user = (await getUser(options?.session)) as User|null;
 
-  if (options?.session?.user?.marketplaceUser?.roles?.includes(UserRoles.nftAdmin)) {
+  if (
+    // @ts-ignore
+    (user.marketplaceUser?.roles || []).includes(UserRoles.nftAdmin)
+  ) {
     can([
       'marketplace:getNFT',
-      'marketplace:createNFT',
+      'marketplace:createNFT          ',
       'marketplace:patchNFT',
       'marketplace:deleteNFT'
-    ], 'NFT', 'all');
+    ], 'NFT');
   }
   else {
     /// Anyone can view public NFT info
@@ -166,11 +170,13 @@ export async function marketplaceCreateNft (form: INFTData) {
     // Get the user from the session object
     const user: IUser = additionalData?.session?.user.marketplaceUser as IUser;
     if (!user) throw new HTTPError(401);
-    const acl = nftAcl({  session: additionalData?.session });
+    const acl = await nftAcl({  session: additionalData?.session });
 
     // Here you could check if the user has permission to execute
     for (const k in form) {
-      acl.can('marketplace:createNft', 'NFT', k);
+      if (!acl.can('marketplace:createNFT', 'NFT', k)) {
+        throw new HTTPError(403, `You do have permission to create NFT`);
+      }
     }
 
     const marketplaceNft = await NFT.create({
@@ -205,7 +211,7 @@ export async function marketplaceGetNft (query: unknown, getOpts?: { limit?: num
     const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
     const additionalData: RequestData = clientRequest.additionalData;
 
-    const acl = nftAcl({ session: additionalData?.session, nft: query as any });
+    const acl = await nftAcl({ session: additionalData?.session, nft: query as any });
 
     // Here you could check if the user has permission to execute
     for (const k in query as any) {

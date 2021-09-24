@@ -11,7 +11,7 @@ import {INFTData} from "./_ntf-collection";
  */
 export interface MarketplaceAPI {
   'marketplace:patchUser': (patches: JSONPatchOp) => Promise<void>;
-  'marketplace:createUser': (user: IUser) => Promise<string>;
+  'marketplace:createUser': (user: unknown) => Promise<string>;
 
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<INFTData[]>;
   'marketplace:patchNFT': (patches: JSONPatchOp) => Promise<void>;

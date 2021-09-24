@@ -1,20 +1,18 @@
 import SessionComponent, {
   AuthenticatedSubcomponentProps,
   SessionComponentProps,
-  SessionComponentState, SubcomponentProps, SubcomponentPropsWithRouter
-} from "./common/_session-component";
+  SessionComponentState, SubcomponentPropsWithRouter
+} from "../common/_session-component";
 import * as React from 'react';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import SettingsIcon from '@mui/icons-material/Settings';
-import {MarketplaceAppBar, SettingsButton} from "./common/_appbar";
-import CloseIcon from '@mui/icons-material/Close';
-import EditProfile from "./common/_edit-profile";
-import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields} from "./common/_user";
-import {MarketplaceAvatar} from "./common/_avatar";
+import {MarketplaceAppBar, SettingsButton} from "../common/_appbar";
+import EditProfile from "../common/_edit-profile";
+import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields} from "../common/_user";
+import {MarketplaceAvatar} from "../common/_avatar";
 import Button from "@mui/material/Button";
 import {ObjectId} from "mongodb";
-import {NextRouter, withRouter} from "next/router";
+import {withRouter} from "next/router";
+import {getUser} from "../api/auth/[...nextauth]";
 
 export type ProfileProps = SessionComponentProps&{
   marketplaceUser: IPOJOUser,
@@ -33,7 +31,8 @@ export type ProfileState = SessionComponentState&{
 export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   state = {
     editProfileOpen:  false,
-    settingsOpen: false
+    settingsOpen: false,
+    pageTitle: 'Profile'
   } as ProfileState
 
 
@@ -45,24 +44,13 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   get isSelf(): boolean { return this.props.session && this.props.marketplaceUser._id === this.props.session?.user?.marketplaceUser?._id }
 
   public get editProfileOpen() {
-    return this.isSelf && this.props.subpage;
+    return this.isSelf && this.props.subpage === 'edit';
   }
 
   render() {
     return (<div className={"page profile"}>
-      <MarketplaceAppBar
-        {...this.subcomponentProps()}
-        rightSideOfAppbar={
-          < SettingsButton
-            onOpen={() => this.setState({ settingsOpen: true })}
-            onClose={() => this.setState({ settingsOpen: false })}
-            onProfileOpen={() => this.setState({ editProfileOpen: true })}
-            open={this.state.settingsOpen}
-            {...this.subcomponentProps()}
-          ></SettingsButton>
-        }
-        pageTitle={"Profile"}
-      />
+      {this.errorDialog}
+      {this.makeAppBar(this.props.router, 'Profile')}
       <div>
         {
           !this.editProfileOpen ? (
@@ -120,23 +108,21 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
 }
 
 export async function getServerSideProps(context: any) {
-  const { res, req } = context;
+  const {   res, req } = context;
   const session = await Profile.getSession(context);
 
   let [not_important, not_important2, id, subpage] = req.url.split('/');
   // If no id is provided
-    if (!id) {
-      res.setHeader('Location', '/profile/self');
-      res.statusCode = 302;
-      res.end();
-      return {
-        props: {
-        }
+  if (!id) {
+    return {
+      redirect: {
+        destination: `/profile/self`,
+        permanent: false
       }
     }
+  }
 
-
-  let uid =   session?.user?.marketplaceUser?._id;
+  let uid =  session && (await getUser(session))?.marketplaceUser?._id || null;
   // If id is self but not logged in
   if (id === 'self' && !uid) {
     return {
@@ -184,7 +170,7 @@ export async function getServerSideProps(context: any) {
   for (const field of (
     fields
   )) {
-    if (!acl.can('marketplace:getUser', user, field)) {
+    if (!acl.can('marketplace:getUser', 'User', field)) {
       return {
         notFound: true
       }

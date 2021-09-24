@@ -2,17 +2,18 @@ import NextAuth, {Account, Profile as ProfileBase, Session, User as UserBase} fr
 import Providers from 'next-auth/providers';
 import atticConfig from '../../../misc/attic-config/config.json';
 import {JWT} from "next-auth/jwt";
-import { IUser as AtticUser} from '@znetstar/attic-common';
+import {IRPC, IUser as AtticUser} from '@znetstar/attic-common';
 import {
   IFormalAccessToken,
   IFormalAccessToken as AtticAccessToken
 } from '@znetstar/attic-common/lib/IAccessToken';
 import levelup from 'levelup';
 import { IORedisDown } from '@etomon/ioredisdown';
-import { OAuthAgent } from "@znetstar/attic-cli-common/lib/OAuthAgent";
+import {OAuthAgent, RPCProxyResult} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import Redis from 'ioredis';
 import {IPOJOUser, IUser, toUserPojo, User as MarketplaceUser} from "../../common/_user";
-import { Document } from 'mongoose';
+import {Document} from 'mongoose';
+import { ObjectId } from 'mongodb';
 import fetch  from 'node-fetch';
 import {
   toPojo
@@ -191,10 +192,6 @@ export type MarketplaceSession = Session&{
    * Load the session data from redis
    */
   load: () => Promise<void>;
-  /**
-   * Gets the OAuth agent used to communicate with the attic server
-   */
-  getAtticAgent(): OAuthAgent;
 };
 
 /**
@@ -277,6 +274,61 @@ type Profile = ProfileBase&{
   atticAccessToken: IFormalAccessToken
 };
 
+
+export function getAtticAgent(session: MarketplaceSession) {
+  const agent = oauthConsumerByName.get(session.token.provider) as DBInitRecordWithAgent;
+  return agent. agent;
+}
+
+export function getAtticRPCProxy(session: MarketplaceSession) {
+  const agent = getAtticAgent(session);
+  const { RPCProxy: rpcProxy } = agent.createRPCProxy({} as any, {
+    headers: [
+      [ 'Authorization', `Bearer ${session.token.atticAccessToken.access_token as any}`]
+    ]
+  } as any);
+
+  return rpcProxy;
+}
+
+export async function getUser(session: MarketplaceSession|null|undefined): Promise<User|null> {
+  if (!session)
+    return null;
+  const rpcProxy = getAtticRPCProxy(session);
+  const atticUserId: ObjectId|string = session.user?.atticUser?._id || session.user?.marketplaceUser?.atticUserId;
+  // Existing session
+  if (!atticUserId) {
+    if (!session.user?.atticUser) {
+      const atticUser = await rpcProxy.getSelfUser() as AtticUser;
+
+      const marketplaceUser = toUserPojo(await syncUser(atticUser));
+      session.user = {
+        name: atticUser.username,
+        email: atticUser.username,
+        atticUser,
+        marketplaceUser
+      };
+    }
+    else if (!session.user?.marketplaceUser) {
+      session.user.marketplaceUser = toUserPojo(await syncUser(session.user.atticUser));
+    }
+  } else {
+    const [ atticUser, marketplaceUser ] = await Promise.all([
+      rpcProxy.getSelfUser() as Promise<AtticUser>,
+      MarketplaceUser.findOne({ atticUserId: new ObjectId(atticUserId) }).exec()
+    ]);
+
+    session.user = {
+      name: atticUser.username,
+      email: atticUser.username,
+      atticUser: toPojo(atticUser),
+      marketplaceUser: toPojo(marketplaceUser)
+    };
+  }
+
+  return session.user || null;
+}
+
 export default NextAuth({
   jwt: {
     signingKey: process.env.JWT_SIGNING_PRIVATE_KEY
@@ -304,7 +356,7 @@ export default NextAuth({
      * @param isNewUser
      */
     async jwt(token: MarketplaceToken, user?: User, account?: Account, profile?: Profile, isNewUser?: boolean): Promise<MarketplaceToken>  {
-      if (token?.userId || user?.marketplaceUser) token.userId  =user?.marketplaceUser._id.toString() as string ||  token.userId;
+      if (token?.userId || user?.marketplaceUser) token.userId  = user?.marketplaceUser._id.toString() as string ||  token.userId;
       if (token?.atticUserId || user?.atticUser._id || token.atticUserId) token.atticUserId =  user?.atticUser._id || token.atticUserId;
       if (user?.atticAccessToken) (token as any).atticAccessToken = user?.atticAccessToken;
       else if (account) token.atticAccessToken = account as unknown as IFormalAccessToken;
@@ -328,36 +380,7 @@ export default NextAuth({
       // session.save = async function () {
       //   // The refresh token is used as a session key, so sessions persist between token refreshes
       //   await sessionDb.put(session.token.atticAccessToken?.refresh_token, session.data);
-      // }
-
-        function getAtticAgent() {
-          const agent = oauthConsumerByName.get(session.token.provider) as DBInitRecordWithAgent;
-          return agent. agent;
-        }
-
-        session.getAtticAgent = getAtticAgent;
-
-        const agent = session.getAtticAgent();
-        if (!session.user?.atticUser) {
-        const { RPCProxy: rpcProxy } = agent.createRPCProxy({} as any, {
-          headers: [
-            [ 'Authorization', `Bearer ${session.token.atticAccessToken.access_token as any}`]
-          ]
-        } as any);
-
-        const atticUser = await rpcProxy.getSelfUser() as AtticUser;
-
-        const marketplaceUser = toUserPojo(await syncUser(atticUser));
-        session.user = {
-          name: atticUser.username,
-          email: atticUser.username,
-          atticUser,
-          marketplaceUser
-        };
-      }
-      else if (!session.user?.marketplaceUser) {
-        session.user.marketplaceUser = toUserPojo(await syncUser(session.user.atticUser));
-      }
+      //
 
       // session.load = async function ()  {
       //   let data: MarketplaceSessionData = {};

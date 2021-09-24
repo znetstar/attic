@@ -15,6 +15,7 @@ import * as React from "react";
 import {Component, PureComponent} from "react";
 import {SubcomponentProps, SubcomponentPropsWithRouter} from "./_session-component";
 import CloseIcon from "@mui/icons-material/Close";
+import LoginIcon from '@mui/icons-material/Login';
 import {NextRouter} from "next/router";
 
 export type AppBarProps =  SubcomponentPropsWithRouter&{
@@ -95,6 +96,29 @@ export class SettingsButton extends PureComponent<SubcomponentPropsWithRouter&{ 
     )
   }
 }
+
+type LoginButtonProps = SubcomponentPropsWithRouter&{ onClick?: () => void }
+export class LoginButton extends PureComponent<LoginButtonProps, { }> {
+  constructor(props: LoginButtonProps) { super(props); }
+  public render() {
+    return (
+      <React.Fragment>
+        {
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="back"
+            sx={{ mr: 2 }}
+            onClick={this.props.onClick ? this.props.onClick : () => { this.props.router.push('/login'); }}>
+            <LoginIcon />
+          </IconButton>
+        }
+      </React.Fragment>
+    )
+  }
+}
+
 
 export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
   render() {

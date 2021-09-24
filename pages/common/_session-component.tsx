@@ -14,6 +14,9 @@ import * as _ from 'lodash'
 import {NextRouter} from "next/router";
 import {MarketplaceAPI} from "./_rpcCommon";
 import {IEncodeTools} from "@etomon/encode-tools";
+import {LoginButton, MarketplaceAppBar, SettingsButton} from "./_appbar";
+import * as React from "react";
+import LoginIcon from '@mui/icons-material/Login';
 
 export type NotifySeverity = 'success'|'error';
 export type HandleErrorFunction = (err: Error|{ message: string, [name: string]: unknown }|{data:{message:string, [name: string]: unknown}, [name: string]: unknown}|{innerError:{message:string, [name: string]: unknown}, [name: string]: unknown}|string, severity?: NotifySeverity) => void;
@@ -34,6 +37,7 @@ export type SubcomponentProps = {
   errorDialog: JSX.Element;
   enc: IEncodeTools
   router?: NextRouter;
+  pageTitle: string;
 }
 export type SubcomponentPropsWithRouter  = SubcomponentProps&{
   router: NextRouter;
@@ -96,6 +100,8 @@ export interface SessionComponentState {
    * The severity of the message that will be showed to the user
    */
   notifySeverity?: NotifySeverity
+  settingsOpen?: boolean;
+  pageTitle: string;
 }
 
 /**
@@ -121,7 +127,9 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
     super(props);
 
     this.state = {
-      ...(this.state || {})
+      ...(this.state || {}),
+      // @ts-ignore
+      pageTitle: this.props.pageTitle
     };
   }
 
@@ -174,13 +182,43 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
     )
   }
 
+  public makeAppBar(router: NextRouter, pageTitle?: string) {
+    if (!pageTitle) {
+      pageTitle = this.state.pageTitle;
+    }
+    return (
+      <MarketplaceAppBar
+        {...this.subcomponentProps()}
+        router={router}
+        rightSideOfAppbar={
+          this.props.session ? (
+            <SettingsButton
+              onOpen={() => this.setState({ settingsOpen: true })}
+              onClose={() => this.setState({ settingsOpen: false })}
+              onProfileOpen={() => router.push('/profile/self')}
+              open={Boolean(this.state.settingsOpen)}
+              {...this.subcomponentProps()}
+              router={router}
+            ></SettingsButton>
+          ) : (
+            <LoginButton
+              {...this.subcomponentProps()}
+              router={router}
+            />
+          )
+        }
+        pageTitle={pageTitle} />
+    );
+  }
+
   protected subcomponentProps(): SubcomponentProps {
     return {
       enc: this.enc,
       session: this.props.session,
       errorDialog: this.errorDialog,
       rpc: this.rpc,
-      handleError: this.handleError
+      handleError: this.handleError,
+      pageTitle: this.state.pageTitle
     }
   }
 }

@@ -65,7 +65,8 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
         email: null,
         password: null
       },
-      notifyMessage: (this.props.router.query?.error || null) as string | null
+      notifyMessage: (this.props.router.query?.error || null) as string | null,
+      pageTitle: 'SignUp'
     };
   }
 
@@ -88,7 +89,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
     return (
       <Fragment>
         {this.errorDialog}
-
+        {this.makeAppBar(this.props.router, 'SignUp')}
         <div className={"signup-panel page"}>
           <div>
             <MarketplaceLogo></MarketplaceLogo>

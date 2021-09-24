@@ -104,7 +104,7 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
     required: false
   },
   roles: {
-    type: String,
+    type: [String],
     required: false,
     enum: [
       'nftAdmin'
@@ -156,7 +156,8 @@ export const userPubFields = [
   'firstName',
   'lastName',
   'image',
-  'public'
+  'public',
+  '_id'
 ];
 export const userPrivFields = [
   ...userPubFields,

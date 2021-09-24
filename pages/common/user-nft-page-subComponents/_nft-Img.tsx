@@ -4,14 +4,18 @@ import Avatar from "@mui/material/Avatar";
 import { INFTData } from "./../_ntf-collection";
 import styles from './../../../styles/user-nft-pages-subComponents-styles/nft-Img.module.css'
 
-interface NftImgProps {
-  allowUpload?: boolean;
+type NftImgProps = {
+  allowUpload: true;
   nftForm: INFTData;
   onNftInput: Function;
+}|{
+  allowUpload: false|undefined;
+  nftForm: INFTData;
+  onNftInput?: Function;
 }
 
 type nftImgState = {
-  nftUrl: string | undefined ; 
+  nftUrl: string | undefined ;
 }
 
 /**
@@ -34,6 +38,7 @@ export class NFTImg extends PureComponent<NftImgProps> {
    */
   onNftAdd(e: ChangeEvent<any>): void {
     e.preventDefault();
+    if (!this.props.allowUpload || !this.props.onNftInput) return;
     const file = Array.from(e.currentTarget.files as FileList)[0];
     if (!file) {
       return;
@@ -54,7 +59,7 @@ export class NFTImg extends PureComponent<NftImgProps> {
         <div className={styles.imgInput}>
           <input className={styles.fileInput} disabled={!this.props.allowUpload} ref={this.inputRef as any} type={'file'} name={"NFT-input"} onChange={(e) => this.onNftAdd(e)}></input>
           <Avatar
-            src={this.state.nftUrl} 
+            src={this.state.nftUrl}
             variant="square"
             sx={{height: 200, width: '100%', borderRadius: '18px 18px 0 0'}} />
         </div>

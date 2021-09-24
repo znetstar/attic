@@ -7,12 +7,13 @@ import LoginFormControl from "./common/_login-common";
 const URL = require('core-js/web/url');
 
 import {NextRouter, withRouter} from "next/router"
-import Profile from "./[...profile]";
 import SessionComponent, {
   SessionComponentProps,
   SessionComponentState,
   SubcomponentProps, SubcomponentPropsWithRouter
 } from "./common/_session-component";
+import {MarketplaceAppBar, SettingsButton} from "./common/_appbar";
+import * as React from "react";
 
 /**
  * Various login provider (e.g., Google)
@@ -29,17 +30,21 @@ export async function getServerSideProps(context: any){
   const session = await Login.getSession(context);
 
   if (req.url.indexOf('callbackUrl=') !== -1) {
-    res.setHeader('Location', (req.url.split('callbackUrl=').pop() as string).split('&').shift() as string);
-    res.statusCode = 302;
-    res.end();
-    return { props: {} };
+    return {
+      redirect: {
+        destination: (req.url.split('callbackUrl=').pop() as string).split('&').shift() as string,
+        permanent: false
+      }
+    }
   }
 
   if (session) {
-    res.setHeader('Location', '/profile');
-    res.statusCode = 302;
-    res.end();
-    return { props: {} };
+    return {
+      redirect: {
+        destination: `/profile`,
+        permanent: false
+      }
+    }
   }
 
   return {
@@ -120,7 +125,8 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
         email: this.fromQueryString('email'),
         password: null
       },
-      notifyMessage: this.fromQueryString('error')
+      notifyMessage: this.fromQueryString('error'),
+      pageTitle: 'Login'
     };
   }
 
@@ -225,14 +231,13 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
 
   render() {
     return (
-      <Fragment>
-        {this.errorDialog}
         <div className={"login-panel page"}>
+          {this.errorDialog}
+          {this.makeAppBar(this.props.router, 'Login')}
           {
             this.slides.get(this.state.slide) || null
           }
         </div>
-      </Fragment>
     )
   }
 }
