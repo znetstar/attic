@@ -14,6 +14,7 @@ import {HTTPError} from "../common/_rpcCommon";
 import {toPojo} from "@thirdact/to-pojo";
 import {getUser} from "../api/auth/[...nextauth]";
 import Button from "@mui/material/Button";
+import {UserRoles} from "../common/_user";
 
 export type ListingProps = SessionComponentProps&{
   nftForm: INFTData,
@@ -182,7 +183,8 @@ export async function getServerSideProps(context: any) {
     }
   }
 
-  let uid = (await getUser(session))?.marketplaceUser?._id;
+  const user = (await getUser(session))?.marketplaceUser;
+  let uid = user?._id;
   // If id is new but not logged in
   if (id === 'new' && !uid) {
     return {
@@ -194,9 +196,11 @@ export async function getServerSideProps(context: any) {
   }
   // If id is self but is logged in attempt to create a listing
   else if (id === 'new') {
-    const acl = await nftAcl({ session });
+    // const acl = await nftAcl({ session });
 
-    if (!acl.can('marketplace:createNFT', 'NFT')) {
+    if (/*!acl.can('marketplace:createNFT', 'NFT')*/
+      !user?.roles || !user?.roles?.includes(UserRoles.nftAdmin)
+    ) {
       return {
         notFound: true
       }

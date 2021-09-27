@@ -202,10 +202,10 @@ export function userAcl(user?: IUser, session?: MarketplaceSession|null): Abilit
 export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}) {
   const acl = userAcl();
 
-  for (const k in form) {
-    if (!acl.can('marketplace:createUser', 'User', k))
-      throw new HTTPError(403, `You do have permission to create a user`);
-  }
+  // for (const k in form) {
+  //   if (!acl.can('marketplace:createUser', 'User', k))
+  //     throw new HTTPError(403, `You don't have permission to create a user`);
+  // }
 
   try {
     const atticRpc = atticServiceRpcProxy();
