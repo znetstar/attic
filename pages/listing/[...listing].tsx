@@ -100,8 +100,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   onFormChange = (formName: Partial<INFTData>, formValue: any) => {
-    this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } })
-    console.log('main', this.nftForm, formName)
+    this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))   
   }
 
   render() {

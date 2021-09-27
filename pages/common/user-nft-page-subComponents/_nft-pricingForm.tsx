@@ -2,29 +2,44 @@ import React, {PureComponent} from "react";
 import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, Menu, MenuItem } from "@mui/material/";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
+import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFTData } from "./../_ntf-collection";
-import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css"
-import { style } from "@mui/system";
-import { ConsoleLogger } from "typedoc/dist/lib/utils";
+import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
 
-interface NftPricingProps {
+type NftPricingProps = SessionComponentProps&{
   nftForm: INFTData;
   onFormChange: Function;
+}
+
+type coOwner = {
+  owedToId: string;
+  owedTo: string;
+  percent: number;
+}
+
+type PricingState = SessionComponentState&{
+  showScheduleInputs: boolean;
+  scheduleDate: string;
+  scheduleTime: string;
+  openMenu: boolean;
+  menuAnchor: HTMLElement | null,
+  coOwner: coOwner,
+  royaltyList: coOwner[]
 }
 
 /**
  * Allows the user to upload NFT Pricing MetaData
  */
-export class NFTPricingForm extends PureComponent<NftPricingProps> {
+export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingState> {
 
   constructor(props: NftPricingProps) {
     super(props);
   }
 
-  state = {
+  state: PricingState = {
     showScheduleInputs : false,
-    scheduleDate: '',
-    scheduleTime: '',
+    scheduleDate: this.props.nftForm.listOn ? new Date(this.props.nftForm.listOn).toLocaleDateString() : '',
+    scheduleTime: this.props.nftForm.listOn ? new Date(this.props.nftForm.listOn).toLocaleTimeString() : '',
     openMenu: false,
     menuAnchor: null,
     coOwner: {
@@ -36,24 +51,27 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
   }
 
   scheduleDateTime = () => {
-    let currTime = new Date(new Date().toString().split('GMT')[0]+' UTC').toISOString()
-    console.log('currTime',currTime, new Date(), this.state.scheduleDate, this.state.scheduleTime);
-    if(this.state.scheduleDate && this.state.scheduleTime) {
-      // console.log(this.state.scheduleDate.join())
+    let listOnTime = '';
+    if(this.state.scheduleDate && this.state.scheduleTime && this.state.showScheduleInputs) {
+      listOnTime = new Date(this.state.scheduleDate + ' ' + this.state.scheduleTime).toISOString();
+    } else {
+      listOnTime = new Date().toISOString();
     }
+    this.props.onFormChange('listOn', listOnTime);
+    return listOnTime;
   }
 
   menuItemClick = (user) => {
-    this.setState({ openMenu: false })
-    this.setState({coOwner: {...this.state.coOwner, owedToId: user.id, owedTo: user.firstName}})
+    this.setState({ openMenu: false });
+    this.setState({coOwner: {...this.state.coOwner, owedToId: user.id, owedTo: user.firstName}});
     console.log(this.state.coOwner)
   }
 
   percentInput = (e) => { 
-    let percentSum = 0
-    if(parseFloat(e.target.value) <= 0) {e.target.value = '0'; return};
+    let percentSum: number = 0;
+    if(parseFloat(e.target.value) <= 0 || parseFloat(e.target.value) > 100) {e.target.value = '0'; return};
     if(this.state.royaltyList.length > 0) {
-      let percentSum = this.state.royaltyList.reduce((acc, owner) => acc + owner.percent, 0)
+      let percentSum = this.state.royaltyList.reduce((acc, owner) => acc + owner.percent, 0);
       if ((parseFloat(e.target.value) + percentSum) > 100) {
         console.log("total can't exceed 100");
         e.target.value = '0';
@@ -70,50 +88,46 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
       this.props.onFormChange('royalties', this.state.royaltyList)
       console.log(this.state.royaltyList)
     }
-    this.setState({ openMenu: true, menuAnchor: e.target })
+
+    let percentSum: number = 0
+    if(this.state.royaltyList.length > 0) {
+      percentSum = this.state.royaltyList.reduce((acc, owner) => acc + owner.percent, 0);
+    }
+    if ((percentSum) === 100) {
+      this.setState({ openMenu: false, menuAnchor: e.target })
+      return;
+    } else {
+      this.setState({ openMenu: true, menuAnchor: e.target })
+    }
   }
 
-  updatePricingForm = () => {
-    this.scheduleDateTime();
-    console.log('check and submit time!!!', this.props.nftForm)
-        // (async () => {
-    //   const nftForm: INFTData = {
-    //     ...this.nftForm
-    //   };
+  submitNewNft = async (dataNft: INFTData) => {
+    (async (dataNft) => {
+      await this.rpc['marketplace:createNFT'](dataNft)
+        .then((res) => {
+          console.log('response', res)
+          this.handleError('NFT created', 'success')
+        })
+    })()
+      .catch(this.handleError)
+  }
 
-    //   let patches = diff((this as any).props.session.user.marketplaceUser, nftForm, jsonPatchPathConverter);
-
-    //   let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
-
-    //   patches = patches
-    //     .filter(f => f.path.substr(0, '/image'.length) !== '/image');
-
-    //   if (this.changedImage && userForm.image) {
-    //     patches.push({
-    //       op: 'add',
-    //       path: '/image',
-    //       value: userForm.image
-    //     })
-    //   }
-
-    //   await this.rpc["marketplace:patchUser"]({} as any, patches as any)
-    //     .then(() => {
-    //       this.handleError('Save success', 'success');
-    //       this.changedImage = false;
-    //     })
-    //     .catch(this.handleError);
-    // })()
-    //   .then(() => {
-    //     this.updateIsCompleted();
-    //   })
-    // })
+  updatePricingForm(e: SubmitEvent): void {
+    e.preventDefault();
+    let nftForm = {...this.props.nftForm, listOn: this.scheduleDateTime()}
+    if(!nftForm.nftItem) {
+      console.log('please add NFT item')
+    } else {
+      this.submitNewNft(nftForm)
+      console.log('API request', nftForm)
+    }
   }
 
   render() {
     const { nftForm, onFormChange } = this.props
     return (
       <div className={styles.nftForm_wrapper}>
-        <form onSubmit={(e) => { this.updatePricingForm(); e.preventDefault(); }}>
+        <form onSubmit={(e) => this.updatePricingForm(e)}>
             <div>
             <FormControl className={'form-control'}>
               <RadioGroup
@@ -122,7 +136,7 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
                                     this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })} 
-                                   else {this.setState({ showScheduleInputs : true })}}
+                                   else {this.setState({ showScheduleInputs : true })}; this.scheduleDateTime()}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />
                 <FormControlLabel value="listOnSchedule" control={<Radio />} label="Schedule listing" />
@@ -135,20 +149,20 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
                             <TextField onChange={(e) => { this.setState({ scheduleDate: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleDate} required={true} className={'form-input'}  variant={"filled"} name={"listOnDate"} label="Date" type="date" />
                           </FormControl>
                           <FormControl className={'form-control'}>
-                          <TextField onChange={(e) => { this.setState({ scheduleTime: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleTime}  required={true} className={'form-input'}  variant={"filled"} name={"listOnTime"} label="Time" type="time" InputProps={{ inputProps: { step: 1}}}/>
+                          <TextField onChange={(e) => { this.setState({ scheduleTime: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleTime} required={true} className={'form-input'}  variant={"filled"} name={"listOnTime"} label="Time" type="time" InputProps={{ inputProps: { step: 1}}}/>
                           </FormControl>
                         </div>
             ) : ''}
 
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceStart} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceStart"} label="Starting Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0}}}/>
+                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceStart} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceStart"} label="Starting Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}}/>
               </FormControl>
             </div>
 
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0}}} />
+                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}} />
               </FormControl>
             </div>
 

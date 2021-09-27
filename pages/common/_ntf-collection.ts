@@ -39,7 +39,7 @@ export interface INFTData {
   supply?: number;
   nftFor: SaleTypes;
 
-  listOn?: Date;
+  listOn?: Date|string;
   royalties?: IRoyalty[];
   priceStart?: number;
   priceBuyNow?: number;
@@ -79,11 +79,10 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    unique: true,
     ref: 'User'
   },
   nftItem: { type: Buffer, required: false },
-  listOn: { type: Date, required: false },
+  listOn: { type: Date, required: true },
   priceStart: {type: Number, required: false},
   priceBuyNow: {type: Number, required: false},
   public: {type: Boolean, required: false}

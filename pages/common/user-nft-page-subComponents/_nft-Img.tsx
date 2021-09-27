@@ -73,7 +73,7 @@ export class NFTImg extends PureComponent<NftImgProps> {
             </div>
             <div>
               <h3 className={styles.metah3}>Ends in</h3>
-              <h2 className={styles.metah2}>12h 30m 15s</h2>
+              <h2 className={styles.metah2}>{nftForm.listOn}</h2>
             </div>
           </div>
         </div>
