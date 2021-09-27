@@ -192,6 +192,8 @@ export async function marketplaceCreateNft (form: INFTData) {
       priceStart: form.priceStart,
       priceBuyNow: form.priceBuyNow
     });
+
+    return marketplaceNft._id.toString();
   } catch (err:any) {
     throw new HTTPError(err?.httpCode || 500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()

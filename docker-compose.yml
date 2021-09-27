@@ -12,6 +12,7 @@ services:
     - REDIS_URI=redis://redis_cache:6379/1
     - "LOG_LEVEL=debug"
     - "ROOT_GROUPS=service,root"
+    - MARKETPLACE_MONGO_URI=mongodb://mongo:27017/marketplace
     ports:
       - "0.0.0.0:8203:80"
     links:
@@ -22,7 +23,7 @@ services:
     environment:
       - PORT=80
       - HOST=0.0.0.0
-      - MONGO_URI=mongodb://mongo:27017/attic
+      - MONGO_URI=mongodb://mongo:27017/marketplace
       - SESSION_REDIS_URI=redis://redis_cache:6379/1
       - SERVICE_OAUTH_REDIS_URI=redis://redis_cache:6379/3
       - BULL_REDIS_URI=redis://redos_mq:6379/0
@@ -41,7 +42,7 @@ services:
       - mongo:/data/db
   redis_cache:
     image: "redis:6"
-    command: "redis-server --save \"\ --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru"
+    command: "redis-server --save \"\" --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru"
     ports:
       - "127.0.0.1:8202:6379"
   redis_mq:

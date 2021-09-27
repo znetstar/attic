@@ -195,13 +195,17 @@ export async function getServerSideProps(context: any) {
   // If id is self but is logged in attempt to create a listing
   else if (id === 'new') {
     const acl = await nftAcl({ session });
-    acl.can('marketplace:createNFT', 'NFT');
 
-    const nft = await NFT.create({ userId: uid })
+    if (!acl.can('marketplace:createNFT', 'NFT')) {
+      return {
+        notFound: true
+      }
+    }
+    const nft = await NFT.create({ userId: uid });
 
     return {
       redirect: {
-        destination: `/listing/${nft._id.toString()}`,
+        destination: `/listing/${nft._id.toString()}/edit`,
         permanent: false
       }
     }
