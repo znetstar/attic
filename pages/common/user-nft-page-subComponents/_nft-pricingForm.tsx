@@ -87,7 +87,6 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       this.state.royaltyList.push(this.state.coOwner)
       this.setState({coOwner: {...this.state.coOwner, owedToId: '', owedTo: '', percent: 0}})
       this.props.onFormChange('royalties', this.state.royaltyList)
-      console.log(this.state.royaltyList)
     }
 
     let percentSum: number = 0
@@ -116,6 +115,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         return f;
 
       });
+      console.log('aaa', patches, this.props.orignalNftForm, dataNft)
 
     this.rpc['marketplace:patchNFT']((this as any).props.orignalNftForm._id, patches as any)
       .then((res) => {

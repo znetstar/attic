@@ -265,6 +265,7 @@ export async function marketplacePatchNft(id: string, patches: any[]) {
         _id: new ObjectId(id)
       }
     }, patches);
+    return resp
   } catch (err) {
     debugger;
   }
