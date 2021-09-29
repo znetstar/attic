@@ -238,37 +238,34 @@ export async function marketplaceGetNft (query: unknown, getOpts?: { limit?: num
   }
 }
 
-export async function marketplacePatchNft(data: any) {
+export async function marketplacePatchNft(id: string, patches: any[]) {
   // Extract the session data
   // @ts-ignore
-  const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+  const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
   const additionalData: RequestData = clientRequest.additionalData;
 
   // additionalData has the raw req/res, in addition to the session
 
   // Get the user from the session object
-  const user: IUser = additionalData?.session?.user.marketplaceUser as IUser;
+  const user: IUser = (await getUser(additionalData.session))?.marketplaceUser as IUser;
   if (!user) throw new HTTPError(401);
-  const acl = await nftAcl({  session: additionalData?.session });
+  const acl = await nftAcl({session: additionalData?.session});
 
   // Here you could check if the user has permission to execute
   // for (const k of args[1].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
   //   if (!acl.can('marketplace:patchUser', 'User', k))
-  //     throw new HTTPError(403, `You do have permission to patch a user`);
+  //     throw new HTTPError(403, `You do have p  ermission to patch a user`);
   // }
 
-  // Execute the request
-  // @ts-ignore
-  // const resp = await NFT.patch(...args);
-   // const resp = await nftInterface.patch(...args);
-  // return resp
-
-  let cur = NFT.findById({id: data._id}, (err, nft) => {
-    if (err) {
-        throw new HTTPError(err?.httpCode || 500, (
-          _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
-        ))
-    }
-    return toPojo(nft)
-  })
+  try {
+    // Execute the request
+    // @ts-ignore
+    const resp = await nftInterface.patch({
+      query: {
+        _id: new ObjectId(id)
+      }
+    }, patches);
+  } catch (err) {
+    debugger;
+  }
 }

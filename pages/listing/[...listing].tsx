@@ -37,6 +37,7 @@ export type ListingState = SessionComponentState&{
    * Fields for the user nft being modified
    */
   nftForm: INFTData;
+  orignalNftForm: INFTData;
   /**
    * Is `true` when all required fields have ben satisfied
    */
@@ -58,6 +59,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     isCompleted: false,
     notifyMessage: null,
     nftForm: this.props.nftForm || {nftFor:'sale'},
+    orignalNftForm: { ...this.props.nftForm },
     pageTitle: 'Listing'
   } as ListingState
 
@@ -100,7 +102,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   onFormChange = (formName: Partial<INFTData>, formValue: any) => {
-    this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))   
+    this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))
   }
 
   render() {
@@ -119,7 +121,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
                   <div >
                     {this.state.stepNum === ListingStep.assetForm ?
                       <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                      <NFTPricingForm nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
+                      <NFTPricingForm orignalNftForm={this.state.orignalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
                     }
                   </div>
                 </div>

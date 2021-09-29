@@ -6,10 +6,12 @@ import {NextRouter, withRouter} from "next/router";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFTData } from "./../_ntf-collection";
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
+import {diff, jsonPatchPathConverter} from "just-diff";
 
 type NftPricingProps = SessionComponentProps&{
   nftForm: INFTData;
   onFormChange: Function;
+  orignalNftForm: INFTData;
 }
 
 type coOwner = {
@@ -67,7 +69,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     this.setState({coOwner: {...this.state.coOwner, owedToId: user.id, owedTo: user.firstName}});
   }
 
-  percentInput = (e) => { 
+  percentInput = (e) => {
     let percentSum: number = 0;
     if(parseFloat(e.target.value) <= 0 || parseFloat(e.target.value) > 100) {e.target.value = '0'; return};
     if(this.state.royaltyList.length > 0) {
@@ -100,16 +102,29 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     }
   }
 
-  submitNewNft = (dataNft: INFTData) => (
-      this.rpc['marketplace:patchNFT'](dataNft)
-        .then((res) => {
-          console.log('response', res)
-          this.handleError('NFT created', 'success')
-          // this.props.router.push('/profile')
-        })
-        .catch(this.handleError)
-  )
+  submitNewNft = (dataNft: INFTData) => {
+    let patches = diff((this as any).props.orignalNftForm, dataNft, jsonPatchPathConverter);
 
+    patches = patches
+      .filter(f => f.path.substr(0, '/nftItem'.length) !== '/nftItem')
+      .map((f) => {
+        if (f.value === '')
+          return {
+            ...f,
+            value: null
+          }
+        return f;
+
+      });
+
+    this.rpc['marketplace:patchNFT']((this as any).props.orignalNftForm._id, patches as any)
+      .then((res) => {
+        console.log('response', res)
+        this.handleError('NFT created', 'success')
+        // this.props.router.push('/profile')
+      })
+      .catch(this.handleError)
+  }
   updatePricingForm(e: SubmitEvent): void {
     e.preventDefault();
     let nftForm = {...this.props.nftForm, listOn: this.scheduleDateTime()}
@@ -133,7 +148,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
                 defaultValue="listOnSubmit"
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
-                                    this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })} 
+                                    this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })}
                                    else {this.setState({ showScheduleInputs : true })}; this.scheduleDateTime()}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />
