@@ -35,6 +35,20 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     pageTitle: 'Profile'
   } as ProfileState
 
+  componentDidMount() {
+    this.props.session.user ? 
+    this.getNft(this.props.session.user._id)
+    : ''
+  }
+
+  getNft = (uid) => (
+    this.rpc['marketplace:getNFT']({ userId: uid})
+      .then((res) => {
+        console.log('response', res)
+      })
+      .catch(this.handleError)
+)
+
 
   constructor(props: ProfileProps) {
     super(props);

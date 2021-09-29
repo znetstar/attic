@@ -1,6 +1,7 @@
 import React, {PureComponent} from "react";
 import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, Menu, MenuItem } from "@mui/material/";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import {NextRouter, withRouter} from "next/router";
 
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFTData } from "./../_ntf-collection";
@@ -64,7 +65,6 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
   menuItemClick = (user) => {
     this.setState({ openMenu: false });
     this.setState({coOwner: {...this.state.coOwner, owedToId: user.id, owedTo: user.firstName}});
-    console.log(this.state.coOwner)
   }
 
   percentInput = (e) => { 
@@ -73,7 +73,6 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     if(this.state.royaltyList.length > 0) {
       let percentSum = this.state.royaltyList.reduce((acc, owner) => acc + owner.percent, 0);
       if ((parseFloat(e.target.value) + percentSum) > 100) {
-        console.log("total can't exceed 100");
         e.target.value = '0';
         return;
       }
@@ -101,16 +100,15 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     }
   }
 
-  submitNewNft = async (dataNft: INFTData) => {
-    (async (dataNft) => {
-      await this.rpc['marketplace:createNFT'](dataNft)
+  submitNewNft = (dataNft: INFTData) => (
+      this.rpc['marketplace:patchNFT'](dataNft)
         .then((res) => {
           console.log('response', res)
           this.handleError('NFT created', 'success')
+          // this.props.router.push('/profile')
         })
-    })()
-      .catch(this.handleError)
-  }
+        .catch(this.handleError)
+  )
 
   updatePricingForm(e: SubmitEvent): void {
     e.preventDefault();
@@ -119,7 +117,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       console.log('please add NFT item')
     } else {
       this.submitNewNft(nftForm)
-      console.log('API request', nftForm)
+      console.log('API request data', nftForm)
     }
   }
 
@@ -210,14 +208,14 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
   }
 }
 
-export default NFTPricingForm
+export default withRouter(NFTPricingForm)
 
 export const dummyUserList = [
-  {id: 1, firstName: 'abc', wallet: 'asdf1234'},
-  {id: 2, firstName: 'def', wallet: 'asdf1234'},
-  {id: 3, firstName: 'ghi', wallet: 'asdf1234'},
-  {id: 4, firstName: 'jkl', wallet: 'asdf1234'},
-  {id: 5, firstName: 'mno', wallet: 'asdf1234'},
-  {id: 6, firstName: 'pqr', wallet: 'asdf1234'},
-  {id: 7, firstName: 'stu', wallet: 'asdf1234'}
+  {id: 1, firstName: 'Matt Nilson', wallet: 'asdf1234'},
+  {id: 2, firstName: 'John Howard', wallet: 'asdf1234'},
+  {id: 3, firstName: 'Alan Wagner', wallet: 'asdf1234'},
+  {id: 4, firstName: 'Eva Williams', wallet: 'asdf1234'},
+  {id: 5, firstName: 'Alice Starshak', wallet: 'asdf1234'},
+  {id: 6, firstName: 'Steven Dee', wallet: 'asdf1234'},
+  {id: 7, firstName: 'Louis Demetry', wallet: 'asdf1234'}
 ]
