@@ -49,6 +49,7 @@ export interface INFTData {
    * Author of the item
    */
   userId: ObjectId|string;
+  sellerID: ObjectId|string;
   public?: boolean;
 }
 
@@ -81,6 +82,11 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
     required: true,
     ref: 'User'
   },
+  sellerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
+  },
   nftItem: { type: Buffer, required: false },
   listOn: { type: Date, required: false },
   priceStart: {type: Number, required: false},
@@ -100,6 +106,7 @@ export const nftPubFields = [
   'priceStart',
   'priceBuyNow',
   'userId',
+  'sellerId',
   'public'
 ]
 
@@ -111,7 +118,7 @@ export const nftPrivFields = [
 ]
 
 export interface NFTACLOptions {
-  nft?: { userId: ObjectId|string, public?: boolean };
+  nft?: { userId: ObjectId|string, sellerId: ObjectId|string, public?: boolean };
   session?: MarketplaceSession|null;
 }
 
@@ -125,7 +132,7 @@ export async function nftAcl(options?: NFTACLOptions): Promise<Ability> {
   ) {
     can([
       'marketplace:getNFT',
-      'marketplace:createNFT          ',
+      'marketplace:createNFT',
       'marketplace:patchNFT',
       'marketplace:deleteNFT'
     ], 'NFT');
@@ -136,10 +143,9 @@ export async function nftAcl(options?: NFTACLOptions): Promise<Ability> {
       public: true
     });
 
-    // Owner can see their own NFTs  even if not  public
-    if (options?.nft?.userId &&
-      options?.session?.user?.marketplaceUser?._id &&
-      options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.userId.toString()) {
+    // Owner and Seller can see their own NFTs  even if not  public
+    if (options?.nft?.userId && options?.session?.user?.marketplaceUser?._id && options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.userId.toString()
+        || options?.nft?.sellerId && options?.session?.user?.marketplaceUser?._id && options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.sellerId.toString()) {
 
       can([
         'marketplace:getNFT'
@@ -186,6 +192,7 @@ export async function marketplaceCreateNft (form: INFTData) {
       nftFor: form.nftFor,
       royalties: form.royalties,
       userId: form.userId,
+      sellerId: form.userId,
       nftItem: form.nftItem,
       listOn: form.listOn,
       priceStart: form.priceStart,
