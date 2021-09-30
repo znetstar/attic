@@ -206,7 +206,7 @@ export async function getServerSideProps(context: any) {
         notFound: true
       }
     }
-    const nft = await NFT.create({ userId: uid });
+    const nft = await NFT.create({ userId: uid, sellerId: uid });
 
     return {
       redirect: {
