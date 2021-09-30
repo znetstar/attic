@@ -8,10 +8,11 @@ import SessionComponent, {SessionComponentProps, SessionComponentState} from "..
 import { INFT } from "../_nft";
 import { IUser } from "../_user";
 import {SearchBar} from "./../_searchBar"
-import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
 import {diff, jsonPatchPathConverter} from "just-diff";
 
 import {RoyaltyAdd} from "./_royaltyAdd"
+import { INFT } from "../_nft";
+import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css"
 
 type NftPricingProps = SessionComponentProps&{
   nftForm: INFT;
@@ -133,7 +134,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
                                     this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })}
-                                   else {this.setState({ showScheduleInputs : true })}; this.scheduleDateTime()}
+                                   else {this.setState({ showScheduleInputs : true })}}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />
                 <FormControlLabel value="listOnSchedule" control={<Radio />} label="Schedule listing" />
