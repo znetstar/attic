@@ -14,7 +14,7 @@ import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {IUser, userAcl, userPrivFields, userPubFields, UserRoles} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
-import {Royalty, IRoyalty,IDestination,Destination} from "./_wallet";
+import {Royalty, IRoyalty,IDestination,Destination} from "./_account";
 import {number} from "prop-types";
 
 export enum SaleTypes {
@@ -38,6 +38,7 @@ export interface INFTData {
   tags?: string[];
   supply?: number;
   nftFor: SaleTypes;
+  symbol?: string;
 
   listOn?: Date;
   royalties?: IRoyalty[];

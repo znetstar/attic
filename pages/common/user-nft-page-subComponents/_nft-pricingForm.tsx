@@ -2,7 +2,7 @@ import React, {PureComponent} from "react";
 import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, Menu, MenuItem } from "@mui/material/";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
-import { INFTData } from "./../_ntf-collection";
+import { INFTData } from "../_nft";
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css"
 import { style } from "@mui/system";
 import { ConsoleLogger } from "typedoc/dist/lib/utils";
@@ -49,7 +49,7 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
     console.log(this.state.coOwner)
   }
 
-  percentInput = (e) => { 
+  percentInput = (e) => {
     let percentSum = 0
     if(parseFloat(e.target.value) <= 0) {e.target.value = '0'; return};
     if(this.state.royaltyList.length > 0) {
@@ -121,7 +121,7 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
                 defaultValue="listOnSubmit"
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
-                                    this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })} 
+                                    this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })}
                                    else {this.setState({ showScheduleInputs : true })}}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />

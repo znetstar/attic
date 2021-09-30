@@ -1,7 +1,7 @@
 import React, {ChangeEvent, PureComponent} from "react";
 import Avatar from "@mui/material/Avatar";
 
-import { INFTData } from "./../_ntf-collection";
+import { INFTData } from "../_nft";
 import styles from './../../../styles/user-nft-pages-subComponents-styles/nft-Img.module.css'
 
 type NftImgProps = {

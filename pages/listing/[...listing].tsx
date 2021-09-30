@@ -6,7 +6,7 @@ import * as React from 'react';
 import {MarketplaceAppBar, SettingsButton} from "../common/_appbar";
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {INFTData, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_ntf-collection";
+import {INFTData, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";

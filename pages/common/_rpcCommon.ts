@@ -4,7 +4,7 @@ import {
   PatchModelInterfaceRequestBody, JSONPatchOp
 } from "@thirdact/simple-mongoose-interface";
 import {IUser} from "./_user";
-import {INFTData} from "./_ntf-collection";
+import {INFTData} from "./_nft";
 
 /**
  * RPC API exposed by the server

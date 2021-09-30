@@ -1,5 +1,11 @@
-import {EncodeTools, EncodingOptions} from '@etomon/encode-tools/lib/EncodeTools';
-import {ImageFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {
+  BinaryEncoding,
+  EncodeTools,
+  EncodingOptions,
+  IDFormat,
+  ImageFormat,
+  SerializationFormat
+} from '@etomon/encode-tools/lib/EncodeTools';
 import {EncodeToolsSerializer} from "multi-rpc-common";
 import {EncodeToolsAuto} from "@etomon/encode-tools";
 
@@ -8,9 +14,10 @@ import {EncodeToolsAuto} from "@etomon/encode-tools";
  *
  * These options are important, and determine the client/server communication format for the entire application
  */
-export function encodeOptions() {
+export function encodeOptions(overrides?: EncodingOptions) {
   return {
-    serializationFormat: SerializationFormat.json,
+    ...(overrides||{}),
+    serializationFormat: (process.env.DEFAULT_SERIALIZATION_FORMAT || SerializationFormat.json) as SerializationFormat,
     imageFormat: ImageFormat.jpeg
   } as EncodingOptions;
 }
@@ -20,7 +27,24 @@ export function encodeOptions() {
  * @constructor
  */
 export function makeEncoder(): EncodeTools {
-  return new EncodeToolsAuto(encodeOptions());
+  return new EncodeToolsAuto(encodeOptions({
+    serializationFormat: (process.env.WEB_SERIALIZATION_FORMAT || SerializationFormat.json) as SerializationFormat,
+  }));
+}
+
+
+export function makeKeyEncoder(): EncodeTools {
+  return new EncodeToolsAuto(encodeOptions({
+    binaryEncoding: BinaryEncoding.hex
+  }));
+}
+
+export function makeInternalCryptoEncoder(): EncodeTools {
+  return new EncodeToolsAuto(encodeOptions({
+    binaryEncoding: BinaryEncoding.base85,
+    serializationFormat: SerializationFormat.cbor,
+    uniqueIdFormat: IDFormat.uuidv4String
+  }));
 }
 
 /**

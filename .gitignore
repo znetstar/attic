@@ -41,3 +41,4 @@ misc/attic-config/config.json
 misc/attic/config/config.json
 
 zb-dc.yml
+*.rdb
