@@ -111,7 +111,7 @@ export async function getServerSideProps(context: any) {
   const {   res, req } = context;
   const session = await Profile.getSession(context);
 
-  let [not_important, not_important2, id, subpage] = req.url.split('/');
+  let [ not_important, not_important2, id, subpage] = req.url.split('/');
   // If no id is provided
   if (!id) {
     return {

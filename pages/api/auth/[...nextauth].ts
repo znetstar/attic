@@ -313,17 +313,27 @@ export async function getUser(session: MarketplaceSession|null|undefined): Promi
       session.user.marketplaceUser = toUserPojo(await syncUser(session.user.atticUser));
     }
   } else {
-    const [ atticUser, marketplaceUser ] = await Promise.all([
-      rpcProxy.getSelfUser() as Promise<AtticUser>,
-      MarketplaceUser.findOne({ atticUserId: new ObjectId(atticUserId) }).exec()
-    ]);
+    try {
+      const [atticUser, marketplaceUser] = await Promise.all([
+        rpcProxy.getSelfUser() as Promise<AtticUser>,
+        MarketplaceUser.findOne({atticUserId: new ObjectId(atticUserId)}).exec()
+      ]);
 
-    session.user = {
-      name: atticUser.username,
-      email: atticUser.username,
-      atticUser: toPojo(atticUser),
-      marketplaceUser: toPojo(marketplaceUser)
-    };
+      session.user = {
+        name: atticUser.username,
+        email: atticUser.username,
+        atticUser: toPojo(atticUser),
+        marketplaceUser: toPojo(marketplaceUser)
+      };
+    } catch (Err: unknown) {
+      let err: Error&{httpCode?: number} = Err;
+      if (err.httpCode !== 401)
+        throw err;
+
+      session = null;
+     return null;
+
+    }
   }
 
   return session.user || null;
