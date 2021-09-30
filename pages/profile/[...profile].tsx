@@ -13,6 +13,7 @@ import Button from "@mui/material/Button";
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
 import {getUser} from "../api/auth/[...nextauth]";
+import {nftImg} from "./../common/user-nft-page-subComponents/_nft-Img"
 
 export type ProfileProps = SessionComponentProps&{
   marketplaceUser: IPOJOUser,
@@ -25,6 +26,7 @@ export type ProfileProps = SessionComponentProps&{
 export type ProfileState = SessionComponentState&{
   editProfileOpen: boolean;
   settingsOpen: boolean;
+  nftCollections: IN
 };
 
 

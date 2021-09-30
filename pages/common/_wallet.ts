@@ -11,17 +11,17 @@ export  interface IDestination {
 
 export interface IRoyalty {
   _id: ObjectId;
-  owedTo: IDestination;
+  owedTo: string;
   percent: number;
 }
 
-export const Destination: Schema<IDestination> = (new (mongoose.Schema)({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' }
-  // walletId: { type: mongoose.Schema.Types.ObjectId, required: false, ref: 'Wallet' }
-}));
+// export const Destination: Schema<IDestination> = (new (mongoose.Schema)({
+//   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' }
+//   // walletId: { type: mongoose.Schema.Types.ObjectId, required: false, ref: 'Wallet' }
+// }));
 
 export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
-  owedTo: Destination,
+  owedTo: String,
   percent: {
     type: Number,
     required: true,

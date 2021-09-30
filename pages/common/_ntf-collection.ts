@@ -70,7 +70,7 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
       let pct: number = 0;
       for (const royalty of royalties)
         pct += royalty.percent;
-      if (pct !== 1)
+      if (pct !== 100)
         throw new RoyaltiesMustBe100();
 
       return true;
