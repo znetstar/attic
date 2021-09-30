@@ -43,6 +43,8 @@ export default async function handler(
 
     await queue.add('event', { id: event.id.toString() }, { jobId: `stripe:event:${event.id.toString()}` });
 
+    await queue.close()
+
     res.statusCode = 200;
     res.end(JSON.stringify({ received: true }));
   }

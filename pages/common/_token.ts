@@ -512,23 +512,24 @@ TokenSchema.methods.cryptoBurnToken = async function (
 }
 
 async function onChargeSuccess(job: Job): Promise<void> {
-    const { id } = job.data;
+  try {
+    const {id} = job.data;
 
     const event = await stripe.events.retrieve(id);
     const charge: any = event.data.object;
-    const symbol: string|undefined = charge.metadata['crypto:symbol'];
+    const symbol: string | undefined = charge.metadata['crypto:symbol'];
     if (symbol && charge.status === 'succeeded') {
-      const [token, customer]: [IToken&Document|null,any] = await Promise.all([
+      const [token, customer]: [IToken & Document | null, any] = await Promise.all([
         Token.findOne({
           symbol
         }),
         (
-         async () => {
-           if (charge.customer) {
-             return stripe.customers.retrieve(charge.customer);
-           }
-           return null;
-         }
+          async () => {
+            if (charge.customer) {
+              return stripe.customers.retrieve(charge.customer);
+            }
+            return null;
+          }
         )()
       ])
 
@@ -545,6 +546,9 @@ async function onChargeSuccess(job: Job): Promise<void> {
         }
       }
     }
+  } catch (err) {
+    throw err;
+  }
 }
 
 
