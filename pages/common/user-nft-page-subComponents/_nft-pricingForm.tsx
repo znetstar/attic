@@ -8,11 +8,10 @@ import SessionComponent, {SessionComponentProps, SessionComponentState} from "..
 import { INFT } from "../_nft";
 import { IUser } from "../_user";
 import {SearchBar} from "./../_searchBar"
+import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
 import {diff, jsonPatchPathConverter} from "just-diff";
 
 import {RoyaltyAdd} from "./_royaltyAdd"
-import { INFT } from "../_nft";
-import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css"
 
 type NftPricingProps = SessionComponentProps&{
   nftForm: INFT;
@@ -80,35 +79,26 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
   }
 
   submitNewNft = (dataNft: INFT) => {
-    if ((this as any).props.originalNftForm && (this as any).props.originalNftForm._id) {
-      let patches = diff((this as any).props.originalNftForm, dataNft, jsonPatchPathConverter);
+    let patches = diff((this as any).props.orignalNftForm, dataNft, jsonPatchPathConverter);
 
-      patches = patches
-        .filter(f => f.path.substr(0, '/nftItem'.length) !== '/nftItem')
-        .map((f) => {
-          if (f.value === '')
-            return {
-              ...f,
-              value: null
-            }
-          return f;
+    patches = patches
+      .filter(f => f.path.substr(0, '/nftItem'.length) !== '/nftItem')
+      .map((f) => {
+        if (f.value === '')
+          return {
+            ...f,
+            value: null
+          }
+        return f;
 
-        });
+      });
 
-      this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any)
-        .then((res) => {
-          this.handleError('NFT created', 'success')
-          // this.props.router.push('/profile')
-        })
-        .catch(this.handleError)
-    } else {
-      this.rpc['marketplace:createNFT'](dataNft)
-        .then((res) => {
-          this.handleError('NFT created', 'success')
-          // this.props.router.push('/profile')
-        })
-        .catch(this.handleError)
-    }
+    this.rpc['marketplace:patchNFT']((this as any).props.orignalNftForm._id, patches as any)
+      .then((res) => {
+        this.handleError('NFT created', 'success')
+        // this.props.router.push('/profile')
+      })
+      .catch(this.handleError)
   }
 
   updatePricingForm(e: SubmitEvent): void {
@@ -178,7 +168,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
               <div><SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.setSeller(user)}/></div>
             ) : ''}
 
-            <div className={styles.royaltyWrapper}><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
+            <div><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
 
             <div>
             <FormControl className={'form-control'}>

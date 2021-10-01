@@ -4,7 +4,11 @@ import {
   PatchModelInterfaceRequestBody, JSONPatchOp
 } from "@thirdact/simple-mongoose-interface";
 import {IUser} from "./_user";
+<<<<<<< HEAD
 import {IListedNFT, INFT} from "./_nft";
+=======
+import {INFT} from "./_nft";
+>>>>>>> sellerId added to form
 
 /**
  * RPC API exposed by the server
@@ -12,8 +16,12 @@ import {IListedNFT, INFT} from "./_nft";
 export interface MarketplaceAPI {
   'marketplace:patchUser': (patches: JSONPatchOp) => Promise<void>;
   'marketplace:createUser': (user: unknown) => Promise<string>;
+  'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<IListedNFT[]>;
   'marketplace:getAllUsers': () => Promise<IUser[]>;
+<<<<<<< HEAD
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<INFT[]>;
+=======
+>>>>>>> sellerId added to form
   'marketplace:patchNFT': (id: unknown, patches: JSONPatchOp) => Promise<void>;
   'marketplace:createNFT': (nft: INFT) => Promise<string>;
 }
