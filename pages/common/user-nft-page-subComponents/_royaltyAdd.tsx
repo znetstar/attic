@@ -2,6 +2,7 @@ import React, {Fragment, PureComponent} from "react"
 import { TextField } from "@mui/material/";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
+import {IUser} from "./../../common/_user"
 import {SearchBar} from "./../_searchBar"
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-royaltyAdd.module.css";
 
@@ -13,6 +14,7 @@ export type payee = {
 
 type royaltyProps = {
   submitRoyaltyList: Function;
+  usersList: IUser[];
 }
 
 type royaltyAddState = {
@@ -41,7 +43,6 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
 
     payee[i].percent = Math.floor(parseFloat(e.target.value)*100)/100
     this.setState({ payee: payee, showAdd: false, showOptions: true })
-    console.log(this.state)
   }
 
 
@@ -51,7 +52,6 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       payee[i].owedTo = user.email
       this.setState({ payee: payee, showAdd: false, showOptions: true })
     }
-    console.log(this.state)
   }
 
 
@@ -62,7 +62,6 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       ...this.state.payee.slice(i + 1)
     ]
     this.setState({ payee, showAdd: true, showOptions: true })
-    console.log(this.state)
   }
 
   onConfirm = e => {
@@ -83,7 +82,6 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
     e.preventDefault()
     let payee = this.state.payee.concat([{_id: '', owedTo: '', percent: 0}])
     this.setState({ payee: payee, showAdd: false })
-    console.log(this.state)
   }
 
   render() {
@@ -92,7 +90,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
         <h2>Royalties</h2>
         {this.state.payee.map((p, idx) => (
           <span key={idx}>
-            <SearchBar searchMenu={menuList} onSelect={(val) => this.emailChange(idx,val)}/>
+            <SearchBar searchMenu={this.props.usersList} onSelect={(val) => this.emailChange(idx,val)}/>
             <TextField onChange={this.percentChange(idx)} 
                         value={p.percent} 
                         required={true} 
@@ -108,7 +106,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
         {this.state.showOptions ? this.state.showAdd ? (        
         <div onClick={this.addCoOwner} className={styles.addRoyalty}>
           <AddCircleIcon />
-          <h2>Add Co-owner</h2>
+          <h2>Add Royalties:</h2>
         </div>) 
         : (
           <div onClick={this.onConfirm}>Confirm Payee</div>
@@ -119,13 +117,3 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
 }
 
 export default RoyaltyAdd
-
-export const menuList = [
-  {id: 1, email: 'Matt Nilson', wallet: 'asdf1234'},
-  {id: 2,  wallet: 'asdf1234'},
-  {id: 3, email: 'Alan Wagner', wallet: 'asdf1234'},
-  {id: 4, email: 'Eva Williams', wallet: 'asdf1234'},
-  {id: 5, email: 'Alice Starshak', wallet: 'asdf1234'},
-  {id: 6, email: 'Steven Dee', wallet: 'asdf1234'},
-  {id: 7, email: 'Louis Demetry', wallet: 'asdf1234'}
-]
