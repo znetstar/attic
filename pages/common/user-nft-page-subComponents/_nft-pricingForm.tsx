@@ -177,7 +177,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
               <div><SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.setSeller(user)}/></div>
             ) : ''}
 
-            <div><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
+            <div className={styles.royaltyWrapper}><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
 
             <div>
             <FormControl className={'form-control'}>
