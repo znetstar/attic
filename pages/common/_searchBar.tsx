@@ -1,4 +1,5 @@
 import React, {PureComponent} from "react";
+import { TextField } from "@mui/material";
 
 interface SearchBarProps {
   searchMenu: [],
@@ -41,7 +42,7 @@ export class SearchBar extends PureComponent<SearchBarProps> {
   render() {
     return(
       <div className="bar">
-      <input type='search' placeholder='Producer email' onChange={this.handleChange} value={this.state.selected ? this.state.selected : ''} />
+      <TextField type='search' variant={'filled'} label='Producer email' onChange={this.handleChange} value={this.state.selected ? this.state.selected : ''} />
       {this.state.showList ? (
       <div className='search_list'>
           <div>
