@@ -49,7 +49,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
   emailChange = (i, user) => {
     let payee = [...this.state.payee]
     if(user) {
-      payee[i].owedTo = user.email
+      payee[i].owedTo = user._id
       this.setState({ payee: payee, showAdd: false, showOptions: true })
     }
   }
@@ -89,8 +89,8 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       <Fragment>
         <h2>Royalties</h2>
         {this.state.payee.map((p, idx) => (
-          <span key={idx}>
-            <SearchBar searchMenu={this.props.usersList} onSelect={(val) => this.emailChange(idx,val)}/>
+          <div key={idx} className={styles.inputSection}>
+            <SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.emailChange(idx,user)}/>
             <TextField onChange={this.percentChange(idx)} 
                         value={p.percent} 
                         required={true} 
@@ -101,12 +101,12 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
                         label="percent" />
 
             <button onClick={this.remove(idx)}>X</button>
-          </span>
+          </div>
         ))}
         {this.state.showOptions ? this.state.showAdd ? (        
-        <div onClick={this.addCoOwner} className={styles.addRoyalty}>
+        <div onClick={this.addCoOwner} className={styles.addButton}>
           <AddCircleIcon />
-          <h2>Add Royalties:</h2>
+          <h2>Add Payee</h2>
         </div>) 
         : (
           <div onClick={this.onConfirm}>Confirm Payee</div>
