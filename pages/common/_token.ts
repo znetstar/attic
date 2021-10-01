@@ -1,6 +1,6 @@
 import {ObjectId} from "mongodb";
 import mongoose from "./_database";
-import {INFTData, NFTDataSchema} from "./_nft";
+import {INFT} from "./_nft";
 import {Document, Schema} from "mongoose";
 import {generateCryptoKeyPair, IKeyPair, KeyNotFoundError, KeyPair, KeyPairSchema} from "./_keyPair";
 import {
@@ -169,7 +169,7 @@ export const TokenSchema: Schema<IToken> = (new (mongoose.Schema)({
     required: true,
     default: () => 0
   }
-}, { timestamps:true }));
+}, { timestamps:true ,discriminatorKey: 'tokenType' }));
 
 TokenSchema.pre<IToken>('save', async function () {
   this.treasury = this.treasury || (await  CryptoAccount.findOne({

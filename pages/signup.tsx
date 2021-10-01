@@ -77,7 +77,8 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
   submitNewUser = async () => {
     (async () => {
       await this.rpc['marketplace:createUser'](this.state.emailPasswordForm)
-        .then(() => {
+        .then((res) => {
+          console.log(res)
           this.handleError('Create success', 'success');
           this.props.router.push('/login?email='+this.state.emailPasswordForm.email);
         })

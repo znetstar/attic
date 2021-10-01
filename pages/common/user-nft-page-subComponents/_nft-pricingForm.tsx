@@ -1,119 +1,111 @@
 import React, {PureComponent} from "react";
-import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, Menu, MenuItem } from "@mui/material/";
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment } from "@mui/material/";
 
-import { INFTData } from "../_nft";
-import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css"
-import { style } from "@mui/system";
-import { ConsoleLogger } from "typedoc/dist/lib/utils";
 
-interface NftPricingProps {
-  nftForm: INFTData;
+import {NextRouter, withRouter} from "next/router";
+
+import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
+import { INFT } from "../_ntf";
+import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
+import {diff, jsonPatchPathConverter} from "just-diff";
+
+import {RoyaltyAdd, payee} from "./_royaltyAdd"
+
+type NftPricingProps = SessionComponentProps&{
+  nftForm: INFT;
   onFormChange: Function;
+  originalNftForm: INFT;
+}
+
+type PricingState = SessionComponentState&{
+  showScheduleInputs: boolean;
+  scheduleDate: string;
+  scheduleTime: string;
+  openMenu: boolean;
+  menuAnchor: HTMLElement | null,
+  royaltyList: [payee] | null
 }
 
 /**
  * Allows the user to upload NFT Pricing MetaData
  */
-export class NFTPricingForm extends PureComponent<NftPricingProps> {
+export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingState> {
 
   constructor(props: NftPricingProps) {
     super(props);
   }
 
-  state = {
+  state: PricingState = {
     showScheduleInputs : false,
-    scheduleDate: '',
-    scheduleTime: '',
+    scheduleDate: this.props.nftForm.listOn ? new Date(this.props.nftForm.listOn).toLocaleDateString() : '',
+    scheduleTime: this.props.nftForm.listOn ? new Date(this.props.nftForm.listOn).toLocaleTimeString() : '',
     openMenu: false,
     menuAnchor: null,
-    coOwner: {
-      owedToId: '',
-      owedTo: '',
-      percent: 0
-    },
-    royaltyList: []
+    royaltyList: null
   }
 
   scheduleDateTime = () => {
-    let currTime = new Date(new Date().toString().split('GMT')[0]+' UTC').toISOString()
-    console.log('currTime',currTime, new Date(), this.state.scheduleDate, this.state.scheduleTime);
-    if(this.state.scheduleDate && this.state.scheduleTime) {
-      // console.log(this.state.scheduleDate.join())
+    let listOnTime = '';
+    if(this.state.scheduleDate && this.state.scheduleTime && this.state.showScheduleInputs) {
+      listOnTime = new Date(this.state.scheduleDate + ' ' + this.state.scheduleTime).toISOString();
+    } else {
+      listOnTime = new Date().toISOString();
+    }
+    this.props.onFormChange('listOn', listOnTime);
+    return listOnTime;
+  }
+
+  submitRoyaltyList = (royaltyList) => {
+      this.props.onFormChange('royalties', royaltyList)
+  }
+
+  submitNewNft = (dataNft: INFT) => {
+    if ((this as any).props.originalNftForm && (this as any).props.originalNftForm._id) {
+      let patches = diff((this as any).props.originalNftForm, dataNft, jsonPatchPathConverter);
+
+      patches = patches
+        .filter(f => f.path.substr(0, '/nftItem'.length) !== '/nftItem')
+        .map((f) => {
+          if (f.value === '')
+            return {
+              ...f,
+              value: null
+            }
+          return f;
+
+        });
+
+      this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any)
+        .then((res) => {
+          this.handleError('NFT created', 'success')
+          // this.props.router.push('/profile')
+        })
+        .catch(this.handleError)
+    } else {
+      this.rpc['marketplace:createNFT'](dataNft)
+        .then((res) => {
+          this.handleError('NFT created', 'success')
+          // this.props.router.push('/profile')
+        })
+        .catch(this.handleError)
     }
   }
 
-  menuItemClick = (user) => {
-    this.setState({ openMenu: false })
-    this.setState({coOwner: {...this.state.coOwner, owedToId: user.id, owedTo: user.firstName}})
-    console.log(this.state.coOwner)
-  }
-
-  percentInput = (e) => {
-    let percentSum = 0
-    if(parseFloat(e.target.value) <= 0) {e.target.value = '0'; return};
-    if(this.state.royaltyList.length > 0) {
-      let percentSum = this.state.royaltyList.reduce((acc, owner) => acc + owner.percent, 0)
-      if ((parseFloat(e.target.value) + percentSum) > 100) {
-        console.log("total can't exceed 100");
-        e.target.value = '0';
-        return;
-      }
+  updatePricingForm(e: SubmitEvent): void {
+    e.preventDefault();
+    let nftForm = {...this.props.nftForm, listOn: this.scheduleDateTime()}
+    if(!nftForm.nftItem) {
+      console.log('please add NFT item')
+    } else {
+      this.submitNewNft(nftForm)
     }
-    this.setState({coOwner: {...this.state.coOwner, percent: Math.floor(parseFloat(e.target.value)*100)/100 }})
-  }
-
-  addCoOwner = (e) => {
-    if(this.state.coOwner.owedToId && this.state.coOwner.percent > 0) {
-      this.state.royaltyList.push(this.state.coOwner)
-      this.setState({coOwner: {...this.state.coOwner, owedToId: '', owedTo: '', percent: 0}})
-      this.props.onFormChange('royalties', this.state.royaltyList)
-      console.log(this.state.royaltyList)
-    }
-    this.setState({ openMenu: true, menuAnchor: e.target })
-  }
-
-  updatePricingForm = () => {
-    this.scheduleDateTime();
-    console.log('check and submit time!!!', this.props.nftForm)
-        // (async () => {
-    //   const nftForm: INFTData = {
-    //     ...this.nftForm
-    //   };
-
-    //   let patches = diff((this as any).props.session.user.marketplaceUser, nftForm, jsonPatchPathConverter);
-
-    //   let imagePatches = patches.filter(f => f.path.substr(0, '/image'.length) === '/image');
-
-    //   patches = patches
-    //     .filter(f => f.path.substr(0, '/image'.length) !== '/image');
-
-    //   if (this.changedImage && userForm.image) {
-    //     patches.push({
-    //       op: 'add',
-    //       path: '/image',
-    //       value: userForm.image
-    //     })
-    //   }
-
-    //   await this.rpc["marketplace:patchUser"]({} as any, patches as any)
-    //     .then(() => {
-    //       this.handleError('Save success', 'success');
-    //       this.changedImage = false;
-    //     })
-    //     .catch(this.handleError);
-    // })()
-    //   .then(() => {
-    //     this.updateIsCompleted();
-    //   })
-    // })
   }
 
   render() {
     const { nftForm, onFormChange } = this.props
     return (
       <div className={styles.nftForm_wrapper}>
-        <form onSubmit={(e) => { this.updatePricingForm(); e.preventDefault(); }}>
+        <form onSubmit={(e) => this.updatePricingForm(e)}>
             <div>
             <FormControl className={'form-control'}>
               <RadioGroup
@@ -122,7 +114,7 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
                                     this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })}
-                                   else {this.setState({ showScheduleInputs : true })}}
+                                   else {this.setState({ showScheduleInputs : true })}; this.scheduleDateTime()}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />
                 <FormControlLabel value="listOnSchedule" control={<Radio />} label="Schedule listing" />
@@ -135,48 +127,25 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
                             <TextField onChange={(e) => { this.setState({ scheduleDate: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleDate} required={true} className={'form-input'}  variant={"filled"} name={"listOnDate"} label="Date" type="date" />
                           </FormControl>
                           <FormControl className={'form-control'}>
-                          <TextField onChange={(e) => { this.setState({ scheduleTime: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleTime}  required={true} className={'form-input'}  variant={"filled"} name={"listOnTime"} label="Time" type="time" InputProps={{ inputProps: { step: 1}}}/>
+                          <TextField onChange={(e) => { this.setState({ scheduleTime: e.target.value}); this.scheduleDateTime()}} value={this.state.scheduleTime} required={true} className={'form-input'}  variant={"filled"} name={"listOnTime"} label="Time" type="time" InputProps={{ inputProps: { step: 1}}}/>
                           </FormControl>
                         </div>
             ) : ''}
 
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceStart} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceStart"} label="Starting Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0}}}/>
+                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceStart} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceStart"} label="Starting Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}}/>
               </FormControl>
             </div>
 
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0}}} />
+                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}} />
               </FormControl>
             </div>
 
-            <div><h2>Royalties</h2></div>
-            {nftForm.royalties ? nftForm.royalties.map((ownerObj, idx) => (
-              <div key={idx}>
-                <div>{ownerObj.owedTo}</div>
-                <div>{ownerObj.percent}</div>
-              </div>
-            )) : ''}
-            {this.state.coOwner.owedTo ? (
-              <div key={this.state.coOwner.owedToId}>
-                <div>{this.state.coOwner.owedTo}</div>
-                  <TextField onChange={this.percentInput} value={this.state.coOwner.percent} required={true} type="number" InputProps={{ inputProps: {min: 0, max: 100} }} className={'form-input'}  variant={"filled"} name={"percent"} label="percent" />
-              </div>
-              ) : ''}
-            <div onClick={this.addCoOwner} className={styles.addRoyalty}>
-              <AddCircleIcon />
-              <h2>Add Co-owner</h2>
-            </div>
-            <div>
-              <Menu
-              anchorEl={this.state.menuAnchor}
-              open={this.state.openMenu}
-              onClose={() => this.setState({ openMenu: false })}>
-                {dummyUserList.map((user) =>  <MenuItem key={user.id} onClick={this.menuItemClick.bind(this, user)}>{user.firstName}</MenuItem>)}
-              </Menu>
-            </div>
+            <div></div>
+            <RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} />
 
             <div>
             <FormControl className={'form-control'}>
@@ -196,14 +165,14 @@ export class NFTPricingForm extends PureComponent<NftPricingProps> {
   }
 }
 
-export default NFTPricingForm
+export default withRouter(NFTPricingForm)
 
 export const dummyUserList = [
-  {id: 1, firstName: 'abc', wallet: 'asdf1234'},
-  {id: 2, firstName: 'def', wallet: 'asdf1234'},
-  {id: 3, firstName: 'ghi', wallet: 'asdf1234'},
-  {id: 4, firstName: 'jkl', wallet: 'asdf1234'},
-  {id: 5, firstName: 'mno', wallet: 'asdf1234'},
-  {id: 6, firstName: 'pqr', wallet: 'asdf1234'},
-  {id: 7, firstName: 'stu', wallet: 'asdf1234'}
+  {id: 1, firstName: 'Matt Nilson', wallet: 'asdf1234'},
+  {id: 2, firstName: 'John Howard', wallet: 'asdf1234'},
+  {id: 3, firstName: 'Alan Wagner', wallet: 'asdf1234'},
+  {id: 4, firstName: 'Eva Williams', wallet: 'asdf1234'},
+  {id: 5, firstName: 'Alice Starshak', wallet: 'asdf1234'},
+  {id: 6, firstName: 'Steven Dee', wallet: 'asdf1234'},
+  {id: 7, firstName: 'Louis Demetry', wallet: 'asdf1234'}
 ]

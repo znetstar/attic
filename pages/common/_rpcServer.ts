@@ -27,7 +27,8 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
-import {marketplaceCreateNft, marketplaceGetNft} from "./_nft";
+import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
+
 import {marketplaceCreateUser, marketplacePatchUser} from "./_user";
 import {getWebhookSecret} from "./_stripe";
 
@@ -237,6 +238,7 @@ export function exposeModel(modelName: string, simpleInterface: any) {
 }
 
 (rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
+(rpcServer as any).methodHost.set('marketplace:patchNFT', marketplacePatchNft);
 (rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
 (rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);

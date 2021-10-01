@@ -1,11 +1,11 @@
 import React, {PureComponent} from "react";
 import { Button, FormControl, TextField, Switch, Typography } from "@mui/material";
 
-import { INFTData } from "../_nft";
+import { INFT } from "../_nft";
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-assetForm.module.css"
 
 interface NftAssetProps {
-  nftForm: INFTData;
+  nftForm: INFT;
   updateAssetForm: Function;
   onFormChange: Function;
 }

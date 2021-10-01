@@ -12,58 +12,106 @@ const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
-import {IUser, userAcl, userPrivFields, userPubFields, UserRoles} from "./_user";
+import {IPOJOUser, IUser, ToUserPojo, userAcl, userPrivFields, userPubFields, UserRoles, User as MarketplaceUser} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
-import {Royalty, IRoyalty,IDestination,Destination} from "./_account";
 import {number} from "prop-types";
+import {IToken, Token, TokenSupplyType, TokenType} from "./_token";
+import {CustomRoyaltyFee} from "@hashgraph/sdk";
 
 export enum SaleTypes {
   sale = 'sale',
   auction = 'auction'
 }
 
-/**
- * Model for the nft creation and it's metaData, with the fields present on each nft object
- */
-export interface INFTData {
-  _id: ObjectId|string;
 
-  /**
-   * Image as a `Buffer`
-   */
-  nftItem?: Buffer;
 
-  title?: string;
+export interface IRoyalty {
+  _id: ObjectId;
+  owedTo: IUser;
+  percent: number;
+  toCryptoValue: () => Promise<CustomRoyaltyFee>
+}
+
+export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
+  owedTo: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  percent: {
+    type: Number,
+    required: true,
+    validate: (x: unknown) => typeof(x) === 'number' && !Number.isNaN(x) && (x >= 0 || x <= 100)
+  }
+}));
+
+
+Royalty.methods.toCryptoValue = async function(): Promise<CustomRoyaltyFee> {
+  const self: IRoyalty&Document = this;
+
+
+  const fee = new CustomRoyaltyFee()
+    .setNumerator(self.percent)
+    .setDenominator(100);
+
+
+  return fee;
+}
+
+export interface HIP10Metadata {
+  name: string;
+  description: string;
+  image: string;
+  localization?: { uri: string, locales: string[], default: string }
+}
+
+export interface INFTMetadata  {
+  name?: string;
   description?: string;
-  tags?: string[];
-  supply?: number;
-  nftFor: SaleTypes;
-  symbol?: string;
+  image: Buffer;
+  localization?: { uri: string, locales: string[], default: string },
+  tags: string[]
+}
 
-  listOn?: Date;
-  royalties?: IRoyalty[];
+
+export type INFT = IToken&INFTMetadata&{
+  maxSupply: 0;
+  nftFor?: SaleTypes;
   priceStart?: number;
   priceBuyNow?: number;
-
-
-  /**
-   * Author of the item
-   */
-  userId: ObjectId|string;
+  listOn?: Date|string;
+  customFees?: IRoyalty[];
+  userId: IUser;
+  sellerId?: IUser;
+  sellerInfo?: {
+    firstName: string;
+    lastName: string;
+  },
   public?: boolean;
 }
 
-export class RoyaltiesMustBe100 extends Error {
-  constructor()  { super(`All royalty destinations must equal 100%`);  }
+export type IListedNFT = {
+  image: string;
+  _id: string;
+  name: string;
+  symbol: string;
+  tags: string[];
+  maxSupply: 0;
+  minted: number;
+  priceStart?: number;
+  priceBuyNow?: number;
+  sellerInfo: {
+    firstName: string;
+    lastName: string;
+  };
+  public: boolean;
 }
 
-export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
-  title: { type: String, required: false },
-  description: { type: String, required: false },
+export class RoyaltiesMustBe100 extends HTTPError {
+  constructor()  { super(400, `All royalty destinations must equal 100%`);  }
+}
+
+export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   tags: { type: [String], required: false },
   supply: { type: Number, required: false, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: false, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
-  royalties: {
+  customFees: {
     type: [Royalty],
     validate: (royalties: IRoyalty[]) => {
       if (!royalties.length) return true;
@@ -71,7 +119,7 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
       let pct: number = 0;
       for (const royalty of royalties)
         pct += royalty.percent;
-      if (pct !== 1)
+      if (pct !== 100)
         throw new RoyaltiesMustBe100();
 
       return true;
@@ -80,40 +128,63 @@ export const NFTDataSchema: Schema<INFTData> = (new (mongoose.Schema)({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    unique: true,
     ref: 'User'
   },
-  nftItem: { type: Buffer, required: false },
+  sellerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
+  },
+  sellerInfo: {
+    firstName: { type: String, required: false },
+    lastName: {  type: String, required: false },
+    required: false
+  },
+  image: { type: Buffer, required: false },
   listOn: { type: Date, required: false },
   priceStart: {type: Number, required: false},
   priceBuyNow: {type: Number, required: false},
   public: {type: Boolean, required: false}
+}, {
+  discriminatorKey: 'tokenType'
 }));
 
-export const NFT = mongoose.models.NFT || mongoose.model<INFTData>('NFT', NFTDataSchema);
-const nftInterface = new SimpleModelInterface<INFTData>(new ModelInterface<INFTData>(NFT));
+export const NFT = (global as any).NFTModel = (global as any).NFTModel || Token.discriminator(TokenType.nft, NFTSchema);
+const nftInterface = new SimpleModelInterface<INFT>(new ModelInterface<INFT>(NFT));
+
+NFTSchema.pre<INFT>('save', async function () {
+  if (this.sellerId) {
+    const seller = await MarketplaceUser.findById(this.sellerId);
+    this.sellerInfo = {
+      firstName: seller.firstName,
+      lastName: seller.lastName
+    };
+  }
+});
 
 export const nftPubFields = [
   '_id',
-  'title',
+  'name',
   'description',
   'tags',
-  'supply',
+  'maxSupply',
+  'minted',
   'priceStart',
   'priceBuyNow',
-  'userId',
-  'public'
+  'sellerId',
+  'public',
+  'minted'
 ]
 
 export const nftPrivFields = [
   ...nftPubFields,
-  'royalties',
-  'nftItem',
+  'customFees',
+  'image',
   'listOn'
 ]
 
 export interface NFTACLOptions {
-  nft?: { userId: ObjectId|string, public?: boolean };
+  nft?: { userId: ObjectId|string, sellerId: ObjectId|string, public?: boolean };
   session?: MarketplaceSession|null;
 }
 
@@ -127,7 +198,7 @@ export async function nftAcl(options?: NFTACLOptions): Promise<Ability> {
   ) {
     can([
       'marketplace:getNFT',
-      'marketplace:createNFT          ',
+      'marketplace:createNFT',
       'marketplace:patchNFT',
       'marketplace:deleteNFT'
     ], 'NFT');
@@ -138,10 +209,9 @@ export async function nftAcl(options?: NFTACLOptions): Promise<Ability> {
       public: true
     });
 
-    // Owner can see their own NFTs  even if not  public
-    if (options?.nft?.userId &&
-      options?.session?.user?.marketplaceUser?._id &&
-      options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.userId.toString()) {
+    // Owner and Seller can see their own NFTs  even if not  public
+    if (options?.nft?.userId && options?.session?.user?.marketplaceUser?._id && options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.userId.toString()
+        || options?.nft?.sellerId && options?.session?.user?.marketplaceUser?._id && options?.session?.user?.marketplaceUser?._id.toString() === options?.nft?.sellerId.toString()) {
 
       can([
         'marketplace:getNFT'
@@ -159,7 +229,7 @@ export async function nftAcl(options?: NFTACLOptions): Promise<Ability> {
  * Creates a new nft document using the provided fields in the marketplace database,
  * @param form Fields for the new ntf document
  */
-export async function marketplaceCreateNft (form: INFTData) {
+export async function marketplaceCreateNft (form: INFT) {
   try {
     // Extract the session data
     // @ts-ignore
@@ -181,17 +251,20 @@ export async function marketplaceCreateNft (form: INFTData) {
     }
 
     const marketplaceNft = await NFT.create({
-      title: form.title,
+      name: form.name,
+      symbol: form.symbol,
       description: form.description,
       tags: form.tags,
-      supply: form.supply,
+      maxSupply: 0,
       nftFor: form.nftFor,
-      royalties: form.royalties,
-      userId: form.userId,
-      nftItem: form.nftItem,
+      customFees: form.customFees,
+      userId: user._id,
+      sellerId: form.sellerId,
+      image: form.image,
       listOn: form.listOn,
       priceStart: form.priceStart,
-      priceBuyNow: form.priceBuyNow
+      priceBuyNow: form.priceBuyNow,
+      supplyType: TokenSupplyType.finite
     });
 
     return marketplaceNft._id.toString();
@@ -199,6 +272,49 @@ export async function marketplaceCreateNft (form: INFTData) {
     throw new HTTPError(err?.httpCode || 500, (
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
     ));
+  }
+}
+
+
+type ToNFTParsable = (Document<INFT>&INFT)|INFT|Document<INFT>;
+export const ToNFTPojo = new ToPojo<ToNFTParsable, INFT&{ image?: string }>();
+
+
+/**
+ * Returns a POJO copy of the user object. This converts the image to a data URI
+ * @param marketplaceUser
+ */
+export function toListedNFT(nft: INFT): IListedNFT {
+  const pojo = ToNFTPojo.toPojo(nft, {
+    conversions: [
+      ...ToNFTPojo.DEFAULT_TO_POJO_OPTIONS.conversions as any,
+      {
+        match: (item: Document<INFT>&INFT) => {
+          return !!item.image;
+        },
+        transform: (item: Document<INFT>&INFT) => {
+          const enc = makeEncoder();
+
+          const mime = ImageFormatMimeTypes.get(enc.options.imageFormat as ImageFormat) as string;
+          return `data:${mime};base64,${Buffer.from(item.image as Buffer).toString('base64')}`
+        }
+      }
+    ],
+    ...ToNFTPojo.DEFAULT_TO_POJO_OPTIONS
+  });
+
+  return {
+    image: pojo.image,
+    _id: pojo._id.toString(),
+    name: pojo.name,
+    symbol: pojo.symbol,
+    tags: pojo.tags,
+    maxSupply: pojo.maxSupply,
+    minted: pojo.minted,
+    priceStart: pojo.priceStart,
+    priceBuyNow: pojo.priceBuyNow,
+    public: pojo.public as boolean,
+    sellerInfo: pojo.sellerInfo as { firstName: string, lastName: string }
   }
 }
 
@@ -231,7 +347,7 @@ export async function marketplaceGetNft (query: unknown, getOpts?: { limit?: num
     }
     const nfts = await cur.exec();
 
-    const pojo = toPojo(nfts);
+    const pojo = nfts.map((n: INFT) => toListedNFT(n));
     return pojo;
   } catch (err:any) {
     throw new HTTPError(err?.httpCode || 500, (
@@ -240,3 +356,35 @@ export async function marketplaceGetNft (query: unknown, getOpts?: { limit?: num
   }
 }
 
+export async function marketplacePatchNft(id: string, patches: any[]) {
+  // Extract the session data
+  // @ts-ignore
+  const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
+  const additionalData: RequestData = clientRequest.additionalData;
+
+  // additionalData has the raw req/res, in addition to the session
+
+  // Get the user from the session object
+  const user: IUser = (await getUser(additionalData.session))?.marketplaceUser as IUser;
+  if (!user) throw new HTTPError(401);
+  const acl = await nftAcl({session: additionalData?.session});
+
+  // Here you could check if the user has permission to execute
+  // for (const k of args[1].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
+  //   if (!acl.can('marketplace:patchUser', 'User', k))
+  //     throw new HTTPError(403, `You do have p  ermission to patch a user`);
+  // }
+
+  try {
+    // Execute the request
+    // @ts-ignore
+    const resp = await nftInterface.patch({
+      query: {
+        _id: new ObjectId(id)
+      }
+    }, patches);
+    return resp
+  } catch (err) {
+    debugger;
+  }
+}

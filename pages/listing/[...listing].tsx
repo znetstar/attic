@@ -6,7 +6,7 @@ import * as React from 'react';
 import {MarketplaceAppBar, SettingsButton} from "../common/_appbar";
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {INFTData, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
+import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
@@ -17,9 +17,10 @@ import Button from "@mui/material/Button";
 import {UserRoles} from "../common/_user";
 
 export type ListingProps = SessionComponentProps&{
-  nftForm: INFTData,
+  nftForm?: INFT,
   subpage: string|null
   canEdit: boolean;
+
 };
 
 export enum ListingStep {
@@ -36,7 +37,8 @@ export type ListingState = SessionComponentState&{
   /**
    * Fields for the user nft being modified
    */
-  nftForm: INFTData;
+  nftForm: INFT;
+  originalNftForm: INFT;
   /**
    * Is `true` when all required fields have ben satisfied
    */
@@ -54,10 +56,11 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   state = {
     editListingOpen: false,
     settingsOpen: false,
-    stepNum: 0,
+    stepNum: 1,
     isCompleted: false,
     notifyMessage: null,
     nftForm: this.props.nftForm || {nftFor:'sale'},
+    originalNftForm: { ...(this.props.nftForm || {}) },
     pageTitle: 'Listing'
   } as ListingState
 
@@ -69,14 +72,14 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   /**
    * Fields for the nft form being edited
    */
-  get nftForm(): INFTData {
+  get nftForm(): INFT {
     return this.state.nftForm;
   }
 
   /**
    * NFT from the database
    */
-  get nft(): INFTData {
+  get nft(): INFT|undefined {
     return this.props.nftForm;
   }
 
@@ -99,9 +102,8 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     this.setState({ stepNum: 1 })
   }
 
-  onFormChange = (formName: Partial<INFTData>, formValue: any) => {
-    this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } })
-    console.log('main', this.nftForm, formName)
+  onFormChange = (formName: Partial<INFT>, formValue: any) => {
+    this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))
   }
 
   render() {
@@ -120,7 +122,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
                   <div >
                     {this.state.stepNum === ListingStep.assetForm ?
                       <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                      <NFTPricingForm nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
+                      <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
                     }
                   </div>
                 </div>
@@ -168,6 +170,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 }
 
+
 export async function getServerSideProps(context: any) {
   const { res, req } = context;
   const session = await Listing.getSession(context);
@@ -205,17 +208,17 @@ export async function getServerSideProps(context: any) {
         notFound: true
       }
     }
-    const nft = await NFT.create({ userId: uid });
 
     return {
-      redirect: {
-        destination: `/listing/${nft._id.toString()}/edit`,
-        permanent: false
+      props: {
+        session,
+        subpage: subpage||null,
+        canEdit: true
       }
     }
   }
 
-  let nft: INFTData;
+  let nft: INFT;
 
   let proj: any = {};
 

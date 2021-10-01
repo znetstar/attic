@@ -5,18 +5,26 @@ import SessionComponent, {
 } from "../common/_session-component";
 import * as React from 'react';
 import Typography from '@mui/material/Typography';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
 import {MarketplaceAppBar, SettingsButton} from "../common/_appbar";
 import EditProfile from "../common/_edit-profile";
-import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields} from "../common/_user";
+import {IPOJOUser, IUser, toUserPojo, User, userAcl, userPrivFields, userPubFields} from "../common/_user";
 import {MarketplaceAvatar} from "../common/_avatar";
 import Button from "@mui/material/Button";
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
 import {getUser} from "../api/auth/[...nextauth]";
+import {IListedNFT, INFT, toListedNFT} from "../common/_nft";
+import {TokenType} from "../common/_token";
+import NFTItemList from "../common/_nft-item-list";
 
 export type ProfileProps = SessionComponentProps&{
   marketplaceUser: IPOJOUser,
-  subpage: string|null
+  subpage: string|null,
+  collections: IListedNFT[];
+  listings: IListedNFT[];
 };
 
 /**
@@ -25,6 +33,7 @@ export type ProfileProps = SessionComponentProps&{
 export type ProfileState = SessionComponentState&{
   editProfileOpen: boolean;
   settingsOpen: boolean;
+  currentTab: number;
 };
 
 
@@ -32,8 +41,10 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   state = {
     editProfileOpen:  false,
     settingsOpen: false,
-    pageTitle: 'Profile'
+    pageTitle: 'Profile',
+    currentTab: 0
   } as ProfileState
+
 
 
   constructor(props: ProfileProps) {
@@ -59,7 +70,9 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                 <div className={"main"}>
                   <div>
                     <MarketplaceAvatar
-                      image={this.props.marketplaceUser.image}
+                      image={
+                        typeof(this.props.marketplaceUser.image) === 'string' ? Buffer.from(this.props.marketplaceUser.image, 'base64') : this.props.marketplaceUser.image
+                      }
                       imageFormat={this.enc.options.imageFormat}
                       allowUpload={false}
                     ></MarketplaceAvatar>
@@ -87,6 +100,30 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                     {this.props.marketplaceUser.bio ? <p className={"bio-box"}>{this.props.marketplaceUser.bio}</p> : null }
                   </div>
                 </div>
+                <div>
+                  <Box sx={{ width: '100%' }}>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                      <Tabs value={this.state.currentTab} onChange={(e, newValue) => {
+                        this.setState({ currentTab: Number(newValue) })
+                      }} aria-label="basic tabs example">
+                        <Tab value={0} label="Collections" />
+                        <Tab value={1} label="Listings" />
+                      </Tabs>
+                    </Box>
+                    <div role="tabpanel" hidden={this.state.currentTab !== 0}>
+                      <NFTItemList
+                        rpc={this.rpc}
+                        nfts={this.props.collections}
+                      ></NFTItemList>
+                    </div>
+                    <div hidden={this.state.currentTab !== 1}>
+                      <NFTItemList
+                        rpc={this.rpc}
+                        nfts={this.props.listings}
+                      ></NFTItemList>
+                    </div>
+                  </Box>
+                </div>
               </div>
             )
           ) : (
@@ -106,10 +143,12 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     }
   }
 }
+export type AggDelta = { user: IUser, listings: INFT[], collections: INFT[] };
 
 export async function getServerSideProps(context: any) {
   const {   res, req } = context;
   const session = await Profile.getSession(context);
+  let delta: AggDelta|undefined;
 
   let [ not_important, not_important2, id, subpage] = req.url.split('/');
   // If no id is provided
@@ -146,6 +185,8 @@ export async function getServerSideProps(context: any) {
   let user = session?.user?.marketplaceUser;
   let pojoUser: IPOJOUser;
 
+
+
   const fields = session && uid === session?.user?.marketplaceUser?._id.toString() ? userPrivFields : userPubFields;
   const proj: any = {};
 
@@ -156,8 +197,89 @@ export async function getServerSideProps(context: any) {
     proj[field] = 1;
   }
 
-  if (uid)
-    user = (await User.find({ _id: new ObjectId(uid) }, proj).limit(1).exec())[0];
+  if (uid) {
+    const agg = User.aggregate([
+      {
+        $match: {
+          _id: new ObjectId(uid)
+        }
+      },
+      {
+        $limit: 1
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            user: '$$ROOT'
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'tokens',
+          as: 'collections',
+          let: {
+            userId: '$user._id'
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [
+                        '$sellerId',
+                        '$$userId'
+                      ]
+                    },
+                    {
+                      $eq: [
+                        'tokenType',
+                        TokenType.nft
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'tokens',
+          as: 'listings',
+          let: {
+            userId: '$user._id'
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [
+                        '$userId',
+                        '$$userId'
+                      ]
+                    },
+                    {
+                      $eq: [
+                        'tokenType',
+                        TokenType.nft
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]);
+    delta = (await agg.exec() || [])[0] as AggDelta;
+    user = delta.user;
+  }
 
   if (!user) {
     return {
@@ -177,11 +299,12 @@ export async function getServerSideProps(context: any) {
     }
   }
 
-
   pojoUser = toUserPojo(user);
 
   return {
     props: {
+      collections: delta ? delta.collections.map((c: INFT) => toListedNFT(c)) : [],
+      listings: delta ? delta.listings.map((c: INFT) => toListedNFT(c)) : [],
       subpage: subpage || null,
       session,
       marketplaceUser: pojoUser

@@ -12,7 +12,7 @@ const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
-import {MarketplaceSession} from "../api/auth/[...nextauth]";
+import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 
 export enum UserRoles {
   nftAdmin = 'nftAdmin'
@@ -132,24 +132,23 @@ export const ToUserPojo = new ToPojo<ToUserParsable, IPOJOUser>();
  * Returns a POJO copy of the user object. This converts the image to a data URI
  * @param marketplaceUser
  */
-export function toUserPojo(marketplaceUser: ToUserParsable): IPOJOUser {
-  return ToUserPojo.toPojo(marketplaceUser, {
-    conversions: [
-      ...ToUserPojo.DEFAULT_TO_POJO_OPTIONS.conversions as any,
-      {
-        match: (item: Document<IUser>&IUser) => {
-          return !!item.image;
-        },
-        transform: (item: Document<IUser>&IUser) => {
-          const enc = makeEncoder();
+export function toUserPojo(user: ToUserParsable): IPOJOUser {
+  let marketplaceUser: any = user;
 
-          const mime = ImageFormatMimeTypes.get(enc.options.imageFormat as ImageFormat) as string;
-          return `data:${mime};base64,${Buffer.from(item.image as Buffer).toString('base64')}`
-        }
-      }
-    ],
-    ...ToUserPojo.DEFAULT_TO_POJO_OPTIONS
-  });
+  if (marketplaceUser.toObject) {
+    marketplaceUser = marketplaceUser.toObject();
+  }
+
+  marketplaceUser._id = marketplaceUser._id.toString();
+
+  const enc = makeEncoder();
+
+  const mime = ImageFormatMimeTypes.get(enc.options.imageFormat as ImageFormat) as string;
+  if ((marketplaceUser as any).image) {
+    const bufImg = Buffer.from(marketplaceUser.image.buffer as Buffer).toString('base64');
+    (marketplaceUser as any).image = bufImg;
+  }
+  return marketplaceUser;
 }
 
 export const userPubFields = [
@@ -202,10 +201,10 @@ export function userAcl(user?: IUser, session?: MarketplaceSession|null): Abilit
 export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}) {
   const acl = userAcl();
 
-  // for (const k in form) {
-  //   if (!acl.can('marketplace:createUser', 'User', k))
-  //     throw new HTTPError(403, `You don't have permission to create a user`);
-  // }
+  for (const k in form) {
+    // if (!acl.can('marketplace:createUser', 'User', k))
+    //   throw new HTTPError(403, `You do have permission to create a user`);
+  }
 
   try {
     const atticRpc = atticServiceRpcProxy();
@@ -223,7 +222,8 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
 
     return marketplaceUser._id.toString();
   } catch (err) {
-    throw new HTTPError(err?.httpCode || 500, (
+    throw new HTTPError((err as any)?.httpCode || 500, (
+      // @tsignore
       _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
     ));
   }
@@ -242,7 +242,7 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
   // additionalData has the raw req/res, in addition to the session
 
   // Get the user from the session object
-  const user: IUser = additionalData?.session?.user.marketplaceUser as IUser;
+  const user: IUser|undefined = additionalData?.session ? (await getUser(additionalData?.session) as MarketplaceSession).marketplaceUser as IUser : void(0);
   if (!user) throw new HTTPError(401);
   const acl = userAcl(user, additionalData?.session);
 
