@@ -6,7 +6,8 @@ import SessionComponent, {
 import * as React from 'react';
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {INFT, NFT, nftAcl, nftPubFields} from "../common/_nft";
+import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
+import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields, IUser} from "../common/_user";
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
@@ -21,7 +22,7 @@ export type ListingProps = SessionComponentProps&{
   nftForm?: INFT,
   subpage: string|null
   canEdit: boolean;
-
+  userList: []
 };
 
 export enum ListingStep {
@@ -46,6 +47,8 @@ export type ListingState = SessionComponentState&{
   isCompleted: boolean;
   notifyMessage: string|null;
   stepNum: ListingStep;
+  pageTitle: string;
+  usersList: IUser[];
 };
 
 
@@ -54,7 +57,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
    * Size of the nft image/thumbnail
    */
   imageSize = { width: 200 }
-  state = {
+  state: ListingState = {
     editListingOpen: false,
     settingsOpen: false,
     stepNum: 1,
@@ -62,12 +65,28 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     notifyMessage: null,
     nftForm: this.props.nftForm || {nftFor:'sale'},
     originalNftForm: { ...(this.props.nftForm || {}) },
-    pageTitle: 'Listing'
+    pageTitle: 'Listing',
+    usersList: []
   } as ListingState
 
 
   constructor(props: ListingProps) {
     super(props);
+  }
+
+  componentDidMount() {
+    if(this.props.session.user) {
+      this.getAllUsers()
+    }
+  }
+
+  getAllUsers = () => {
+    this.rpc['marketplace:getAllUsers']()
+      .then((res) => {
+        let users = [...this.state.usersList, ...res]
+        this.setState({ usersList: users })
+      })
+      .catch(this.handleError)
   }
 
   /**
@@ -123,7 +142,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
                   <div >
                     {this.state.stepNum === ListingStep.assetForm ?
                       <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                      <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
+                      <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
                     }
                   </div>
                 </div>

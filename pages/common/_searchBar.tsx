@@ -20,8 +20,9 @@ export class SearchBar extends PureComponent<SearchBarProps> {
   }
 
   componentDidUpdate (_prevProps: any, prevState: { selected: string; }) {
-    if(this.state.selected !== prevState.selected) {
-      this.props.onSelect(this.props.searchMenu.find(item => item.email === this.state.selected))
+    if(this.state.selected !== prevState.selected && this.props.searchMenu) {
+      let e = this.props.searchMenu.find(item => item.email === this.state.selected)
+      this.props.onSelect(e)
     }
   }
 
@@ -43,11 +44,11 @@ export class SearchBar extends PureComponent<SearchBarProps> {
       <input type='search' placeholder='Producer email' onChange={this.handleChange} value={this.state.selected ? this.state.selected : ''} />
       {this.state.showList ? (
       <div className='search_list'>
-          <ul>
-            {this.props.searchMenu.filter(item => item.email ? item.email.includes(this.state.selected) : '').map((item,idx) => (
-              <li key={idx} onClick={this.menuItemClick}>{item.email}</li>)
+          <div>
+            {this.props.searchMenu.filter(item => item.email ? item.email.toLowerCase().includes(this.state.selected.toLowerCase()) : '').map((item,idx) => (
+              <div key={idx} onClick={this.menuItemClick}>{item.email}</div>)
             )}
-        </ul>
+        </div>
       </div>
       ) : ''}  
       </div>

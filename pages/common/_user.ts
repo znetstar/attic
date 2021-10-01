@@ -1,6 +1,6 @@
 import mongoose from '../common/_database';
 import {Document, Model, Schema} from "mongoose";
-import {ToPojo} from "@thirdact/to-pojo";
+import {ToPojo, toPojo} from "@thirdact/to-pojo";
 import rpcServer, {atticServiceRpcProxy, exposeModel, MarketplaceClientRequest, RequestData} from "./_rpcServer";
 import {JSONPatch, JSONPatchOp, ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
@@ -183,6 +183,7 @@ export function userAcl(user?: IUser, session?: MarketplaceSession|null): Abilit
         _id: new ObjectId(user.id),
         public: true
       });
+      can('marketplace:getAllUser', 'User', userPubFields)
     }
   }
 
@@ -262,5 +263,24 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
   // Execute the request
   // @ts-ignore
   const resp = await simpleInterface.patch(...args);
+}
+
+export async function marketplaceGetAllUsers() {
+  try {
+    // Extract the session data
+  // @ts-ignore
+  const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+  const additionalData: RequestData = clientRequest.additionalData;
+
+  const findUsers = User.find();
+  const users = await findUsers.exec();
+
+    const pojo = toPojo(users);
+    return pojo;
+  } catch (err:any) {
+    throw new HTTPError(err?.httpCode || 500, (
+      _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
+    ));
+  }
 }
 
