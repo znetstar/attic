@@ -1,29 +1,32 @@
 import React, {PureComponent} from "react";
-import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment } from "@mui/material/";
+import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, FormLabel } from "@mui/material/";
 
 
 import {NextRouter, withRouter} from "next/router";
 
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
-import { INFT } from "../_ntf";
+import { INFT } from "../_nft";
+import { IUser } from "../_user";
+import {SearchBar} from "./../_searchBar"
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
 import {diff, jsonPatchPathConverter} from "just-diff";
 
-import {RoyaltyAdd, payee} from "./_royaltyAdd"
+import {RoyaltyAdd} from "./_royaltyAdd"
 
 type NftPricingProps = SessionComponentProps&{
   nftForm: INFT;
   onFormChange: Function;
   originalNftForm: INFT;
+  usersList: IUser[];
+  currUser: IUser;
 }
 
 type PricingState = SessionComponentState&{
   showScheduleInputs: boolean;
   scheduleDate: string;
   scheduleTime: string;
-  openMenu: boolean;
-  menuAnchor: HTMLElement | null,
-  royaltyList: [payee] | null
+  isUserSeller: string;
+  showSellerInput: boolean;
 }
 
 /**
@@ -39,9 +42,25 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     showScheduleInputs : false,
     scheduleDate: this.props.nftForm.listOn ? new Date(this.props.nftForm.listOn).toLocaleDateString() : '',
     scheduleTime: this.props.nftForm.listOn ? new Date(this.props.nftForm.listOn).toLocaleTimeString() : '',
-    openMenu: false,
-    menuAnchor: null,
-    royaltyList: null
+    isUserSeller: 'Yes',
+    showSellerInput: false
+  }
+
+  onSellerSet = (e) => {
+    this.setState({ isUserSeller: e.target.value },() => {
+      if (this.state.isUserSeller === 'No') {
+        this.setState({ showSellerInput: true })
+      } else {
+        this.setState({ showSellerInput: false }) 
+        this.props.onFormChange('sellerId', this.props.currUser.marketplaceUser._id)
+      }
+    })
+  }
+
+  setSeller = (user) => {
+    if (user && this.state.isUserSeller === 'No') {
+      this.props.onFormChange('sellerId', user._id)
+    }
   }
 
   scheduleDateTime = () => {
@@ -143,9 +162,22 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
                 <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}} />
               </FormControl>
             </div>
+            
+            <div>
+            <FormControl component="fieldset">
+              <FormLabel component="legend">Are you the Seller?</FormLabel>
+              <RadioGroup row aria-label="seller" name="seller-Selection" value={this.state.isUserSeller} onChange={this.onSellerSet}>
+                <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio />} label="No" />
+              </RadioGroup>
+              </FormControl>
+            </div>
+            
+            {this.state.showSellerInput ? (
+              <div><SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.setSeller(user)}/></div>
+            ) : ''}
 
-            <div></div>
-            <RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} />
+            <div><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
 
             <div>
             <FormControl className={'form-control'}>
@@ -166,13 +198,3 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
 }
 
 export default withRouter(NFTPricingForm)
-
-export const dummyUserList = [
-  {id: 1, firstName: 'Matt Nilson', wallet: 'asdf1234'},
-  {id: 2, firstName: 'John Howard', wallet: 'asdf1234'},
-  {id: 3, firstName: 'Alan Wagner', wallet: 'asdf1234'},
-  {id: 4, firstName: 'Eva Williams', wallet: 'asdf1234'},
-  {id: 5, firstName: 'Alice Starshak', wallet: 'asdf1234'},
-  {id: 6, firstName: 'Steven Dee', wallet: 'asdf1234'},
-  {id: 7, firstName: 'Louis Demetry', wallet: 'asdf1234'}
-]
