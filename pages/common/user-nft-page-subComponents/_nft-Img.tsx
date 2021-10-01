@@ -1,6 +1,5 @@
 import React, {ChangeEvent, PureComponent} from "react";
 import Avatar from "@mui/material/Avatar";
-import {SearchBar} from "./../_searchBar"
 import { INFT } from "../_nft";
 import styles from './../../../styles/user-nft-pages-subComponents-styles/nft-Img.module.css'
 
