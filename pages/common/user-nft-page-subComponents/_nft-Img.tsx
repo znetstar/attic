@@ -1,7 +1,7 @@
 import React, {ChangeEvent, PureComponent} from "react";
 import Avatar from "@mui/material/Avatar";
 import {SearchBar} from "./../_searchBar"
-import { INFT } from "../_ntf";
+import { INFT } from "../_nft";
 import styles from './../../../styles/user-nft-pages-subComponents-styles/nft-Img.module.css'
 
 type NftImgProps = {
@@ -50,6 +50,7 @@ export class NFTImg extends PureComponent<NftImgProps> {
 
   render() {
     const { nftForm } = this.props
+    let b = (nftForm.title || nftForm.priceStart || nftForm.listOn) ? '18px 18px 0 0' : '18px'
     return (
       <div>
         <div className={styles.nftImg_wrapper} onClick={() =>{
@@ -62,39 +63,32 @@ export class NFTImg extends PureComponent<NftImgProps> {
             <Avatar
               src={this.state.nftUrl}
               variant="square"
-              sx={{height: 200, width: '100%', borderRadius: '18px 18px 0 0'}} />
+              sx={{height: 200, width: '100%', borderRadius:b}} />
           </div>
 
+        {(nftForm.title || nftForm.priceStart || nftForm.listOn) ? (
           <div className={styles.footer}>
             <div className={styles.metaTitle}>{nftForm.title}</div>
             <div className={styles.metaData}>
-              <div>
-                <h3 className={styles.metah3}>Starting bid</h3>
-                <h2 className={styles.metah2}>{nftForm.priceStart}</h2>
-              </div>
-              <div>
-                <h3 className={styles.metah3}>Ends in</h3>
-                <h2 className={styles.metah2}>{nftForm.listOn}</h2>
-              </div>
+              {nftForm.priceStart ? (
+                <div>
+                  <h3 className={styles.metah3}>Starting bid</h3>
+                  <h2 className={styles.metah2}>{nftForm.priceStart}</h2>
+                </div>
+              ) : ''}
+              {nftForm.listOn ? (
+                <div>
+                  <h3 className={styles.metah3}>Ends in</h3>
+                  <h2 className={styles.metah2}>{nftForm.listOn}</h2>
+                </div>
+              ) : ''}
             </div>
           </div>
-
+        ) : ''}
         </div>
-        <div><SearchBar searchMenu={menuList} /></div>
       </div>
     )
   }
 }
 
 export default NFTImg
-
-export const menuList = [
-  {id: 1, email: 'Matt Nilson', wallet: 'asdf1234'},
-  {id: 2,  wallet: 'asdf1234'},
-  {id: 3, email: 'Alan Wagner', wallet: 'asdf1234'},
-  {id: 4, email: 'Eva Williams', wallet: 'asdf1234'},
-  {id: 5, email: 'Alice Starshak', wallet: 'asdf1234'},
-  {id: 6, email: 'Steven Dee', wallet: 'asdf1234'},
-  {id: 7, email: 'Louis Demetry', wallet: 'asdf1234'}
-]
-
