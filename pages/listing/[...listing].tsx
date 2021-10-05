@@ -64,7 +64,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   state: ListingState = {
     editListingOpen: false,
     settingsOpen: false,
-    stepNum: 1,
+    stepNum: 0,
     isCompleted: false,
     notifyMessage: null,
     nftForm: this.props.nftForm || {nftFor:'sale'},
