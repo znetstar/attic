@@ -14,6 +14,7 @@ export interface MarketplaceAPI {
   'marketplace:createUser': (user: unknown) => Promise<string>;
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<IListedNFT[]>;
   'marketplace:getAllUsers': () => Promise<IUser[]>;
+  // 'marketplace:getUserById': (id: unknown) =>Promise<IUser>;
   'marketplace:patchNFT': (id: unknown, patches: JSONPatchOp) => Promise<void>;
   'marketplace:createNFT': (nft: INFT) => Promise<string>;
 }

@@ -152,9 +152,6 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
               </div>
             )
           ) : (
-            // <EditProfile
-            //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
-            // ></EditProfile>
             <div>
               <div >
                 <div className={"main"}>

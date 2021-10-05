@@ -6,10 +6,9 @@ import SessionComponent, {
 import * as React from 'react';
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {getUser} from "../api/auth/[...nextauth]";
 import {NFTImg} from "../common/user-nft-page-subComponents/_nft-Img"
-import { INFTData } from "../common/_ntf-collection";
-
+import { INFTData, NFT } from "../common/_ntf-collection";
+import {toPojo} from "@thirdact/to-pojo";
 import styles from "./../../styles/auction.module.css"
 import { style } from "@mui/system";
 
@@ -38,10 +37,13 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
     this.setState({ optSelect: e.target.innerText })
   }
 
-  getUserById = async (id) => {
-    return (await getUser(id))?.marketplaceUser;
-    
-  }
+  // getUserById = (id) => {
+  //   this.rpc['marketplace:getUserById'](id)
+  //   .then((res) => {
+  //     console.log('response', res)
+  //   })
+  //   .catch(this.handleError)
+  // }
 
   jsxForOpt = (opt) => {
     let jsx = (<div></div>)
@@ -64,7 +66,7 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
         )
         break;
       case 'Ownership':
-        console.log(this.getUserById(this.props.nft.userId))
+        // this.getUserById(this.props.nft.userId)
         jsx = (
           <div>
 
@@ -72,18 +74,20 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
         )
         break;
       default:
+        this.setState({ optSelect: 'Information' })
         break;
-
     }
+    return jsx
   }
 
   render() {
+    console.log('aaa', this.props.nft)
     return (
       <div className={styles.auction_wrapper}>
         {this.makeAppBar(this.props.router, 'Auction Listing')}
-        {/* <NFTImg nftForm={this.props.nft} allowUpload={false} showFooter={false} /> */}
+        {this.props.nft.nftItem ? <NFTImg nftForm={this.props.nft} allowUpload={false} showFooter={false} /> : <NFTImg allowUpload={false} nftForm={{title: '', priceStart:0, listOn: ''}} />}
         <div className={styles.auction_nftHeader}>
-          {/* <h2>{this.props.nft.title}</h2> */}
+          <h2>{this.props.nft.title}</h2>
           <div className={styles.auction_headerSubSection}>
             <div className={styles.ownerMedia}>
               <div>@username</div>
@@ -97,6 +101,7 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
           <div className={styles.auction_opt} onClick={this.onOptSelect}>Activity</div>
           <div className={styles.auction_opt} onClick={this.onOptSelect}>Ownership</div>
         </div>
+        <div>{this.jsxForOpt(this.state.optSelect)}</div>
       </div>
     )
   }
@@ -116,22 +121,18 @@ export async function getServerSideProps(context: any) {
       }
     }
    }
-  // nft id provided
-  // else {
-  //   return {
-  //     redirect: {
-  //       destination: `/auction/${id}${ subpage ? '/'+subpage : '' }`,
-  //       permanent: false
-  //     }
-  //   }
-  // }
 
-  const user = (await getUser(session))?.marketplaceUser;
+  let nft: INFTData;
+
+  let proj: any = {};
+
+  nft = (await NFT.find({ _id: new ObjectId(id) }, proj).limit(1).exec())[0];
 
   return {
     props: {
       session,
-      subpage: subpage||null
+      subpage: subpage||null,
+      nft: toPojo(nft)
     }
   }
 }
