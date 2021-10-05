@@ -7,7 +7,6 @@ import {SearchBar} from "./../_searchBar"
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-royaltyAdd.module.css";
 
 export type payee = {
-  _id: string;
   owedTo: string;
   percent: number;
 }
@@ -76,11 +75,12 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       }
     }
       this.setState({ showAdd: true })
+      console.log(this.state.payee)
   }
 
   addCoOwner = e => {
     e.preventDefault()
-    let payee = this.state.payee.concat([{_id: '', owedTo: '', percent: 0}])
+    let payee = this.state.payee.concat([{owedTo: '', percent: 0}])
     this.setState({ payee: payee, showAdd: false })
   }
 
