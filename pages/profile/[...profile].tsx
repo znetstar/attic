@@ -19,6 +19,7 @@ import {getUser} from "../api/auth/[...nextauth]";
 import {IListedNFT, INFT, toListedNFT} from "../common/_nft";
 import {TokenType} from "../common/_token";
 import NFTItemList from "../common/_nft-item-list";
+import {nftImg} from "./../common/user-nft-page-subComponents/_nft-Img";
 
 export type ProfileProps = SessionComponentProps&{
   marketplaceUser: IPOJOUser,
@@ -34,6 +35,7 @@ export type ProfileState = SessionComponentState&{
   editProfileOpen: boolean;
   settingsOpen: boolean;
   currentTab: number;
+  nftCollections: INFT;
 };
 
 
