@@ -511,44 +511,86 @@ TokenSchema.methods.cryptoBurnToken = async function (
   }, true);
 }
 
-async function onChargeSuccess(job: Job): Promise<void> {
-  try {
-    const {id} = job.data;
+async function burnFromCharge(charge: Stripe.PaymentIntent, amount?: number): Promise<void> {
 
-    const event = await stripe.events.retrieve(id);
-    const charge: any = event.data.object;
-    const symbol: string | undefined = charge.metadata['crypto:symbol'];
-    if (symbol && charge.status === 'succeeded') {
-      const [token, customer]: [IToken & Document | null, any] = await Promise.all([
-        Token.findOne({
-          symbol
-        }),
-        (
-          async () => {
-            if (charge.customer) {
-              return stripe.customers.retrieve(charge.customer);
-            }
-            return null;
+  const symbol: string | undefined = charge.metadata['crypto:symbol'];
+  if (symbol && charge.status === 'succeeded') {
+    const [token, customer]: [IToken & Document | null, any] = await Promise.all([
+      Token.findOne({
+        symbol
+      }),
+      (
+        async () => {
+          if (charge.customer) {
+            return stripe.customers.retrieve(charge.customer as string);
           }
-        )()
-      ])
-
-      if (!token)
-        throw new SymbolNotFoundError(symbol);
-
-      if (token.name === 'marketplaceToken') {
-        await token.cryptoMintToken(
-          charge.amount
-        );
-
-        if (customer) {
-          // Send crypto to wallet
+          return null;
         }
+      )()
+    ])
+
+    if (!token)
+      throw new SymbolNotFoundError(symbol);
+
+
+    if (customer) {
+      // Move crypto from wallet
+    }
+
+    if (token.name === 'marketplaceToken') {
+      await token.cryptoBurnToken(
+        typeof(amount) === 'undefined' ? charge.amount : amount
+      );
+    }
+  }
+}
+
+async function onChargeRefunded(job: Job): Promise<void> {
+  const {id} = job.data;
+
+  const event = await stripe.events.retrieve(id);
+  const refund: any = event.data.object;
+
+  const charge = await stripe.paymentIntents.retrieve(refund.payment_intent);
+  await burnFromCharge(charge, refund.amount);
+}
+
+async function onChargeSuccess(job: Job): Promise<void> {
+  const {id} = job.data;
+
+  const event = await stripe.events.retrieve(id);
+  const charge: any = event.data.object;
+  const symbol: string | undefined = charge.metadata['crypto:symbol'];
+  if (symbol && charge.status === 'succeeded') {
+    const [token, customer]: [IToken & Document | null, any] = await Promise.all([
+      Token.findOne({
+        symbol
+      }),
+      (
+        async () => {
+          if (charge.customer) {
+            return stripe.customers.retrieve(charge.customer);
+          }
+          return null;
+        }
+      )()
+    ])
+
+    if (!token)
+      throw new SymbolNotFoundError(symbol);
+
+    if (token.name === 'marketplaceToken') {
+      await token.cryptoMintToken(
+        charge.amount
+      );
+
+      if (customer) {
+        // Send crypto to wallet
+
       }
     }
-  } catch (err) {
-    throw err;
   }
+
 }
 
 
@@ -601,6 +643,10 @@ export async function initMarketplace() {
 
 export function createTokenWorker() {
   (global as any).stripeTokenWorker = (global as any).stripeTokenWorker || new Worker(`stripe:payment_intent.succeeded`, onChargeSuccess,  {
+    // @ts-ignore
+    connection: CryptoQueue.createConnection('crypto:token:general')
+  });
+  (global as any).stripeTokenRefundWorker = (global as any).stripeTokenRefundWorker || new Worker(`stripe:charge.refunded`, onChargeRefunded,  {
     // @ts-ignore
     connection: CryptoQueue.createConnection('crypto:token:general')
   });

@@ -1,16 +1,39 @@
 import {GenericError} from '@znetstar/attic-common/lib/Error/GenericError'
 import {IApplicationContext as IApplicationContextBase, IConfig, IPlugin} from "@znetstar/attic-common/lib/Server";
 import { default as IRPCBase } from '@znetstar/attic-common/lib/IRPC';
-import {Db, MongoClient} from "mongodb";
+import {Db, MongoClient, ObjectId} from "mongodb";
 const {
   emperors
 } = require('@dailynodemodule/emperor-data/src/index');
+const {
+  AccountId,
+  PrivateKey
+} = require('@hashgraph/sdk');
 import * as _ from 'lodash';
 import {CouldNotLocateUserError} from "@znetstar/attic-common/lib/Error";
+import {BinaryEncoding, BinaryInputOutput} from "@etomon/encode-tools/lib/IEncodeTools";
+import {EncodeToolsAuto} from "@etomon/encode-tools";
 
 export type IApplicationContext = IApplicationContextBase&{
   marketplaceMongo:MongoClient,
   marketplaceDb: Db
+}
+
+export type IMarketplaceCryptoKeyPair = {
+  publicKey?: BinaryInputOutput,
+  privateKey: BinaryInputOutput,
+  _id: string;
+  encrypted?: boolean;
+}
+
+export interface IMarketplaceCryptoAccount {
+  _id: string;
+  name: string;
+  keyPair: IMarketplaceCryptoKeyPair;
+  accountId: BinaryInputOutput;
+  networkName: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 
@@ -21,6 +44,7 @@ export type IRPC = IRPCBase&{
     name: string,
     image: string
   }>;
+  marketplaceCryptoGetCryptoAccount(q: any, hederaFormat?: boolean, pipeline?: any[]): Promise<IMarketplaceCryptoAccount[]>;
 };
 
 class MarketplaceCouldNotLocateUserError extends CouldNotLocateUserError {
@@ -72,6 +96,62 @@ export class MarketplaceTesting implements IPlugin {
         for (let col of cols) {
           await db.dropCollection(col.name);
         }
+      }
+
+      rpcMethods.marketplaceCryptoGetCryptoAccount = async function (q: any = {}, hederaFormat?: boolean, pipeline?: any[]): Promise<IMarketplaceCryptoAccount[]> {
+        if (q._id) q._id = new ObjectId(q._id);
+
+        const accounts = (await db.collection('cryptoaccounts')
+          .aggregate([
+            {
+              $match: q as any
+            },
+            {
+              $lookup: {
+                from: 'keypairs',
+                let: {
+                  id: '$keyPair'
+                },
+                as: 'keyPair',
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          '$_id',
+                          '$$id'
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              $addFields: {
+                keyPair: {
+                  $arrayElemAt: [ '$keyPair', 0 ]
+                }
+              }
+            },
+            ...(pipeline || []),
+          ]).toArray())
+          .map((account: any) => {
+            if (account && hederaFormat) {
+              account.accountId = AccountId.fromBytes(Buffer.from(account.accountId.buffer)).toString();
+              if (account.keyPair) {
+                const pk = PrivateKey.fromBytes(Buffer.from(account.keyPair.privateKey.buffer));
+                account.keyPair.privateKey = pk.toString();
+                account.keyPair.publicKey = pk.publicKey.toString();
+              }
+            }
+
+            return account;
+          })
+
+
+
+        return accounts;
       }
     }
 

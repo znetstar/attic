@@ -19,7 +19,8 @@ module.exports = {
         'bson-ext': 'commonjs bson-ext',
         'shelljs': 'commonjs shelljs',
         'lzma-native': 'commonjs lzma-native',
-        'sharp': 'commonjs sharp'
+        'sharp': 'commonjs sharp',
+        'magiccrypt': 'commonjs magiccrypt'
       }
       config.plugins = [
         ...config.plugins,
