@@ -135,6 +135,10 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))
   }
 
+  mintNft = () => {
+    console.log(this.state.orignalNftForm)
+  }
+
   render() {
     return (<div className={"page createNFT"}>
       {this.errorDialog}
@@ -143,9 +147,9 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
         { 
           this.confirmOpen ? (
             <div className='confirm_wrapper'>
-              {console.log(this.state.originalNftForm,'ppp')}
-              <div><NFTImg allowUpload={false} nftForm={this.state.originalNftForm} /></div>
-              <div>{this.state.originalNftForm.description}</div>
+              <div><NFTImg allowUpload={false} nftForm={this.state.orignalNftForm} /></div>
+              <div>{this.state.orignalNftForm.description}</div>
+              <div><Button variant="contained" onClick={this.mintNft} >Create NFT</Button></div>
             </div>
           ) : (
             this.editListingOpen ? (

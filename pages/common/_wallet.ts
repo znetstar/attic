@@ -25,6 +25,6 @@ export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
   percent: {
     type: Number,
     required: true,
-    validate: (x: unknown) => typeof(x) === 'number' && !Number.isNaN(x) && (x >= 0 || x <= 1)
+    validate: (x: unknown) => typeof(x) === 'number' && !Number.isNaN(x) && (x >= 0 || x <= 100)
   }
 }));
