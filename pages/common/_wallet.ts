@@ -1,7 +1,7 @@
 import {ObjectId} from "mongodb";
 import {Schema} from "mongoose";
 import mongoose from "./_database";
-import {INFT} from "./_ntf-collection";
+import {INFT} from "./_nft";
 
 export  interface IDestination {
   userId: ObjectId|string;

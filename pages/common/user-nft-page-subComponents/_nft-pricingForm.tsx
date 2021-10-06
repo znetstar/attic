@@ -97,7 +97,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any)
         .then((res) => {
           this.handleError('NFT created', 'success')
-          // this.props.router.push('/profile')
+          this.props.router.push(`/listing/${this.props.originalNftForm._id}/confirm`)
         })
         .catch(this.handleError)
     } else {
