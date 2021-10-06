@@ -10,7 +10,8 @@ import {NFTImg} from "../common/user-nft-page-subComponents/_nft-Img"
 import { INFTData, NFT } from "../common/_ntf-collection";
 import {toPojo} from "@thirdact/to-pojo";
 import styles from "./../../styles/auction.module.css"
-import { style } from "@mui/system";
+
+import {IUser} from "./../common/_user"
 
 export type AuctionProps = SessionComponentProps&{
   nft: INFTData
@@ -21,6 +22,8 @@ export type AuctionProps = SessionComponentProps&{
  */
 type AuctionState = SessionComponentState&{
   optSelect: string;
+  owner: IUser|unknown;
+  payee: IUser[]
 };
 
 export class Auction extends SessionComponent<AuctionProps, AuctionState> {
@@ -30,20 +33,28 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
   }
 
   state: AuctionState = {
-    optSelect : 'Information'
+    optSelect : 'Information',
+    owner: {},
+    payee: []
   }
+
+  componentDidMount() {
+    if(this.props.nft.userId) {
+      this.getUserById(this.props.nft.userId, (res) => this.setState({ owner: res }))
+    }
+    }
 
   onOptSelect = (e) => {
     this.setState({ optSelect: e.target.innerText })
   }
 
-  // getUserById = (id) => {
-  //   this.rpc['marketplace:getUserById'](id)
-  //   .then((res) => {
-  //     console.log('response', res)
-  //   })
-  //   .catch(this.handleError)
-  // }
+  getUserById = (id, setInState) => {
+    this.rpc['marketplace:getUserById'](id)
+    .then((res) => {
+      setInState(res)
+    })
+    .catch(this.handleError)
+  }
 
   jsxForOpt = (opt) => {
     let jsx = (<div></div>)
@@ -66,10 +77,15 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
         )
         break;
       case 'Ownership':
-        // this.getUserById(this.props.nft.userId)
         jsx = (
           <div>
-
+            <div className={styles.owner_wrapper}>
+              <div className={styles.owner_avatar}></div>
+              <div className={styles.owner_data}>
+                <div>{this.state.owner ? 'Owned by @' + this.state.owner.email.split('@')[0] : ''}</div>
+                <div></div>
+              </div>
+            </div>
           </div>
         )
         break;
@@ -81,7 +97,6 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
   }
 
   render() {
-    console.log('aaa', this.props.nft)
     return (
       <div className={styles.auction_wrapper}>
         {this.makeAppBar(this.props.router, 'Auction Listing')}

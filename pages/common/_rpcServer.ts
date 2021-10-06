@@ -169,7 +169,7 @@ const authorizedMethods = [
   'marketplace:deleteNFT',
   'marketplace:getNFT',
   'marketplace:getAllUsers',
-  // 'marketplace:getUserById'
+  'marketplace:getUserById'
 ]
 
 /**
@@ -244,6 +244,6 @@ export function exposeModel(modelName: string, simpleInterface: any) {
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
 (rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
 (rpcServer as any).methodHost.set('marketplace:getAllUsers', marketplaceGetAllUsers);
-// (rpcServer as any).methodHost.set('marketplace:getUserById', marketplaceGetUserById);
+(rpcServer as any).methodHost.set('marketplace:getUserById', marketplaceGetUserById);
 
 export default rpcServer;
