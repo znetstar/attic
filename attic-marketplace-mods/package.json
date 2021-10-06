@@ -26,6 +26,7 @@
         "@dailynodemodule/emperor-data": "^3.0.0",
         "@etomon/encode-tools": "^2.3.2",
         "@etomon/wiki-dummy-data": "^1.0.4",
+        "@hashgraph/sdk": "^2.0.13",
         "@types/body-parser": "^1.19.1",
         "body-parser": "^1.19.0",
         "express": "^4.17.1",
