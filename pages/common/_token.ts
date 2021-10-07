@@ -552,10 +552,9 @@ async function onChargeSuccess(job: Job): Promise<void> {
 }
 
 
-export async function initMarketplace() {
+export async function initMarketplace(): Promise<{ token: IToken, treasury: ICryptoAccount }> {
   if ((global as any).marketInitDone)
-    return;
-  (global as any).marketInitDone = true;
+    return (global as any).marketInitDone;
   try {
     let treasuryAccount: ICryptoAccount & Document | null = await CryptoAccount.findOne({
       name: 'marketplaceTreasury'
@@ -590,6 +589,12 @@ export async function initMarketplace() {
     }
     await marketplaceToken.cryptoCreateToken(0);
     createTokenWorker();
+
+    (global as any).marketInitDone = {
+      token: marketplaceToken,
+      treasury: treasuryAccount
+    };
+    return (global as any).marketInitDone;
   }
   catch (err) {
     throw err;
