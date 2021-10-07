@@ -1,20 +1,21 @@
 import SessionComponent, {
   SessionComponentProps,
-  SessionComponentState, SubcomponentPropsWithRouter
+  SessionComponentState,
+  SubcomponentPropsWithRouter
 } from "../common/_session-component";
 import * as React from 'react';
-import {MarketplaceAppBar, SettingsButton} from "../common/_appbar";
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
+import {INFT, NFT, nftAcl, nftPubFields} from "../common/_nft";
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
-import {HTTPError} from "../common/_rpcCommon";
 import {toPojo} from "@thirdact/to-pojo";
 import {getUser} from "../api/auth/[...nextauth]";
 import Button from "@mui/material/Button";
 import {UserRoles} from "../common/_user";
+import EncodeTools, {BinaryEncoding, IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {initMarketplace, TokenSupplyType, TokenType} from "../common/_token";
 
 export type ListingProps = SessionComponentProps&{
   nftForm?: INFT,
@@ -209,11 +210,23 @@ export async function getServerSideProps(context: any) {
       }
     }
 
+    const { treasury } = await initMarketplace();
+
+    const symName = EncodeTools.WithDefaults.encodeBuffer(EncodeTools.WithDefaults.uniqueId(IDFormat.uuidv1), BinaryEncoding.base32).toLowerCase().substr(0, 100);
+    const nft = await NFT.create({
+      userId: uid,
+      symbol: symName,
+      name: symName,
+      treasury,
+      supplyType: TokenSupplyType.finite,
+      tokenType: TokenType.nft,
+      sellerId: uid
+    });
+
     return {
-      props: {
-        session,
-        subpage: subpage||null,
-        canEdit: true
+      redirect: {
+        destination: `/listing/${nft._id.toString()}/edit`,
+        permanent: false
       }
     }
   }
@@ -236,8 +249,8 @@ export async function getServerSideProps(context: any) {
 
   const acl = await nftAcl({ session, nft });
 
-  for (const field in nft) {
-    if (!acl.can('marketplace:getNFT', nft, field)) {
+  for (const field in (nft as any)._doc) {
+    if (!acl.can('marketplace:getNFT', "NFT", field)) {
       return {
         notFound: true
       }
