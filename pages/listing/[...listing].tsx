@@ -128,7 +128,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
    * over rpc.
    */
   updateAssetForm = () => {
-    this.setState({ stepNum: 1 })
+    this.setState({ stepNum: 0 })
   }
 
   onFormChange = (formName: Partial<INFT>, formValue: any) => {
@@ -136,7 +136,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   mintNft = () => {
-    console.log(this.state.orignalNftForm)
+    console.log(this.state.originalNftForm)
   }
 
   render() {
@@ -147,8 +147,8 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
         { 
           this.confirmOpen ? (
             <div className='confirm_wrapper'>
-              <div><NFTImg allowUpload={false} nftForm={this.state.orignalNftForm} /></div>
-              <div>{this.state.orignalNftForm.description}</div>
+              <div><NFTImg allowUpload={false} nftForm={this.state.originalNftForm} /></div>
+              <div>{this.state.originalNftForm.description}</div>
               <div><Button variant="contained" onClick={this.mintNft} >Create NFT</Button></div>
             </div>
           ) : (
@@ -173,6 +173,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
               //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
               // ></EditProfile>
               <div>
+                {console.log(this.nftForm)}
                 <div >
                   <div className={"main"}>
                     <div>
@@ -240,7 +241,7 @@ export async function getServerSideProps(context: any) {
   }
   // If id is self but is logged in attempt to create a listing
   else if (id === 'new') {
-    // const acl = await nftAcl({ session });
+    const acl = await nftAcl({ session });
 
     if (/*!acl.can('marketplace:createNFT', 'NFT')*/
       !user?.roles || !user?.roles?.includes(UserRoles.nftAdmin)
