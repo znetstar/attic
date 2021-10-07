@@ -71,7 +71,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     originalNftForm: { ...(this.props.nftForm || {}) },
     pageTitle: 'Listing',
     usersList: []
-  }
+  } as ListingState
 
   constructor(props: ListingProps) {
     super(props);
