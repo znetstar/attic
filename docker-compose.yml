@@ -50,6 +50,7 @@ services:
     command: "redis-server --dir /data/redis_mq --appendonly yes --maxmemory 512mb --maxmemory-policy noeviction"
     ports:
       - "127.0.0.1:8204:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_mq:/data/redis_mq
 volumes:
