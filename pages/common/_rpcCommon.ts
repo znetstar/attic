@@ -5,6 +5,7 @@ import {
 } from "@thirdact/simple-mongoose-interface";
 import {IUser} from "./_user";
 import {IListedNFT, INFT} from "./_nft";
+import {IPOJOWallet} from "./_wallet";
 
 /**
  * RPC API exposed by the server
@@ -16,6 +17,8 @@ export interface MarketplaceAPI {
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<IListedNFT[]>;
   'marketplace:patchNFT': (id: unknown, patches: JSONPatchOp) => Promise<void>;
   'marketplace:createNFT': (nft: INFT) => Promise<string>;
+
+  'marketplace:getWallet': (userId?: string) => Promise<IPOJOWallet>;
 }
 
 /**

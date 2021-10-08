@@ -30,6 +30,7 @@ import {LRUMap} from 'lru_map';
 import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
 
 import {marketplaceCreateUser, marketplacePatchUser} from "./_user";
+import {marketplaceGetWallet, toWalletPojo} from './_wallet';
 import {getWebhookSecret} from "./_stripe";
 
 export type RequestData = {
@@ -168,7 +169,8 @@ const authorizedMethods = [
   'marketplace:createNFT',
   'marketplace:patchNFT',
   'marketplace:deleteNFT',
-  'marketplace:getNFT'
+  'marketplace:getNFT',
+  'marketplace:getWallet'
 ]
 
 /**
@@ -242,5 +244,15 @@ export function exposeModel(modelName: string, simpleInterface: any) {
 (rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
 (rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
+(rpcServer as any).methodHost.set('marketplace:getWallet', async function (...args: any[]): Promise<unknown> {
+  // Extract the session data
+  // @ts-ignore
+  const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+  const additionalData: RequestData = clientRequest.additionalData;
+
+  // additionalData has the raw req/res, in addition to the session
+  const {wallet} = await marketplaceGetWallet(additionalData.session, ...args);
+  return wallet ? toWalletPojo(wallet) : null;
+});
 
 export default rpcServer;

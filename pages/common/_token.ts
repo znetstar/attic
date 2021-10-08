@@ -4,9 +4,9 @@ import {INFT} from "./_nft";
 import {Document, Schema} from "mongoose";
 import {generateCryptoKeyPair, IKeyPair, KeyNotFoundError, KeyPair, KeyPairSchema} from "./_keyPair";
 import {
-  AccountCouldNotBeCreated,
+  AccountCouldNotBeCreated, CannotCreateCryptoAccountForExternalAccountError,
   createCryptoAccount,
-  CryptoAccount,
+  CryptoAccount, ensureAccount,
   getCryptoAccountByKeyName,
   ICryptoAccount
 } from "./_account";
@@ -27,9 +27,12 @@ import {
   Hbar,
   PrivateKey, TokenBurnTransaction,
   TokenCreateTransaction, TokenId,
+  TransactionId,
   TokenMintTransaction,
   TransactionReceipt,
-  TokenDeleteTransaction
+  TokenDeleteTransaction,
+
+  TransferTransaction, AccountId, Transaction
 } from '@hashgraph/sdk';
 import CryptoQueue, {CryptoError} from "./_cryptoQueue";
 import {HTTPError} from "./_rpcCommon";
@@ -37,6 +40,9 @@ import {bullRedis} from "./_bull";
 import stripe from "./_stripe";
 import {Stripe} from "stripe";
 import {makeInternalCryptoEncoder} from "./_encoder";
+import {NetworkName} from "@hashgraph/sdk/lib/client/Client";
+import {IUser, User} from "./_user";
+import NodeClient from "@hashgraph/sdk/lib/client/NodeClient";
 
 export enum TokenType {
   token = 'FUNGIBLE_COMMON',
@@ -66,7 +72,8 @@ export type IToken = {
 
   cryptoCreateToken(initalSupply: number, extraFields?: { [name: string]: unknown }): Promise<Buffer>;
   cryptoMintToken(amount: number, metadatas?: Buffer[]): Promise<void>
-  cryptoBurnToken(amount: number): Promise<void>
+  cryptoBurnToken(amount: number): Promise<void>;
+  cryptoTransferFungible(executingAccountId: ObjectId|string, lines: Map<{ to: Buffer, from?: Buffer }, number>): Promise<TransactionReceipt>
 }&(
   {
     supplyType: TokenSupplyType.infinite
@@ -203,6 +210,11 @@ export class CannotInteractWithTokenNotCreatedError extends HTTPError {
 export class MissingKeyError extends HTTPError {
   constructor(id: string|ObjectId, key: string) {
     super(400, `Token ${id.toString()} is missing ${key} key, so cannot perform this operation`)
+  }
+}
+export class WrongTokenTypeError extends HTTPError {
+  constructor() {
+    super(400, `The requested operation cannot take place on a token of this typee`)
   }
 }
 
@@ -419,6 +431,159 @@ TokenSchema.methods.cryptoMintToken = async function (
   }, true);
 }
 
+export class CannotBurnTokenBecauseCannotTransferError extends HTTPError {
+  constructor(){
+    super(500, 'Could not access the crypto account provided, so could not transfer token amount back to treasury, so cannot burn')
+  }
+}
+
+/**
+ *
+ * @param rawLines
+ * @param feePayer
+ */
+TokenSchema.methods.cryptoTransferFungible = async function (
+  executingAccountId: ObjectId|string,
+  lines: Map<{ to: Buffer, from?: Buffer }, number>
+): Promise<TransactionReceipt> {
+  // @ts-ignore
+  let token: IToken&Document = this;
+
+  if (!token.tokenId) throw new CannotInteractWithTokenNotCreatedError(token._id);
+  if (token.tokenType !== TokenType.token) {
+    throw new WrongTokenTypeError();
+  }
+
+  const queue = CryptoQueue.createCryptoQueue(
+    'crypto:transferFungible',
+    async (job: Job) => {
+      let  {
+        executingAccountId,
+        rawLines,
+        tokenId
+      }: {
+        executingAccountId: string,
+        rawLines: [{ to: Buffer, from?: Buffer }, number][],
+        tokenId: string
+      } = job.data;
+
+      const [ executingAccount, token ]: [ ICryptoAccount&Document, IToken&Document ] = await Promise.all([
+        CryptoAccount.findById(executingAccountId).exec() as any as Promise<ICryptoAccount&Document>,
+        Token.findById(tokenId).exec() as any as Promise<IToken&Document>
+      ]);
+
+
+      let treasury: ICryptoAccount&Document|undefined;
+      const getTreasury = (async () => {
+        if (treasury) return treasury;
+        // @ts-ignore
+        await token.populate('treasury').execPopulate();
+        treasury = token.treasury as ICryptoAccount&Document;
+
+        return treasury;
+      });
+
+      const feePayer: ICryptoAccount&Document = await getCryptoAccountByKeyName('cryptoMaster');
+
+      const lines = new Map<{ to: ICryptoAccount&Document, from: ICryptoAccount&Document }, number>(await Promise.all<[ { to: ICryptoAccount&Document, from: ICryptoAccount&Document }, number ]>(
+        Array.from(rawLines).map(async ([ accountId, amount ]) => {
+          const[ to, from ] = await Promise.all([
+            ensureAccount(accountId.to, feePayer.networkName),
+            accountId.from ? ensureAccount(accountId.from, feePayer.networkName) : getTreasury()
+          ])
+          return [
+            { to, from },
+            amount
+          ]
+        })
+      ));
+
+      // Now we can transfer the tokens
+      let transaction = new TransferTransaction();
+      let fromAccounts: Set<{ account: ICryptoAccount&Document, client?: NodeClient }> = new Set<{ account: ICryptoAccount&Document, client?: NodeClient }>(
+        await Promise.all<{ account: ICryptoAccount&Document, client?: NodeClient }>(
+          Array.from((
+            new Map<string, ICryptoAccount&Document>(
+              Array.from(lines.keys()).map((k) => [ k.from._id.toString(), k.from ])
+            )
+          ).values()).map(async (from) => ({ account: from /**, client: await from.createClient()**/ }))
+        )
+      );
+
+      const refreshAccounts = new Set<string>();
+      for (let [{ to, from }, amount ] of Array.from(lines.entries())) {
+        refreshAccounts.add(to._id.toString());
+        refreshAccounts.add(from._id.toString());
+        transaction
+          .addTokenTransfer(
+            TokenId.fromBytes(token.tokenId as Buffer),
+            AccountId.fromBytes(from.accountId),
+            (amount * -1)
+          )
+          .addTokenTransfer(
+            TokenId.fromBytes(token.tokenId as Buffer),
+            AccountId.fromBytes(to.accountId),
+            (amount * 1)
+          );
+      }
+      if (!feePayer.keyPair)
+        throw new CannotCreateCryptoAccountForExternalAccountError();
+
+      const [feeClient,executingClient]: [ NodeClient, NodeClient ] = await Promise.all([
+        feePayer.createClient(),
+        executingAccount.createClient()
+      ]);
+
+      const transBytes = (await transaction.freezeWith(feeClient)
+        .sign(await feePayer.keyPair.toCryptoValue())).toBytes();
+
+      let finalTrans: Transaction = Transaction.fromBytes(transBytes)
+      await finalTrans.freezeWith(executingClient);
+
+      for (let { account, client } of Array.from(fromAccounts.values())) {
+        if (!account.keyPair)
+          throw new CannotCreateCryptoAccountForExternalAccountError();
+
+        finalTrans = await finalTrans
+          .sign(await account.keyPair.toCryptoValue())
+      }
+
+      job.data.refreshAccounts = Array.from(refreshAccounts.values());
+
+     const resp = await finalTrans.execute(executingClient);
+      return resp.transactionId;
+    },
+    async (job: Job, getReceipt: TransactionReceipt) => {
+      let  {
+        executingAccountId,
+        rawLines,
+        tokenId,
+        refreshAccounts
+      }: {
+        executingAccountId: string,
+        rawLines: [{ to: Buffer, from?: Buffer }, number][],
+        tokenId: string,
+        refreshAccounts: string[]
+      } = job.data;
+
+      await Promise.all(
+        refreshAccounts.map(async (id) => {
+          const account = await CryptoAccount.findById(id) as ICryptoAccount&Document;
+          await account.loadBalance();
+        })
+      );
+      return Buffer.from(getReceipt.toBytes())
+    }
+  );
+
+
+  const job = await queue.addJob('beforeConfirm', {
+    executingAccountId,
+    rawLines: lines
+  }, true);
+
+  return TransactionReceipt.fromBytes(job.returnvalue);
+}
 
 TokenSchema.methods.cryptoBurnToken = async function (
   amount: number,
@@ -533,8 +698,29 @@ async function burnFromCharge(charge: Stripe.PaymentIntent, amount?: number): Pr
       throw new SymbolNotFoundError(symbol);
 
 
-    if (customer) {
-      // Move crypto from wallet
+    if (customer && customer.metadata['marketplace:user']) {
+      // Find the checking account
+      const userId = new ObjectId(customer.metadata['marketplace:user']);
+      let [user, cryptoAccount]: [(IUser & Document) | null, (ICryptoAccount & Document) | null] = await Promise.all([
+        User.findById(userId),
+        CryptoAccount.findOne({
+          user: userId,
+          name: 'checking'
+        })
+      ]);
+
+      if (!user || !cryptoAccount) {
+        throw new CannotBurnTokenBecauseCannotTransferError();
+      }
+
+      await token.cryptoTransferFungible(
+        cryptoAccount._id.toString(),
+        new Map<{ to: Buffer, from: Buffer }, number>(
+          [
+            [ { from: cryptoAccount.accountId, to: token.treasury.accountId }, typeof(amount) === 'undefined' ? charge.amount : amount ]
+          ]
+        )
+      );
     }
 
     if (token.name === 'marketplaceToken') {
@@ -564,8 +750,11 @@ async function onChargeSuccess(job: Job): Promise<void> {
   if (symbol && charge.status === 'succeeded') {
     const [token, customer]: [IToken & Document | null, any] = await Promise.all([
       Token.findOne({
-        symbol
-      }),
+        symbol,
+        tokenId: {
+          $exists: true
+        }
+      }).populate('treasury'),
       (
         async () => {
           if (charge.customer) {
@@ -584,13 +773,48 @@ async function onChargeSuccess(job: Job): Promise<void> {
         charge.amount
       );
 
-      if (customer) {
-        // Send crypto to wallet
+      if (customer && customer.metadata['marketplace:user']) {
+        // Find the checking account
+        const userId = new ObjectId(customer.metadata['marketplace:user']);
+        let [ user, cryptoAccount ]: [ (IUser&Document)|null, (ICryptoAccount&Document)|null ] = await Promise.all([
+          User.findById(userId),
+          CryptoAccount.findOne({
+            user: userId,
+            name: 'checking'
+          })
+        ]);
 
+        // If the user wasn't found, we should refund the transaction (which will burn the token)
+        if (!user) {
+          await stripe.refunds.create({
+            amount: charge.amount,
+            payment_intent: charge.id
+          });
+
+          return;
+        }
+        // If no account was  found, create the account
+        if (!cryptoAccount) {
+          cryptoAccount = await createCryptoAccount(
+            1000,
+            {
+              name: 'checking',
+              userId: userId
+            }
+          )
+        }
+
+        await token.cryptoTransferFungible(
+          token.treasury._id.toString(),
+          new Map<{ to: Buffer, from: Buffer }, number>(
+            [
+              [ { to: cryptoAccount.accountId, from: token.treasury.accountId }, charge.amount ]
+            ]
+          )
+        );
       }
     }
   }
-
 }
 
 
@@ -657,6 +881,32 @@ export function createTokenWorker() {
   });
 
   return (global as any).stripeTokenWorker;
+}
+
+export async function getLegalTender(): Promise<Buffer[]> {
+  return (await Promise.all<(Buffer|null)>((
+    process.env.MARKETPLACE_LEGAL_TENDER ? JSON.parse(process.env.MARKETPLACE_LEGAL_TENDER) : []
+  ).map(async (tenderDoc: { symbol?: string, tokenId?: string, _id?: string|ObjectId }): Promise<Buffer|null> => {
+    if (tenderDoc.tokenId) {
+      return Buffer.from(TokenId.fromString(tenderDoc.tokenId).toBytes());
+    } else {
+      if (tenderDoc._id) {
+        tenderDoc._id = new ObjectId(tenderDoc._id);
+      }
+
+      const token = await Token.findOne({
+        ...tenderDoc,
+        tokenId: {
+          $exists: true
+        }
+      });
+      if (token) {
+        return Buffer.from(token.tokenId.buffer);
+      } else {
+        return null;
+      }
+    }
+  }))).filter((x: Buffer|null) => x !== null) as Buffer[];
 }
 
 wrapVirtual(TokenSchema, 'tokenId');

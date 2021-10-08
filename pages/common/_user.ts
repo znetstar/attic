@@ -15,7 +15,8 @@ import { ObjectId } from 'mongodb';
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 
 export enum UserRoles {
-  nftAdmin = 'nftAdmin'
+  nftAdmin = 'nftAdmin',
+  walletAdmin = 'walletAdmin'
 }
 
 /**
