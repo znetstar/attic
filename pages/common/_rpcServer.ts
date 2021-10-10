@@ -27,10 +27,8 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
-import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
 
-import {marketplaceCreateUser, marketplacePatchUser} from "./_user";
-import {marketplaceGetWallet, toWalletPojo} from './_wallet';
+import { Token } from './_token';
 import {getWebhookSecret} from "./_stripe";
 
 export type RequestData = {
@@ -238,21 +236,31 @@ export function exposeModel(modelName: string, simpleInterface: any) {
     (rpcServer as any).methodHost.set(`db:${modelName}:${k}`, fn.bind(simpleInterface));
   }
 }
+export function rpcInit() {
+  if ((global as any).rpcInited)
+    return;
 
-(rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
-(rpcServer as any).methodHost.set('marketplace:patchNFT', marketplacePatchNft);
-(rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
-(rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
-(rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
-(rpcServer as any).methodHost.set('marketplace:getWallet', async function (...args: any[]): Promise<unknown> {
-  // Extract the session data
-  // @ts-ignore
-  const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
-  const additionalData: RequestData = clientRequest.additionalData;
+  (global as any).rpcInited = true;
 
-  // additionalData has the raw req/res, in addition to the session
-  const {wallet} = await marketplaceGetWallet(additionalData.session, ...args);
-  return wallet ? toWalletPojo(wallet) : null;
-});
+  const {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} = require('./_nft');
+  const {marketplaceCreateUser, marketplacePatchUser} = require('./_user');
+  const {marketplaceGetWallet, toWalletPojo} = require('./_wallet');
+
+  (rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
+  (rpcServer as any).methodHost.set('marketplace:patchNFT', marketplacePatchNft);
+  (rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
+  (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
+  (rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
+  (rpcServer as any).methodHost.set('marketplace:getWallet', async function (...args: any[]): Promise<unknown> {
+    // Extract the session data
+    // @ts-ignore
+    const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
+    const additionalData: RequestData = clientRequest.additionalData;
+
+    // additionalData has the raw req/res, in addition to the session
+    const {wallet} = await marketplaceGetWallet(additionalData.session, ...args);
+    return wallet ? toWalletPojo(wallet) : null;
+  });
+}
 
 export default rpcServer;

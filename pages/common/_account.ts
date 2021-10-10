@@ -13,12 +13,13 @@ import * as path from 'path';
 import {HTTPError} from "./_rpcCommon";
 import CryptoQueue from "./_cryptoQueue";
 import {Job, QueueEvents} from "bullmq";
-import {getLegalTender} from "./_token";
+import {getLegalTender} from "./_wallet";
 import {add, dinero, toFormat} from "dinero.js";
 import {USD} from "@dinero.js/currencies";
 import TokenBalanceMap from "@hashgraph/sdk/lib/account/TokenBalanceMap";
 import {IPOJOUser, IUser} from "./_user";
-import {IPOJOWallet, IWallet} from "./_wallet";
+import {IPOJOWallet, IWallet, syncTransactions} from "./_wallet";
+import {IToken, Token} from "./_token";
 
 export interface ICryptoAccount {
   _id: ObjectId|string;
@@ -41,6 +42,9 @@ export interface ICryptoAccount {
   user?: IUser;
   userName?: string;
 
+  associatedTokens?: (ObjectId)[]|IToken[],
+  kycGrantedTokens?: (ObjectId)[]|IToken[],
+
   /**
    * If absent, will assume this is an external address
    */
@@ -49,6 +53,7 @@ export interface ICryptoAccount {
   toCryptoValue(): Promise<AccountId>;
   writeAccountToEnv(): Promise<void>;
   loadBalance(): Promise<void>;
+  syncTransactions(): Promise<Job>;
 }
 
 export const CryptoAccountSchema: Schema<ICryptoAccount> = (new (mongoose.Schema)({
@@ -69,6 +74,26 @@ export const CryptoAccountSchema: Schema<ICryptoAccount> = (new (mongoose.Schema
   userName: {
     type: String,
     required: false
+  },
+  associatedTokens: {
+    required: false,
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Token',
+        required: false
+      }
+    ]
+  },
+  kycGrantedTokens: {
+    required: false,
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Token',
+        required: false
+      }
+    ]
   }
 }, { timestamps:true }));
 
@@ -106,7 +131,7 @@ export async function ensureAccount(accountId: Buffer, networkName: NetworkName)
   let account: ICryptoAccount&Document|null = await CryptoAccount.findOne({
     accountId: Buffer.from(accountId),
     networkName
-  });
+  }).populate('keyPair');
 
   if (!account) {
      account = new CryptoAccount({
@@ -123,13 +148,21 @@ CryptoAccountSchema.methods.createClient = async function () {
   if (client)
     return client;
 
-  if (!this.keyPair)
+  let kp = this.keyPair;
+  if (!this.isNew)
+    await this.populate('keyPair').execPopulate();
+
+  if (kp && (kp as any)._bsontype === 'ObjectID') {
+    kp = await KeyPair.findById(kp) as IKeyPair&Document;
+  }
+  if (!kp || !kp.toCryptoValue)
     throw new CannotCreateCryptoAccountForExternalAccountError();
 
   client = Client.forName(this.networkName as NetworkName);
 
+
   client.setOperator(await this.toCryptoValue(), (
-    await this.keyPair.toCryptoValue()
+    await kp.toCryptoValue()
   ));
 
   existingClientByAccountId.set(this._id.toString(), client);
@@ -208,7 +241,6 @@ export async function createCryptoAccount(initialBalance: number = 1000, opts: {
         ...job.data.opts,
         keyPairId: keyPair._id.toString()
       };
-
       const newAccountTransactionResponse = await new AccountCreateTransaction()
         .setKey(await keyPair.toCryptoValue())
         .setInitialBalance(Hbar.fromTinybars(initialBalance))
@@ -267,25 +299,46 @@ CryptoAccountSchema.methods.toCryptoValue = async function (): Promise<AccountId
 }
 
 
-export async function cryptoLoadBalance(accountId: ObjectId|string): Promise<void> {
+export async function cryptoLoadBalance(account: ICryptoAccount): Promise<void> {
   const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
-  // @ts-ignore
-  let self  = (this as ICryptoAccount&Document);
   const client = await masterAccount.createClient();
-  const account  = await CryptoAccount.findById(accountId) as ICryptoAccount&Document;
 
   const getBalanceCommand = new AccountBalanceQuery()
-    .setAccountId(AccountId.fromBytes(account.accountId));
+    .setAccountId(AccountId.fromBytes(Buffer.from(account.accountId)));
 
   const balance = await getBalanceCommand.execute(client);
   // Filter out tokens that aren't legal tender
   const legalTender = await getLegalTender();
-  const tenderIds = new Set<string>(Array.from(legalTender).map((x) => x.toString('base64')));
+  const tenderIds = new Set<string>(Array.from(legalTender).map((x) => x.toString()));
+
+  await Promise.all<void>(
+    Array.from(tenderIds.values()).map(async (tokenIdStr) => {
+      const token = await Token.findOne({
+        tokenId: Buffer.from(TokenId.fromString(tokenIdStr).toBytes())
+      });
+
+      await CryptoAccount.collection.updateOne(
+        { _id: new ObjectId(account._id) },
+        {
+          $addToSet: {
+            kycGrantedTokens: new ObjectId(token._id),
+            associatedTokens: new ObjectId(token._id)
+          },
+          $set: {
+            updatedAt: new Date()
+          },
+          $inc: {
+            __v: 1
+          }
+        }
+      );
+    })
+  )
 
   let totalBalance = dinero({ amount: 0, currency: USD });
 
   for (const tokenId of Array.from(balance.tokens?.keys() || [] as TokenId[])) {
-    if (!tenderIds.has(Buffer.from(tokenId.toBytes()).toString('base64'))) continue;
+    if (!tenderIds.has(tokenId.toString())) continue;
 
     const tokenBalance = dinero({
       amount: ((balance.tokens as TokenBalanceMap).get(tokenId) as any).toNumber(),
@@ -295,12 +348,24 @@ export async function cryptoLoadBalance(accountId: ObjectId|string): Promise<voi
     totalBalance = add(totalBalance, tokenBalance);
   }
 
-  const presentBalance: Decimal128 = new Decimal128(
-    toFormat(totalBalance, ({ amount }) => amount.toString())
+  const decimalNum = toFormat(totalBalance, ({ amount }) => amount.toString());
+  const presentBalance: Decimal128 = Decimal128.fromString(
+    decimalNum
   );
 
+  await CryptoAccount.collection.updateOne({
+    _id: account._id
+  }, {
+    $set: {
+      balance: presentBalance,
+      updatedAt: new Date()
+    },
+    $inc: {
+      __v: 1
+    }
+  })
 
-  self.balance = presentBalance;
+  account.balance = presentBalance;
 }
 
 CryptoAccountSchema.pre<ICryptoAccount&Document>('save', async function () {
@@ -313,6 +378,15 @@ CryptoAccountSchema.pre<ICryptoAccount&Document>('save', async function () {
   }
 });
 
-CryptoAccountSchema.methods.loadBalance = cryptoLoadBalance;
+CryptoAccountSchema.methods.loadBalance = async function () {
+  return cryptoLoadBalance(
+    this
+  );
+}
+CryptoAccountSchema.methods.syncTransactions = async function () {
+  return syncTransactions(
+    this as ICryptoAccount&Document
+  );
+}
 
 export const CryptoAccount = mongoose.models.CryptoAccount || mongoose.model<ICryptoAccount>('CryptoAccount', CryptoAccountSchema);

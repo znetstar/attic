@@ -15,6 +15,7 @@ import {HTTPError} from "./_rpcCommon";
 import { getCryptoAccountByKeyName } from "./_account";
 import IORedis from "ioredis";
 import {makeInternalCryptoEncoder, makeKeyEncoder} from "./_encoder";
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 
 const confirmDelay = Number(process.env.CONFIRM_DELAY) || 30e3;
 
@@ -31,7 +32,7 @@ export class CryptoQueueError extends HTTPError {
 }
 
 
-export class CryptoQueue {
+export class CryptoQueue extends EventEmitter {
   public queue: Queue;
   public scheduler: QueueScheduler;
   public worker: Worker;
@@ -131,8 +132,12 @@ export class CryptoQueue {
     if (sync) {
       let state: string;
       while (
-        (state = await job.getState()) && state !== 'completed' && state !== 'failed'
+        (state = await job.getState()) && (state !== 'completed' || (state === 'completed' && job.name === 'beforeConfirm')) && state !== 'failed'
       ) {
+          if (state === 'completed' && job.name === 'beforeConfirm') {
+            job = await this.queue.getJob('crypto:transaction:'+job.data.returnValueKey ||  job.returnvalue) as Job;
+            continue;
+          }
           await new Promise<void>((resolve) => {
           setTimeout(() => {
             resolve();
@@ -188,7 +193,18 @@ export class CryptoQueue {
     return { redis: conn, ready };
   }
 
+  static errorEventName(job: Job, ...extra: any[]) {
+    return `cryptoQueue:${job.id}${ extra.length ? ':'+extra.join(':') : '' }`;
+  }
+
+
+  clearEventsForJob(job: Job) {
+    this.removeAllListeners(CryptoQueue.errorEventName(job, '*'));
+  }
+
   protected processTransaction = async (job: Job): Promise<string|void> => {
+    let err1: any;
+    let returnValue: any;
     try {
       const client = await (await getCryptoAccountByKeyName('cryptoMaster')).createClient();
 
@@ -205,19 +221,22 @@ export class CryptoQueue {
           await job.moveToDelayed(
             (new Date()).getTime() + confirmDelay
           );
-        } else if (receipt.status === Status.Success) {
-          let rawVal = await this.afterConfirm(job, receipt);
-          let key: string|undefined;
-          if (rawVal) {
-            const returnVal = Buffer.from(makeInternalCryptoEncoder().serializeObject({ value: rawVal }));
-            const newJob = job.id ? await this.queue.getJob(job.id) : void(0);
-            key = Buffer.from(((newJob || job).data.returnValueKey as string)).toString('base64');
-            await this.connection.hsetBuffer(`returnValues`, key, returnVal);
-          }
+        }
+        else {
+          if (receipt.status === Status.Success) {
+            let rawVal = await this.afterConfirm(job, receipt);
+            let key: string | undefined;
+            if (rawVal) {
+              const returnVal = Buffer.from(makeInternalCryptoEncoder().serializeObject({value: rawVal}));
+              const newJob = job.id ? await this.queue.getJob(job.id) : void (0);
+              key = (newJob || job).data.returnValueKey;
+              await this.connection.hsetBuffer(`returnValues`, key, returnVal);
+            }
 
-          return key;
-        } else {
-          throw new CryptoError(receipt);
+            returnValue = key;
+          } else {
+            throw new CryptoError(receipt);
+          }
         }
       } else if (job.name === 'beforeConfirm') {
         const transactionId = await this.beforeConfirm(job);
@@ -227,12 +246,35 @@ export class CryptoQueue {
           transactionId: tidString
         }, {
           ...job.opts,
-          jobId: 'crypto:transaction:' + tidString
+          jobId: 'crypto:transaction:'+job.data.returnValueKey
         });
+
+        returnValue = 'crypto:transaction:'+job.data.returnValueKey
+        job.data.afterConfirmId = returnValue;
       }
     } catch (err: any) {
-        console.error(`error processing transaction: ${err.stack}`);
-        throw err;
+      err1 = err;
+    } finally {
+      let err2: any;
+      try {
+        if (err1) {
+          if (this.hasListeners(CryptoQueue.errorEventName(job, 'catch'))) {
+            await this.emitAsync(CryptoQueue.errorEventName(job, 'catch'), job, err1);
+          } else {
+            throw err1;
+          }
+        }
+      } catch (err: any) {
+        err2 = err;
+      } finally {
+        this.clearEventsForJob(job);
+        if (err2 && err2.receipt?.status !== Status.TokenAlreadyAssociatedToAccount) {
+          console.error(`error processing transaction ${this.name}: ${err2.stack}`);
+          throw err2;
+        } else {
+          return returnValue;
+        }
+      }
     }
   }
 
@@ -252,6 +294,7 @@ export class CryptoQueue {
       onError?: (job: Job) => void,
     }
   ) {
+    super({ wildcard: true, delimiter: ':' });
     this.connection = CryptoQueue.createConnection(`${name}:general`).redis;
     this.queue = new Queue(name, {
       // @ts-ignore

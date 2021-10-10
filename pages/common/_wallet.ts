@@ -5,7 +5,7 @@ import {IToken, Token} from "./_token";
 import {
   CryptoAccount,
   CryptoAccountSchema,
-  ensureAccount,
+  ensureAccount, getCryptoAccountByKeyName,
   ICryptoAccount,
   IPOJOCryptoAccount,
   toCryptoAccountPojo
@@ -13,14 +13,15 @@ import {
 import {
   AccountId,
   TokenId,
-  TransactionRecord
+  TransactionRecord,
+  AccountRecordsQuery
 } from "@hashgraph/sdk";
 import {NetworkName} from "@hashgraph/sdk/lib/client/Client";
 import TokenTransferAccountMap from "@hashgraph/sdk/lib/account/TokenTransferAccountMap";
 import {NftTransfer} from "@hashgraph/sdk/lib/account/TokenNftTransferMap";
 import {dinero, add, subtract, toFormat, Dinero} from 'dinero.js';
 import { USD } from '@dinero.js/currencies';
-import {makeEncoder} from "./_encoder";
+import {makeEncoder, makeInternalCryptoEncoder} from "./_encoder";
 import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
 import {IPOJOUser, IUser, userAcl, userPrivFields, userPubFields, UserRoles} from "./_user";
@@ -29,6 +30,10 @@ import {Ability, AbilityBuilder} from "@casl/ability";
 import {MarketplaceClientRequest, RequestData} from "./_rpcServer";
 import {HTTPError} from "./_rpcCommon";
 import {JSONPatch} from "@thirdact/simple-mongoose-interface";
+import {Job, Queue, Worker} from "bullmq";
+import CryptoQueue from "./_cryptoQueue";
+import {CryptoGetAccountRecordsQuery} from "@hashgraph/proto";
+import * as _ from 'lodash';
 
 
 export interface ITransaction {
@@ -228,9 +233,86 @@ export async function loadTransactionsByToken(tokenId: ObjectId): Promise<(ITran
 
   return transactions;
 }
+export async function getLegalTender(): Promise<string[]> {
+  return (await Promise.all<(string|null)>((
+    process.env.MARKETPLACE_LEGAL_TENDER ? JSON.parse(process.env.MARKETPLACE_LEGAL_TENDER) : []
+  ).map(async (tenderDoc: { symbol?: string, tokenId?: string, _id?: string|ObjectId }): Promise<string|null> => {
+    if (tenderDoc.tokenId) {
+      return TokenId.fromBytes(Buffer.from(tenderDoc.tokenId)).toString();
+    } else {
+      if (tenderDoc._id) {
+        tenderDoc._id = new ObjectId(tenderDoc._id);
+      }
+
+      const token = await Token.findOne({
+        ...tenderDoc,
+        tokenId: {
+          $exists: true
+        }
+      });
+      if (token) {
+        return TokenId.fromBytes(Buffer.from(token.tokenId)).toString();
+      } else {
+        return null;
+      }
+    }
+  }))).filter((x: string|null) => x !== null) as string[];
+}
 
 TransactionSchema.index({ token: 1, confirmedAt: -1  });
 TransactionSchema.index({  confirmedAt: -1  });
+
+const syncTransactionsQueue = new Queue('crypto:syncTransactions', {
+  // @ts-ignore
+  connection:  CryptoQueue.createConnection(`crypto:syncTransactions:queue`).redis,
+  defaultJobOptions: {
+    removeOnFail: false,
+    removeOnComplete: true,
+    attempts: 20,
+    backoff: 30e3
+  }
+});
+
+export async function syncTransactions(account: ICryptoAccount&Document): Promise<Job> {
+  const  { accountId } = account;
+  await account.save();
+
+  const accountIdStr = Buffer.from(makeInternalCryptoEncoder().encodeBuffer(Buffer.from(accountId))).toString('utf8')
+  return syncTransactionsQueue.add('crypto:syncTransactions', {
+    accountId: accountIdStr
+  });
+}
+
+const syncTransactionsWorker = new Worker('crypto:syncTransactions', async (job) => {
+  const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
+  const client = await masterAccount.createClient();
+
+  const accountId = makeInternalCryptoEncoder().decodeBuffer(Buffer.from(job.data.accountId, 'utf8'));
+    const account = await ensureAccount(
+      accountId,
+      masterAccount.networkName
+    );
+    const trans = await new AccountRecordsQuery()
+      .setAccountId(AccountId.fromBytes(account.accountId))
+      .execute(client);
+
+    const cryptoTrans = await Promise.all(
+      trans.map(async (t) => {
+        const cryptoTrans = await cryptoTransactionToMarketplaceTransactions(t, masterAccount.networkName);
+
+        await Promise.all(cryptoTrans.map((t) => t.save()));
+
+        return cryptoTrans;
+      })
+    );
+
+    return _.flatten(cryptoTrans.map((t) => t.map((tt) => tt._id.toString())));
+}, {
+  concurrency: 5,
+  // @ts-ignore
+  connection: CryptoQueue.createConnection(`crypto:syncTransactions:worker`).redis,
+});
+
 
 /**
  * Transfers transaction data from the Hedera API to the database
@@ -238,6 +320,7 @@ TransactionSchema.index({  confirmedAt: -1  });
  */
 export async function cryptoTransactionToMarketplaceTransactions(transaction: TransactionRecord, networkName: NetworkName): Promise<(ITransaction&Document)[]> {
   let results: (ITransaction&Document)[] = [];
+
   // First let's deal with Fungible tokens
   type TokenTransfer = { accountId: Buffer, amount: any }|{ accountId: Buffer, serial: Buffer, amount: -1|1 };
   let tokenTransfers = new Map<string, TokenTransfer[]>();

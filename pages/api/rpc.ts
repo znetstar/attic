@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
-import {rpcTransport} from "../common/_rpcServer";
+import {rpcInit, rpcTransport} from "../common/_rpcServer";
 
 /**
  * Forwards the request to the RPC Server
@@ -11,6 +11,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>
 ) {
+  rpcInit();
   try {
     await rpcTransport.onRequest(req, res as any);
   } catch (err) {

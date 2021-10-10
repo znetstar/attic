@@ -12,10 +12,10 @@ const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
+import {IToken, Token, TokenSupplyType, TokenType} from "./_token";
 import {IPOJOUser, IUser, ToUserPojo, userAcl, userPrivFields, userPubFields, UserRoles, User as MarketplaceUser} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {number} from "prop-types";
-import {IToken, Token, TokenSupplyType, TokenType} from "./_token";
 import {CustomRoyaltyFee} from "@hashgraph/sdk";
 
 export enum SaleTypes {
