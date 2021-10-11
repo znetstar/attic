@@ -6,12 +6,8 @@ import SessionComponent, {
 import * as React from 'react';
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-<<<<<<< HEAD
-import {INFT, NFT, nftAcl, nftPubFields} from "../common/_nft";
-=======
 import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
 import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields, IUser} from "../common/_user";
->>>>>>> sellerId added to form
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
