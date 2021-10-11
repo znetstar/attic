@@ -1,9 +1,6 @@
 import React, {PureComponent} from "react";
 import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, FormLabel } from "@mui/material/";
-
-
 import {NextRouter, withRouter} from "next/router";
-
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFT } from "../_nft";
 import { IUser } from "../_user";
@@ -52,7 +49,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         this.setState({ showSellerInput: true })
       } else {
         this.setState({ showSellerInput: false }) 
-        this.props.onFormChange('sellerId', this.props.currUser.marketplaceUser._id)
+        this.props.onFormChange('sellerId', this.props.currUser._id)
       }
     })
   }
@@ -113,7 +110,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
   updatePricingForm(e: SubmitEvent): void {
     e.preventDefault();
     let nftForm = {...this.props.nftForm, listOn: this.scheduleDateTime()}
-    if(!nftForm.nftItem) {
+    if(!nftForm.image) {
       console.log('please add NFT item')
     } else {
       this.submitNewNft(nftForm)
