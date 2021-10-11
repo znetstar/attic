@@ -429,6 +429,8 @@ TokenSchema.methods.cryptoMintToken = async function (
       if (!tokenDoc)
         throw new TokenNotFoundError(id);
 
+      console.debug(`⛏ ฿${amount}`);
+
       await Promise.all([
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),
         Token.collection.updateOne({
@@ -710,6 +712,7 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         );
 
         const refreshAccounts = new Set<string>();
+        const receipt = new Set<{ to: string, from: string, amount: number }>();
         for (let [{to, from}, amount] of Array.from(lines.entries())) {
           refreshAccounts.add(to._id.toString());
           refreshAccounts.add(from._id.toString());
@@ -727,7 +730,15 @@ TokenSchema.methods.cryptoTransferFungible = async function (
               AccountId.fromBytes(to.accountId),
               (adjAmount * 1)
             );
+          receipt.add({
+            from: AccountId.fromBytes(from.accountId).toString(),
+            to: AccountId.fromBytes(to.accountId).toString(),
+            amount
+          })
         }
+
+        job.data.receipt = Array.from(receipt.values());
+
         if (!feePayer.keyPair)
           throw new CannotCreateCryptoAccountForExternalAccountError();
 
@@ -764,13 +775,21 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         executingAccountId,
         rawLines,
         tokenId,
-        refreshAccounts
+        refreshAccounts,
+        receipt,
+        symbol
       }: {
         executingAccountId: string,
         rawLines: [{ to: Buffer, from?: Buffer }, number][],
         tokenId: string,
-        refreshAccounts: string[]
+        refreshAccounts: string[],
+        receipt: any,
+        symbol: string
       } = job.data;
+
+      for (let { to, from, amount } of receipt) {
+        console.debug(`${amount} ${symbol}: ${from} → ${to} `)
+      }
 
       await Promise.all(
         refreshAccounts.map(async (id) => {
@@ -788,7 +807,8 @@ TokenSchema.methods.cryptoTransferFungible = async function (
   const job = await queue.addJob('beforeConfirm', {
     executingAccountId,
     rawLines: Array.from(lines.entries()),
-    tokenId: this._id.toString()
+    tokenId: this._id.toString(),
+    symbol: this.symbol
   }, true);
 
   // const returnKey = await queue.getReturnValue(job.data.returnValueKey);
@@ -858,11 +878,13 @@ TokenSchema.methods.cryptoBurnToken = async function (
         id: string
       } = job.data;
 
-      const tokenDoc = await Token.findById(id);
+      const tokenDoc = await Token.findById(id).populate('treasury').exec();
 
       if (!tokenDoc)
         throw new TokenNotFoundError(id);
 
+
+      console.debug(`🔥 ${amount} ${tokenDoc.symbol}`);
 
       await Promise.all([
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),
