@@ -1,7 +1,7 @@
 import {ObjectId} from "mongodb";
 import {Schema} from "mongoose";
 import mongoose from "./_database";
-import {INFT} from "./_ntf-collection";
+import {INFT} from "./_nft";
 
 export  interface IDestination {
   userId: ObjectId|string;
@@ -25,6 +25,6 @@ export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
   percent: {
     type: Number,
     required: true,
-    validate: (x: unknown) => typeof(x) === 'number' && !Number.isNaN(x) && (x >= 0 || x <= 1)
+    validate: (x: unknown) => typeof(x) === 'number' && !Number.isNaN(x) && (x >= 0 || x <= 100)
   }
 }));

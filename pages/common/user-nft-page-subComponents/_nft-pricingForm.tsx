@@ -79,7 +79,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
   }
 
   submitNewNft = (dataNft: INFT) => {
-    let patches = diff((this as any).props.orignalNftForm, dataNft, jsonPatchPathConverter);
+    let patches = diff((this as any).props.originalNftForm, dataNft, jsonPatchPathConverter);
 
     patches = patches
       .filter(f => f.path.substr(0, '/nftItem'.length) !== '/nftItem')
@@ -93,7 +93,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
 
       });
 
-    this.rpc['marketplace:patchNFT']((this as any).props.orignalNftForm._id, patches as any)
+    this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any)
       .then((res) => {
         this.handleError('NFT created', 'success')
         // this.props.router.push('/profile')
