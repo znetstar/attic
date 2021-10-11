@@ -83,7 +83,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       let patches = diff((this as any).props.originalNftForm, dataNft, jsonPatchPathConverter);
 
       patches = patches
-        .filter(f => f.path.substr(0, '/nftItem'.length) !== '/nftItem')
+        .filter(f => f.path.substr(0, '/image'.length) !== '/image')
         .map((f) => {
           if (f.value === '')
             return {

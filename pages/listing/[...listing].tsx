@@ -128,7 +128,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
    * over rpc.
    */
   updateAssetForm = () => {
-    this.setState({ stepNum: 0 })
+    this.setState({ stepNum: 1 })
   }
 
   onFormChange = (formName: Partial<INFT>, formValue: any) => {
@@ -137,7 +137,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
 
   mintNft = () => {
     // mint logic for NFT
-    console.log(this.state.originalNftForm)
+    console.log(this.state.originalNftForm, 'Mint NFT here')
   }
 
   render() {
@@ -163,7 +163,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
                     <div >
                       {this.state.stepNum === ListingStep.assetForm ?
                         <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                        <NFTPricingForm orignalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
+                        <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
                       }
                     </div>
                   </div>
@@ -291,11 +291,7 @@ export async function getServerSideProps(context: any) {
 
   const acl = await nftAcl({ session, nft });
 
-<<<<<<< HEAD
   for (const field in (nft as any)._doc) {
-=======
-  for (const field in nft) {
->>>>>>> plain confirmation page
     if (!acl.can('marketplace:getNFT', "NFT", field)) {
       return {
         notFound: true
