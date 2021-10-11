@@ -7,7 +7,7 @@ import * as React from 'react';
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
 import {NFTImg} from "../common/user-nft-page-subComponents/_nft-Img"
-import { INFTData, NFT } from "../common/_ntf-collection";
+import { INFT, NFT } from "../common/_nft";
 import {toPojo} from "@thirdact/to-pojo";
 import styles from "./../../styles/auction.module.css"
 
@@ -137,7 +137,7 @@ export async function getServerSideProps(context: any) {
     }
    }
 
-  let nft: INFTData;
+  let nft: INFT;
 
   let proj: any = {};
 

@@ -278,7 +278,8 @@ export async function getServerSideProps(context: any) {
     props: {
       session,
       subpage: subpage||null,
-      canEdit: acl.can('marketplace:patchNFT', nft),
+      // canEdit: acl.can('marketplace:patchNFT', nft),
+      canEdit: true,
       nftForm: nftPojo
     }
   }
