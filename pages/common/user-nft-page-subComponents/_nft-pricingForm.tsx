@@ -52,7 +52,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         this.setState({ showSellerInput: true })
       } else {
         this.setState({ showSellerInput: false }) 
-        this.props.onFormChange('sellerId', this.props.currUser.marketplaceUser._id)
+        this.props.onFormChange('sellerId', this.props.currUser._id)
       }
     })
   }
@@ -101,19 +101,14 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         })
         .catch(this.handleError)
     } else {
-      this.rpc['marketplace:createNFT'](dataNft)
-        .then((res) => {
-          this.handleError('NFT created', 'success')
-          // this.props.router.push('/profile')
-        })
-        .catch(this.handleError)
+          this.props.router.push(`/listing/new`)
     }
   }
 
   updatePricingForm(e: SubmitEvent): void {
     e.preventDefault();
     let nftForm = {...this.props.nftForm, listOn: this.scheduleDateTime()}
-    if(!nftForm.nftItem) {
+    if(!nftForm.image) {
       console.log('please add NFT item')
     } else {
       this.submitNewNft(nftForm)

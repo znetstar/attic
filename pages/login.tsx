@@ -181,7 +181,7 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
     return new Map<LoginPanelSlides, JSX.Element>([
       [ LoginPanelSlides.login,
         (
-          <Fragment>
+          <Fragment key="signIn">
             <div>
               <MarketplaceLogo></MarketplaceLogo>
             </div>
@@ -215,7 +215,7 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
       ],
       [ LoginPanelSlides.emailPassword,
         (
-          <Fragment>
+          <Fragment key="login">
             <div>
               <MarketplaceLogo></MarketplaceLogo>
             </div>

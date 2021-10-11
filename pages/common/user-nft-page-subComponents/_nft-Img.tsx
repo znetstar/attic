@@ -45,12 +45,12 @@ export class NFTImg extends PureComponent<NftImgProps> {
     }
     const fileUrl = URL.createObjectURL(file)
     this.setState({ nftUrl: fileUrl })
-    this.props.onNftInput('nftItem', file)
+    this.props.onNftInput('image', file)
   }
 
   render() {
     const { nftForm } = this.props
-    let b = (nftForm.title || nftForm.priceStart || nftForm.listOn) ? '18px 18px 0 0' : '18px'
+    let b = (nftForm.name || nftForm.priceStart || nftForm.listOn) ? '18px 18px 0 0' : '18px'
     return (
       <div>
         <div className={styles.nftImg_wrapper} onClick={() =>{
@@ -66,9 +66,9 @@ export class NFTImg extends PureComponent<NftImgProps> {
               sx={{height: 200, width: '100%', borderRadius:b}} />
           </div>
 
-        {(nftForm.title || nftForm.priceStart || nftForm.listOn) ? (
+        {(nftForm.name || nftForm.priceStart || nftForm.listOn) ? (
           <div className={styles.footer}>
-            <div className={styles.metaTitle}>{nftForm.title}</div>
+            <div className={styles.metaTitle}>{nftForm.name}</div>
             <div className={styles.metaData}>
               {nftForm.priceStart ? (
                 <div>

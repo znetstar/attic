@@ -136,6 +136,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   mintNft = () => {
+    // mint logic for NFT
     console.log(this.state.originalNftForm)
   }
 
@@ -290,7 +291,11 @@ export async function getServerSideProps(context: any) {
 
   const acl = await nftAcl({ session, nft });
 
+<<<<<<< HEAD
   for (const field in (nft as any)._doc) {
+=======
+  for (const field in nft) {
+>>>>>>> plain confirmation page
     if (!acl.can('marketplace:getNFT', "NFT", field)) {
       return {
         notFound: true
@@ -304,8 +309,8 @@ export async function getServerSideProps(context: any) {
     props: {
       session,
       subpage: subpage||null,
-      canEdit: acl.can('marketplace:patchNFT', nft),
-      canConfirm: acl.can('marketplace:patchNFT', nft),
+      canEdit: acl.can('marketplace:patchNFT', "NFT"),
+      canConfirm: acl.can('marketplace:patchNFT', "NFT"),
       nftForm: nftPojo
     }
   }
