@@ -312,6 +312,8 @@ TokenSchema.methods.cryptoCreateToken = async function (
       const tokenId = Buffer.from(getReceipt.tokenId.toBytes());
       const treasury = await CryptoAccount.findById(tokenDoc.treasury).populate('keyPair');
 
+      console.debug(`💵 created new token ${tokenDoc.symbol} (${getReceipt.tokenId.toString()}) on ${treasury.networkName}`)
+
       await Promise.all([
         Token.collection.updateOne({
           _id: tokenDoc._id
@@ -429,7 +431,7 @@ TokenSchema.methods.cryptoMintToken = async function (
       if (!tokenDoc)
         throw new TokenNotFoundError(id);
 
-      console.debug(`⛏ ฿${amount}`);
+      console.debug(`⛏ minted ฿${amount}`);
 
       await Promise.all([
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),
@@ -788,7 +790,7 @@ TokenSchema.methods.cryptoTransferFungible = async function (
       } = job.data;
 
       for (let { to, from, amount } of receipt) {
-        console.debug(`${amount} ${symbol}: ${from} → ${to} `)
+        console.debug(`transferred ${amount} ${symbol}: ${from} → ${to} `)
       }
 
       await Promise.all(
@@ -884,7 +886,7 @@ TokenSchema.methods.cryptoBurnToken = async function (
         throw new TokenNotFoundError(id);
 
 
-      console.debug(`🔥 ${amount} ${tokenDoc.symbol}`);
+      console.debug(`🔥 burned ${amount} ${tokenDoc.symbol}`);
 
       await Promise.all([
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),

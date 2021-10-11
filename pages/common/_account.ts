@@ -279,6 +279,8 @@ export async function createCryptoAccount(initialBalance: number = 1000, opts: {
         user: opts.userId ? new ObjectId(opts.userId) : void(0)
       });
 
+      console.debug(`🐣 created new account ${getReceipt.accountId.toString()} (${opts.name ? opts.name : '[no name]'}) on ${masterAccount.networkName}`);
+
       await account.save();
 
       return account._id.toString();
