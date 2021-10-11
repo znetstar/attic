@@ -13,6 +13,7 @@ import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
+import stripe from './_stripe';
 
 export enum UserRoles {
   nftAdmin = 'nftAdmin',
@@ -52,6 +53,9 @@ export interface IUser {
   bio?: string;
 
   roles?: UserRoles[]
+  stripeCustomerId?: string;
+
+  getStripeUser(): Promise<any>;
 }
 
 
@@ -110,6 +114,10 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
     enum: [
       'nftAdmin'
     ]
+  },
+  stripeCustomerId: {
+    type: String,
+    required: false
   }
 }));
 
@@ -192,6 +200,27 @@ export function userAcl(user?: IUser, session?: MarketplaceSession|null): Abilit
   }
 
   return new Ability(rules);
+}
+
+
+UserSchema.methods.getStripeUser = async function (): Promise<any> {
+  let self: IUser&Document = this;
+
+  let stripeUser: any;
+  if (!self.stripeCustomerId) {
+     stripeUser = await stripe.customers.create({
+      metadata: {
+        'marketplace:user': this._id.toString()
+      }
+    });
+
+     self.stripeCustomerId = stripeUser.id;
+     await self.save();
+  } else {
+    stripeUser = await stripe.customers.retrieve(self.stripeCustomerId) as any;
+  }
+
+  return stripeUser;
 }
 
 /**

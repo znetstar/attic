@@ -6,6 +6,7 @@ import {
 import {IUser} from "./_user";
 import {IListedNFT, INFT} from "./_nft";
 import {IPOJOWallet} from "./_wallet";
+import {User} from "../api/auth/[...nextauth]";
 
 /**
  * RPC API exposed by the server
@@ -19,6 +20,7 @@ export interface MarketplaceAPI {
   'marketplace:createNFT': (nft: INFT) => Promise<string>;
 
   'marketplace:getWallet': (userId?: string) => Promise<IPOJOWallet>;
+  'marketplace:beginBuyLegalTender': (amount: number|string) => Promise<string>;
 }
 
 /**

@@ -17,6 +17,7 @@ import {
   AccountRecordsQuery
 } from "@hashgraph/sdk";
 import {NetworkName} from "@hashgraph/sdk/lib/client/Client";
+import stripe from "./_stripe";
 import TokenTransferAccountMap from "@hashgraph/sdk/lib/account/TokenTransferAccountMap";
 import {NftTransfer} from "@hashgraph/sdk/lib/account/TokenNftTransferMap";
 import {dinero, add, subtract, toFormat, Dinero} from 'dinero.js';
@@ -24,8 +25,8 @@ import { USD } from '@dinero.js/currencies';
 import {makeEncoder, makeInternalCryptoEncoder} from "./_encoder";
 import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
-import {IPOJOUser, IUser, userAcl, userPrivFields, userPubFields, UserRoles} from "./_user";
-import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
+import {IPOJOUser, IUser, userAcl, userPrivFields, userPubFields, UserRoles, User as UserModel } from "./_user";
+import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {Ability, AbilityBuilder} from "@casl/ability";
 import {MarketplaceClientRequest, RequestData} from "./_rpcServer";
 import {HTTPError} from "./_rpcCommon";
@@ -101,7 +102,7 @@ export function toWalletPojo(wallet: IWallet): IPOJOWallet {
   return {
     ...wallet,
     balance: wallet.balance.toString(),
-    _id: wallet.toString(),
+    _id: wallet._id.toString(),
     accounts: wallet.accounts.map((a) => toCryptoAccountPojo(a))
   } as IPOJOWallet;
 }
@@ -134,7 +135,7 @@ export const TransactionSchema: Schema<ITransaction> = (new (mongoose.Schema)({
 }));
 
 
-export async function loadWallet(userId: ObjectId): Promise<IWallet|null> {
+export async function loadWallet(userId: ObjectId, projection?: any): Promise<IWallet|null> {
   const wallet = (await CryptoAccount.aggregate<IWallet>([
     {
       $match: {
@@ -173,7 +174,8 @@ export async function loadWallet(userId: ObjectId): Promise<IWallet|null> {
           $push: '$$ROOT'
         }
       }
-    }
+    },
+    ...(projection ? [ { $project: projection } ] : [])
   ]))[0] || null as IWallet|null;
 
   if (wallet && wallet.needsUpdate) {
@@ -432,29 +434,67 @@ export async function cryptoLoadBalances(): Promise<void> {
   self.balance = new Decimal128(balance);
 }
 
-export async function marketplaceGetWallet(inputSession: MarketplaceSession, userId?: ObjectId|string): Promise<({ wallet: IWallet|null, user: IUser })> {
-  // Get the user from the session object
-  const [ session, wallet ]: [ MarketplaceSession|null, IWallet|null ] = await (inputSession.user?.marketplaceUser?._id ? await Promise.all([
-    (getUser(inputSession) as Promise<MarketplaceSession>),
-    loadWallet(new ObjectId(userId || inputSession?.user?.marketplaceUser?._id))
-  ]) : Promise.resolve<[null,null]>([null,null]));
-  if (!session || !session.user?.marketplaceUser) throw new HTTPError(401);
-  const user = session.user?.marketplaceUser as IUser;
-  if (!wallet) {
-    return {
-      wallet: null,
-      user
-    };
-  }
-  const acl = walletAcl(wallet, session);
+export async function marketplaceGetWallet(sessionUser: User|null, userId?: ObjectId|string): Promise<({ wallet: IWallet|null, user: IUser })> {
+  try {
+    // Get the user from the session object
+    if (!sessionUser?.marketplaceUser) throw new HTTPError(401);
+    const user = sessionUser?.marketplaceUser as IUser;
+    const proj: any = {};
 
-  for (let key in (wallet as any)) {
-    if (!acl.can('marketplace:getWallet', 'Wallet', key as string)) {
-      throw new HTTPError(403);
+    for (let field of walletPrivFields) {
+      proj[field] = 1;
     }
-  }
 
-  return { wallet, user };
+    const wallet: IWallet | null = await loadWallet(new ObjectId(userId || sessionUser?.marketplaceUser?._id), proj);
+    if (!wallet) {
+      return {
+        wallet: null,
+        user
+      };
+    }
+    const acl = walletAcl(wallet, {user: sessionUser} as any as MarketplaceSession);
+
+    for (let key in (wallet as any)) {
+      if (!acl.can('marketplace:getWallet', 'Wallet', key as string)) {
+        throw new HTTPError(403);
+      }
+    }
+
+    return {wallet, user};
+
+  } catch (err: any) {
+    throw err;
+  }
+}
+
+export async function marketplaceBeginBuyLegalTender(sessionUser: User|null, amount: number|string): Promise<string> {
+  try {
+    // Get the user from the session object
+    if (!sessionUser?.marketplaceUser) throw new HTTPError(401);
+    const user = sessionUser?.marketplaceUser as IUser;
+    const proj: any = {};
+
+    const dbUser: any = await UserModel.findById(user._id) as IUser & Document;
+
+    const customer = await UserModel.schema.methods.getStripeUser.call(dbUser);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Number(amount) * 100,
+      currency: "usd",
+      metadata: {
+        'crypto:symbol': process.env.MARKETPLACE_LEGAL_TENDER_FOR_PURCHASE as string
+      },
+      customer: customer.id
+    });
+
+    if (!paymentIntent.client_secret) {
+      throw new HTTPError(500, "Could not get client secret");
+    }
+
+    return paymentIntent.client_secret as string;
+  } catch (err: any)  {
+    throw err;
+  }
 }
 
 

@@ -300,7 +300,6 @@ CryptoAccountSchema.methods.toCryptoValue = async function (): Promise<AccountId
   return AccountId.fromBytes(Buffer.from(this.accountId));
 }
 
-
 export async function cryptoLoadBalance(account: ICryptoAccount): Promise<void> {
   const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
   const client = await masterAccount.createClient();

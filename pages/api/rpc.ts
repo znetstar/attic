@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import {rpcInit, rpcTransport} from "../common/_rpcServer";
 
+
 /**
  * Forwards the request to the RPC Server
  * @param req
@@ -15,7 +16,7 @@ export default async function handler(
   try {
     await rpcTransport.onRequest(req, res as any);
   } catch (err) {
-
+    console.error(err.stack);
   }
 }
 

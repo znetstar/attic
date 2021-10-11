@@ -182,7 +182,7 @@ export async function getServerSideProps(context: any) {
   }
   else uid = id;
 
-  let user = session?.user?.marketplaceUser;
+  let user: IUser = session?.user?.marketplaceUser;
   let pojoUser: IPOJOUser;
 
 

@@ -20,7 +20,7 @@ import {
   RPCInterface,
 } from '@thirdact/simple-mongoose-interface';
 import {HTTPError, MarketplaceAPI, UnauthorizedRequest} from "./_rpcCommon";
-import {MarketplaceSession} from "../api/auth/[...nextauth]";
+import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import {getSession} from "next-auth/client";
 import Redis from "ioredis";
 import levelup from "levelup";
@@ -30,6 +30,8 @@ import {LRUMap} from 'lru_map';
 
 import { Token } from './_token';
 import {getWebhookSecret} from "./_stripe";
+import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
+import {IUser} from "./_user";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -168,7 +170,9 @@ const authorizedMethods = [
   'marketplace:patchNFT',
   'marketplace:deleteNFT',
   'marketplace:getNFT',
-  'marketplace:getWallet'
+  'marketplace:getWallet',
+  'marketplace:beginBuyLegalTender',
+  'marketplace:completeBuyLegalTender'
 ]
 
 /**
@@ -237,29 +241,48 @@ export function exposeModel(modelName: string, simpleInterface: any) {
   }
 }
 export function rpcInit() {
-  if ((global as any).rpcInited)
-    return;
-
-  (global as any).rpcInited = true;
-
   const {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} = require('./_nft');
   const {marketplaceCreateUser, marketplacePatchUser} = require('./_user');
   const {marketplaceGetWallet, toWalletPojo} = require('./_wallet');
 
-  (rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
-  (rpcServer as any).methodHost.set('marketplace:patchNFT', marketplacePatchNft);
-  (rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
-  (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
-  (rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
-  (rpcServer as any).methodHost.set('marketplace:getWallet', async function (...args: any[]): Promise<unknown> {
+  !(rpcServer as any).methodHost.has('marketplace:createNFT') && (rpcServer as any).methodHost.set('marketplace:createNFT',  marketplaceCreateNft);
+  !(rpcServer as any).methodHost.has('marketplace:patchNFT') && (rpcServer as any).methodHost.set('marketplace:patchNFT',  marketplacePatchNft);
+  !(rpcServer as any).methodHost.has('marketplace:getNFT') && (rpcServer as any).methodHost.set('marketplace:getNFT',  marketplaceGetNft);
+  !(rpcServer as any).methodHost.has('marketplace:createUser') && (rpcServer as any).methodHost.set('marketplace:createUser',  marketplaceCreateUser);
+  !(rpcServer as any).methodHost.has('marketplace:patchUser') && (rpcServer as any).methodHost.set('marketplace:patchUser',  marketplacePatchUser);
+  !(rpcServer as any).methodHost.has('marketplace:getWallet') && (rpcServer as any).methodHost.set('marketplace:getWallet',  async function (...args: any[]): Promise<unknown> {
     // Extract the session data
     // @ts-ignore
     const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
     const additionalData: RequestData = clientRequest.additionalData;
 
+
+    const sessionMarketplaceUser = await getUser(additionalData?.session);
+    if (!sessionMarketplaceUser) {
+      throw new HTTPError(401);
+    }
+
     // additionalData has the raw req/res, in addition to the session
-    const {wallet} = await marketplaceGetWallet(additionalData.session, ...args);
+    const {wallet} = await marketplaceGetWallet(sessionMarketplaceUser as any, ...args);
     return wallet ? toWalletPojo(wallet) : null;
+  });
+  !(rpcServer as any).methodHost.has('marketplace:beginBuyLegalTender') && (rpcServer as any).methodHost.set('marketplace:beginBuyLegalTender',  async function (amount: number|string): Promise<unknown> {
+    // Extract the session data
+    // @ts-ignore
+    const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
+    const additionalData: RequestData = clientRequest.additionalData;
+
+    const sessionMarketplaceUser = await getUser(additionalData?.session);
+    if (!sessionMarketplaceUser) {
+      throw new HTTPError(401);
+    }
+
+    // additionalData has the raw req/res, in addition to the session
+    return marketplaceBeginBuyLegalTender(sessionMarketplaceUser as any, amount);
+  });
+
+  !(rpcServer as any).methodHost.has('marketplace:completeBuyLegalTender') && (rpcServer as any).methodHost.set('marketplace:completeBuyLegalTender',  async function (amount: number|string): Promise<unknown> {
+    throw new HTTPError(405);
   });
 }
 
