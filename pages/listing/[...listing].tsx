@@ -137,10 +137,11 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
 
   mintNft = () => {
     // mint logic for NFT
-    console.log(this.state.originalNftForm, 'Mint NFT here')
+    console.log(this.state.nftForm, 'Mint NFT here')
   }
 
   render() {
+    console.log(this.state, 'list')
     return (<div className={"page createNFT"}>
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
@@ -148,8 +149,11 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
         { 
           this.confirmOpen ? (
             <div className='confirm_wrapper'>
-              <div><NFTImg allowUpload={false} nftForm={this.state.originalNftForm} /></div>
-              <div>{this.state.originalNftForm.description}</div>
+              {console.log(this.state.nftForm)}
+              <div><NFTImg allowUpload={false} nftForm={this.state.nftForm} /></div>
+              <div>{this.state.nftForm.description}</div>
+              <div></div>
+
               <div><Button variant="contained" onClick={this.mintNft} >Create NFT</Button></div>
             </div>
           ) : (

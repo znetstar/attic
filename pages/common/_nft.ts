@@ -109,6 +109,7 @@ export class RoyaltiesMustBe100 extends HTTPError {
 
 export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   tags: { type: [String], required: false },
+  description: { type: String, required: false },
   supply: { type: Number, required: false, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: false, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
   customFees: {
