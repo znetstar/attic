@@ -1,0 +1,20 @@
+.img_wrapper {
+  width: 300px;
+  height: 300px;
+  border-radius: 20px;
+  background-color: grey;
+  margin: 20px auto; 
+}
+
+.nft_info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 30px 20px 30px;
+}
+
+.purchase_Button {
+  width: 100%;
+  text-align: center;
+  margin: 10px;
+}
