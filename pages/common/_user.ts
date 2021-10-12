@@ -294,3 +294,16 @@ export async function marketplacePatchUser(...args: any[]): Promise<void> {
   const resp = await simpleInterface.patch(...args);
 }
 
+export async function marketplaceGetUserById (query: unknown) {
+  try {
+    const cur = User.find(query as any);
+    const user = await cur.exec();
+
+    const pojo = toUserPojo(user)
+    return pojo;
+  } catch (err:any) {
+    throw new HTTPError(err?.httpCode || 500, (
+      _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
+    ));
+  }
+}
