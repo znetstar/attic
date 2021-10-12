@@ -7,6 +7,7 @@ import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
 import {INFT, NFT} from "../common/_nft";
 import {toPojo} from "@thirdact/to-pojo";
+import {User} from "./../common/_user"
 
 import styles from "./../../styles/purchase/purchase.module.css"
 import { Chip, Box, Tab, Tabs } from '@mui/material';
@@ -35,6 +36,14 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
     console.log('Purchase NFT')
   }
 
+  // getUserById = (userId = this.props.nftForm.sellerId) => {
+  //   if (this.props.nftForm) {
+  //     return (User.find({ _id: userId }, {}).limit(1).exec())[0]
+  //   } else {
+  //     return 
+  //   }
+  // }
+
   render() {
     console.log(this.props)
     return (
@@ -43,10 +52,10 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
       {this.makeAppBar(this.props.router, 'Listing')}
       <div className={styles.img_wrapper}></div>
       <div className={styles.nft_info_wrappper}>
-        <h2>Uncle Vanya</h2>
+        <h2>{this.props.nftForm.name ? this.props.nftForm.name : ''}</h2>
         <div className={styles.nft_info}>
           <div className={styles.nft_owner}>@username</div>
-          <div className={styles.nft_price}>$500.00</div>
+          <div className={styles.nft_price}>{'$' + this.props.nftForm.priceBuyNow}</div>
         </div>
       </div>
       <div className={styles.purchase_Button}>
@@ -57,16 +66,19 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
           <Tabs variant="fullWidth" value={this.state.currentTab} onChange={(e, newVal) => {
             this.setState({ currentTab: Number(newVal) })
           }} aria-label="NFT Information Tabs">
-            <Tab value={0} label="Description" />
+            <Tab value={0} label="Information" />
             <Tab value={1} label="Activity" />
             <Tab value={2} label="Ownership" />
           </Tabs>
         </Box>
       </div>
       <div className={styles.nft_extraInfo}>
-        <div hidden={!(this.state.currentTab === 0)}>Description</div>
-        <div hidden={!(this.state.currentTab === 1)}>Activity</div>
-        <div hidden={!(this.state.currentTab === 2)}>Ownership</div>
+        <div hidden={!(this.state.currentTab === 0)} className={styles.info}>
+          {this.props.nftForm.description ? '\nDescription\n' + this.props.nftForm.description + '\n\n' : 'No Description Available \n'}
+          {this.props.nftForm.tags ? this.props.nftForm.tags.map((tag, idx) => <Chip label={tag} key={idx} sx={{ margin:'10px 3px 10px 3px'}} />) : ''}
+        </div>
+        <div hidden={!(this.state.currentTab === 1)} className={styles.activity}>Activity</div>
+        <div hidden={!(this.state.currentTab === 2)} className={styles.ownership}>Ownership</div>
       </div>
     </div>);
   }
