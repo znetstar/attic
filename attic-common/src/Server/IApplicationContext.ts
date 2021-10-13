@@ -41,6 +41,7 @@ export type IApplicationContext = IApplicationHookEmitter&{
     webSocketServer: unknown;
     webSocketPaths: Map<string, unknown>;
     errors: IErrorBroker;
+    ipfsClient?: unknown;
     middleware: {
        [name: string]: middlewareCreator;
        restrictScopeMiddleware: restrictScopeMiddleware;

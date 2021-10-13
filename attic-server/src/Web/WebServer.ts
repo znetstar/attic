@@ -1,4 +1,4 @@
-import * as express from 'express';
+import express from 'express';
 import { JSONSerializer, Response,  Transport, ClientRequest} from 'multi-rpc';
 import { ExpressTransport } from 'multi-rpc-express-transport';
 import ResolverMiddleware from './ResolverMiddleware';
@@ -146,9 +146,12 @@ export let WebSocketPaths = new Map<string, ws.Server>([
 
 export async function loadWebServer() {
     await ApplicationContext.emitAsync('launch.loadWebServer.start');
+
+// @ts-ignore
     WebExpress = express();
 
     if (Config.cors) {
+// @ts-ignore
       WebExpress.use(cors(Config.cors as any));
     }
 

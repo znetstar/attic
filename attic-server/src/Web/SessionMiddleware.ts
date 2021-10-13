@@ -1,9 +1,9 @@
-import * as session from 'express-session';
+import session from 'express-session';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import Config from "../Config";
-import * as cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import {redis, default as mongoose} from "../Database";
 
 const MongoStore = require('connect-mongo');
@@ -22,6 +22,7 @@ if (!Config.expressSessionSecret) {
 export const ExpressSessionStore = new RedisStore({ client: redis });
   // Config.expressSessionDriver === ExpressSessionDrivers.redis ?// : MongoStore.create({ client: mongoose.connection });
 
+// @ts-ignore
 export const SessionMiddleware = session({
     cookie: {
         maxAge: Config.expressSessionMaxAge
@@ -32,6 +33,7 @@ export const SessionMiddleware = session({
     saveUninitialized: true
 });
 
+// @ts-ignore
 export const CookieMiddleware = cookieParser(Config.expressSessionSecret);
 
 export default SessionMiddleware;

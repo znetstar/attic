@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import {IUser} from "../User";
 import {HTTPDriverBase} from "./HTTPDriverBase";
 import {Request, Response} from "express";
-import * as HTTPProxy from 'http-proxy';
+import HTTPProxy from 'http-proxy';
 import { ServerOptions } from 'http-proxy';
 import * as URL from 'url';
 import {IDriverOfFull} from "../Driver";
@@ -19,6 +19,7 @@ export default class HTTPReverseProxyDriver extends HTTPDriverBase implements ID
     public httpProxy: HTTPProxy;
     constructor(public user?: IUser, protected proxyServerOptions?: ServerOptions) {
         super(user);
+
 
         this.httpProxy = HTTPProxy.createProxyServer(proxyServerOptions);
         this.httpProxy.on('proxyReq', this.onProxyReq);

@@ -159,6 +159,12 @@ export interface IConfig {
 
     dbInit?: DBInitRecord<any>[];
     allowGetTokenWithNoRedirectUri?: string[];
+
+  /**
+   * URL to IPFS API server. Leave `undefined` to disable IPFS
+   */
+  ipfsUri?: string;
+  ipfsOptions?: { [name: string]: unknown; }
 }
 
 export default IConfig;

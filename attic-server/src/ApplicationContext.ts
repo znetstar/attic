@@ -34,7 +34,7 @@ import {IDriver} from "@znetstar/attic-common/lib/IDriver";
 import {handleErrorMiddleware, WebSocketPaths, WebSocketServer} from "./Web/WebServer";
 import * as ws from 'ws';
 import {DBInitRecordMongo, DBInitRecordMongoose} from "@znetstar/attic-common/lib/Server/IConfig";
-
+import {create, IPFSHTTPClient} from 'ipfs-http-client'
 import {asyncMiddleware} from "./Web/Common";
 import {ObjectId} from "mongodb";
 import {ErrorBroker} from "./ErrorBroker";
@@ -188,6 +188,8 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     }
 
     get redis() { return redis; }
+
+    ipfsClient: IPFSHTTPClient;
 
     get config(): ConfigType {
         return Config as any;

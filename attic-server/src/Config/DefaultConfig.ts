@@ -63,6 +63,7 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     entityTypes: [
         'HTTPResourceEntity',
         'IdentityEntity'
+
     ],
     logLevel: LogLevels.info,
     autoLogEvents: true,

@@ -1,7 +1,7 @@
 import { connect, Mongoose } from 'mongoose';
 import config from '../Config';
 import ApplicationContext from "../ApplicationContext";
-import * as Redis from 'ioredis';
+import Redis from 'ioredis';
 import {RPCServer} from "../RPC";
 
 const mongoose = (<any>global).mongoose = <Mongoose>(<any>require('mongoose'));
@@ -15,6 +15,7 @@ mongoose.connect(config.mongoUri, {
     process.exit(1);
 });
 
+// @ts-ignore
 export const redis = new Redis(config.redisUri);
 
 RPCServer.methods.redisFlushAll = async () => { await redis.flushall(); }
