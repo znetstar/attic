@@ -14,7 +14,6 @@ import {User} from "../api/auth/[...nextauth]";
 export interface MarketplaceAPI {
   'marketplace:patchUser': (patches: JSONPatchOp) => Promise<void>;
   'marketplace:createUser': (user: unknown) => Promise<string>;
-  'marketplace:getUserById': (_id: unknown) => Promise<IUser>;
 
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<IListedNFT[]>;
   'marketplace:patchNFT': (id: unknown, patches: JSONPatchOp) => Promise<void>;

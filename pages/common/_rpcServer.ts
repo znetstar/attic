@@ -185,8 +185,7 @@ const anonymousMethods: string[] = [
    * Allows the user to create a new account
    */
   'marketplace:createUser',
-  'marketplace:getNFT',
-  'marketplace:getUserById'
+  'marketplace:getNFT'
 ]
 
 /**
@@ -243,13 +242,12 @@ export function exposeModel(modelName: string, simpleInterface: any) {
 }
 export function rpcInit() {
   const {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} = require('./_nft');
-  const {marketplaceCreateUser, marketplacePatchUser, marketplaceGetUserById} = require('./_user');
+  const {marketplaceCreateUser, marketplacePatchUser} = require('./_user');
   const {marketplaceGetWallet, toWalletPojo} = require('./_wallet');
 
   !(rpcServer as any).methodHost.has('marketplace:createNFT') && (rpcServer as any).methodHost.set('marketplace:createNFT',  marketplaceCreateNft);
   !(rpcServer as any).methodHost.has('marketplace:patchNFT') && (rpcServer as any).methodHost.set('marketplace:patchNFT',  marketplacePatchNft);
   !(rpcServer as any).methodHost.has('marketplace:getNFT') && (rpcServer as any).methodHost.set('marketplace:getNFT',  marketplaceGetNft);
-  !(rpcServer as any).methodHost.has('marketplace:getUserById') && (rpcServer as any).methodHost.set('marketplace:getUserById',  marketplaceGetUserById);
   !(rpcServer as any).methodHost.has('marketplace:createUser') && (rpcServer as any).methodHost.set('marketplace:createUser',  marketplaceCreateUser);
   !(rpcServer as any).methodHost.has('marketplace:patchUser') && (rpcServer as any).methodHost.set('marketplace:patchUser',  marketplacePatchUser);
   !(rpcServer as any).methodHost.has('marketplace:getWallet') && (rpcServer as any).methodHost.set('marketplace:getWallet',  async function (...args: any[]): Promise<unknown> {

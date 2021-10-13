@@ -7,7 +7,7 @@ import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
 import {INFT, NFT} from "../common/_nft";
 import {toPojo} from "@thirdact/to-pojo";
-import {User, IUser} from "./../common/_user"
+import {User} from "./../common/_user"
 
 import styles from "./../../styles/purchase/purchase.module.css"
 import { Chip, Box, Tab, Tabs } from '@mui/material';
@@ -36,21 +36,18 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
     console.log('Purchase NFT')
   }
 
-  getUserById = (userId = this.props.nftForm.sellerId) => {
-    if (this.props.nftForm) {
-      this.rpc['marketplace:getUserById']({_id: new ObjectId(userId)})
-        .then((res) => {console.log( res)})
-        .catch(this.handleError)
-    } else {
-      return 
-    }
-  }
+  // getUserById = (userId = this.props.nftForm.sellerId) => {
+  //   if (this.props.nftForm) {
+  //     return (User.find({ _id: userId }, {}).limit(1).exec())[0]
+  //   } else {
+  //     return 
+  //   }
+  // }
 
   render() {
     console.log(this.props)
     return (
     <div className={styles.purchase_wrapper}>
-      {this.getUserById()}
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
       <div className={styles.img_wrapper}></div>
