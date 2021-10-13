@@ -27,13 +27,27 @@ export enum SaleTypes {
 
 export interface IRoyalty {
   _id: ObjectId;
-  owedTo: IUser;
+  owedTo: {
+    firstName?:  string;
+    lastName?: string;
+    image?: Buffer,
+    user: IUser
+  };
   percent: number;
   toCryptoValue: () => Promise<CustomRoyaltyFee>
 }
 
 export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
-  owedTo: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  owedTo: {
+    firstName: {  type: String },
+    lastName: { type: String },
+    image: { type: Buffer  },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User'
+    }
+  },
   percent: {
     type: Number,
     required: true,
