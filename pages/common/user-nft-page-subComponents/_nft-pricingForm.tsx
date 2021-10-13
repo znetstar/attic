@@ -122,6 +122,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     return (
       <div className={styles.nftForm_wrapper}>
         <form onSubmit={(e) => this.updatePricingForm(e)}>
+
             <div>
             <FormControl className={'form-control'}>
               <RadioGroup
@@ -148,17 +149,19 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
                         </div>
             ) : ''}
 
-            <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceStart} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceStart"} label="Starting Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}}/>
-              </FormControl>
-            </div>
-
-            <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}} />
-              </FormControl>
-            </div>
+            {this.props.nftForm.nftFor === 'sale' ? (
+              <div>
+                <FormControl className={'form-control'}>
+                  <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceBuyNow} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceBuyNow"} label="Buy Now Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}} />
+                </FormControl>
+              </div>
+            ) : (
+              <div>
+                <FormControl className={'form-control'}>
+                  <TextField onChange={(e) => { if(parseFloat(e.target.value) < 0) {e.target.value = '0'; return}; onFormChange(e.target.name, Math.floor(parseFloat(e.target.value)*100)/100) }} value={nftForm.priceStart} required={false} type="number" className={'form-input'}  variant={"filled"} name={"priceStart"} label="Starting Price" InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, inputProps: { min: 0, step:0.01}}}/>
+                </FormControl>
+              </div>
+            )}
             
             <div>
             <FormControl component="fieldset">
@@ -169,7 +172,6 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
               </RadioGroup>
               </FormControl>
             </div>
-            
             {this.state.showSellerInput ? (
               <div><SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.setSeller(user)}/></div>
             ) : ''}
