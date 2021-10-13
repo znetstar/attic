@@ -4,6 +4,7 @@
 @import './EditProfile.scss';
 @import './Avatar.scss';
 @import './NFTList.scss';
+@import './Wallet.scss';
 
 html,
 body {
@@ -32,7 +33,14 @@ a {
   flex-direction: column;
   align-items: center;
   margin: 0 auto;
-  padding: 40px;
+
+  & > * {
+    padding: 15px;
+    &.app-bar-wrapper {
+      padding:0;
+    }
+  }
+
   max-width: 960px;
 
   & > * {

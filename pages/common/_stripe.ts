@@ -11,7 +11,8 @@ export const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY as string
 export default stripe;
 
 export const stripeEvents: string[] = [
-  'payment_intent.succeeded'
+  'payment_intent.succeeded',
+  'charge.refunded'
 ]
 
 export async function getWebhookSecret(): Promise<string> {

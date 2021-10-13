@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import {getWebhookSecret, stripe} from '../common/_stripe';
 import {Queue} from "bullmq";
 import {bullRedis} from "../common/_bull";
-import {createTokenWorker, initMarketplace} from "../common/_token";
+import { initMarketplace} from "../common/_token";
 import CryptoQueue from "../common/_cryptoQueue";
 
 /**
@@ -20,7 +20,7 @@ export default async function handler(
   let event;
 
   try {
-      await initMarketplace();
+    await initMarketplace();
 
     const body = await new Promise<Buffer>((resolve, reject) => {
       let buf: Buffer[] = [];
@@ -51,6 +51,7 @@ export default async function handler(
   catch (err) {
     res.statusCode = 400;
     res.end(`Webhook Error: ${err.message}`);
+    console.error(err.stack);
   }
 }
 

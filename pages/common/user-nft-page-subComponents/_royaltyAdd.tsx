@@ -2,14 +2,10 @@ import React, {Fragment, PureComponent} from "react"
 import { TextField } from "@mui/material/";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
-import {IUser} from "./../../common/_user"
+import {IUser} from "./../_user"
+import {IRoyalty} from "./../_nft"
 import {SearchBar} from "./../_searchBar"
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-royaltyAdd.module.css";
-
-export type payee = {
-  owedTo: string;
-  percent: number;
-}
 
 type royaltyProps = {
   submitRoyaltyList: Function;
@@ -17,7 +13,7 @@ type royaltyProps = {
 }
 
 type royaltyAddState = {
-  payee: payee[];
+  payee: IRoyalty[];
   showAdd: boolean;
   showOptions: boolean
 }
@@ -44,15 +40,16 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
     this.setState({ payee: payee, showAdd: false, showOptions: true })
   }
 
-
   emailChange = (i, user) => {
     let payee = [...this.state.payee]
     if(user) {
-      payee[i].owedTo = user._id
+      payee[i].owedTo.user = user._id
+      payee[i].owedTo.firstName = user.firstName
+      payee[i].owedTo.lastName = user.lastName
+      payee[i].owedTo.image = user.image
       this.setState({ payee: payee, showAdd: false, showOptions: true })
     }
   }
-
 
   remove = i => e => {
     e.preventDefault()
@@ -67,7 +64,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
     // if total sum af percent is greater than 0; not allow
     if(this.state.payee.length > 0) {
       let percentSum = this.state.payee.reduce((acc, p) => acc + p.percent, 0);
-      if (percentSum > 100 || (this.state.payee[this.state.payee.length - 1].owedTo === '')) {
+      if (percentSum > 100 || (this.state.payee[this.state.payee.length - 1].owedTo.user === '')) {
         return;
       } else if (percentSum === 100) {
         this.props.submitRoyaltyList(this.state.payee)
@@ -79,7 +76,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
 
   addCoOwner = e => {
     e.preventDefault()
-    let payee = this.state.payee.concat([{owedTo: '', percent: 0}])
+    let payee = this.state.payee.concat([{owedTo: {user: '', firstName: '', lastName: '', image: ''}, percent: 0}])
     this.setState({ payee: payee, showAdd: false })
   }
 

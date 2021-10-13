@@ -123,7 +123,7 @@ export class LoginButton extends PureComponent<LoginButtonProps, { }> {
 export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
   render() {
     return (
-      <React.Fragment>
+      <div className={"app-bar-wrapper"}>
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="static">
             <Toolbar>
@@ -146,7 +146,7 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
             </Toolbar>
           </AppBar>
         </Box>
-      </React.Fragment>
+      </div>
     )
   }
 }

@@ -189,6 +189,7 @@ export async function getKeyByName(name: string, generateIfNotFound?: boolean): 
     const { keyPair: x, account: y } = await keyFromEnv(envName);
     account = y;
     keyPair = x;
+    if (y) y.keyPair = x;
   } catch (err) {
     if (!(err instanceof KeyNotFoundError)) {
       throw err;

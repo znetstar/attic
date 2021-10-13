@@ -18,6 +18,7 @@ import {UserRoles} from "../common/_user";
 import EncodeTools, {BinaryEncoding, IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
 import {initMarketplace, TokenSupplyType, TokenType} from "../common/_token";
 
+
 export type ListingProps = SessionComponentProps&{
   nftForm?: INFT,
   subpage: string|null
@@ -64,7 +65,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     stepNum: 0,
     isCompleted: false,
     notifyMessage: null,
-    nftForm: this.props.nftForm || {nftFor:'sale'},
+    nftForm: (this.props.nftForm && this.props.nftForm.nftFor) ? this.props.nftForm : {...this.props.nftForm, nftFor:'sale'},
     originalNftForm: { ...(this.props.nftForm || {}) },
     pageTitle: 'Listing',
     usersList: []
@@ -141,7 +142,6 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   render() {
-    console.log(this.state, 'list')
     return (<div className={"page createNFT"}>
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
@@ -178,7 +178,6 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
               //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
               // ></EditProfile>
               <div>
-                {console.log(this.nftForm)}
                 <div >
                   <div className={"main"}>
                     <div>
@@ -266,7 +265,12 @@ export async function getServerSideProps(context: any) {
       treasury,
       supplyType: TokenSupplyType.finite,
       tokenType: TokenType.nft,
-      sellerId: uid
+      sellerId: uid,
+      sellerInfo: {
+        firstName: user.firstName ? user.firstName : null,
+        lastName: user.lastName ? user.lastName : null,
+        image: user.image ? user.image : null
+      }
     });
 
     return {
