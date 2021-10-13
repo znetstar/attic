@@ -135,7 +135,7 @@ UserSchema.pre<IUser&{ password?: string }>('save', async function () {
   }
 
   await Promise.all([
-    await NFT.collection.updateMany({
+    NFT.collection.updateMany({
       'sellerId': this._id
     }, {
       $set: {
@@ -144,7 +144,7 @@ UserSchema.pre<IUser&{ password?: string }>('save', async function () {
         updatedAt: new Date()
       }
     }),
-    await NFT.collection.updateMany({
+     NFT.collection.updateMany({
       'customFees.$.owedTo.user': this._id
     }, {
       $set: {
