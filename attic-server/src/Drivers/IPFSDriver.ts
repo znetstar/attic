@@ -26,7 +26,7 @@ export default class IPFSDriver extends Driver<IHTTPResponse> {
       return;
     await ApplicationContext.triggerHook(`IPFSDriver.connect.start`);
     ApplicationContext.ipfsClient = await create({
-      url: ApplicationContext.config.ipfsUri || process.env.IPFS_URL as string,
+      url: ApplicationContext.config.ipfsUri || process.env.IPFS_URI as string,
       ...(options || {} as IPFSOptions)
     });
     await ApplicationContext.triggerHook(`IPFSDriver.connect.complete`);

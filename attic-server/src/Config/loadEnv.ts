@@ -61,7 +61,7 @@
         'ROOT_GROUPS',
         'LOG_LEVEL',
         'PLUGINS',
-        'IPFS_URL'
+        'IPFS_URI'
     ];
 
     const noTransform: any[] = [

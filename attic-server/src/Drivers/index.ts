@@ -9,7 +9,7 @@ export async function loadDrivers() {
     await ApplicationContext.emitAsync('launch.loadDrivers.start');
     await ApplicationContext.loadDriver(HTTPRedirectDriver, 'HTTPRedirectDriver');
     await ApplicationContext.loadDriver(HTTPReverseProxyDriver, 'HTTPReverseProxyDriver');
-    if (ApplicationContext.config.ipfsUri || process.env.IPFS_URL) {
+    if (ApplicationContext.config.ipfsUri || process.env.IPFS_URI) {
       await ApplicationContext.loadDriver(IPFSDriver, 'IPFSDriver');
     }
     await ApplicationContext.emitAsync('launch.loadDrivers.complete');
