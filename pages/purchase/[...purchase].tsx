@@ -23,6 +23,7 @@ export type PurchaseProps = SessionComponentProps&{
 
 export type PurchaseState = SessionComponentState&{
   currentTab: number;
+  purchaseType: string|unknown;
 };
 
 
@@ -32,7 +33,8 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
   }
 
   state = {
-    currentTab: 0
+    currentTab: 0,
+    purchaseType: this.props.nftForm?.nftFor
   } as PurchaseState
 
   onPurchase = () => {
@@ -78,14 +80,11 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
 
   render() {
     console.log(this.props)
-    let image = this.props.nftForm?.image ? this.props.nftForm.image : ''
     let name = this.props.nftForm?.name
-    let firstName = this.props.nftForm?.sellerInfo?.firstName ? this.props.nftForm?.sellerInfo?.firstName : '' 
-    let lastName =  this.props.nftForm?.sellerInfo?.lastName ? this.props.nftForm?.sellerInfo?.lastName : ''
     let user_firstName = this.props.user?.firstName ? this.props.user?.firstName : '' 
     let user_lastName =  this.props.user?.lastName ? this.props.user?.lastName : ''
     let user_img = this.props.user?.image ? this.props.user.image : ''
-    let price =this.props.nftForm.priceBuyNow
+    let price = (this.state.purchaseType === 'sale') ? this.props.nftForm.priceBuyNow : this.props.nftForm.priceStart
 
     return (
     <div className={styles.purchase_wrapper}>
@@ -114,7 +113,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
       </div>
 
       <div className={styles.purchase_Button}>
-        <Chip sx={{ width: "80%" }}label="Purchase" onClick={this.onPurchase} />
+        <Chip sx={{ width: "80%" }} label={(this.state.purchaseType === 'sale') ? "Purchase" : "Place a Bid"} onClick={this.onPurchase} />
       </div>
 
       <div className={styles.nft_tabsPanel}>
