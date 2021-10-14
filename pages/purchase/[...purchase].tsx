@@ -8,6 +8,8 @@ import {withRouter} from "next/router";
 import {INFT, NFT} from "../common/_nft";
 import {toPojo} from "@thirdact/to-pojo";
 import { MarketplaceAvatar } from "../common/_avatar";
+import {getUser} from "../api/auth/[...nextauth]";
+import {IUser} from "./../common/_user";
 
 import styles from "./../../styles/purchase/purchase.module.css"
 import { Chip, Box, Tab, Tabs } from '@mui/material';
@@ -16,6 +18,7 @@ import { Chip, Box, Tab, Tabs } from '@mui/material';
 export type PurchaseProps = SessionComponentProps&{
   canPurchase: boolean;
   nftForm: INFT;
+  user: IUser;
 };
 
 export type PurchaseState = SessionComponentState&{
@@ -79,6 +82,10 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
     let name = this.props.nftForm?.name
     let firstName = this.props.nftForm?.sellerInfo?.firstName ? this.props.nftForm?.sellerInfo?.firstName : '' 
     let lastName =  this.props.nftForm?.sellerInfo?.lastName ? this.props.nftForm?.sellerInfo?.lastName : ''
+    let user_firstName = this.props.user?.firstName ? this.props.user?.firstName : '' 
+    let user_lastName =  this.props.user?.lastName ? this.props.user?.lastName : ''
+    let user_img = this.props.user?.image ? this.props.user.image : ''
+    let price =this.props.nftForm.priceBuyNow
 
     return (
     <div className={styles.purchase_wrapper}>
@@ -91,8 +98,18 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
       <div className={styles.nft_info_wrappper}>
         <h2>{name}</h2>
         <div className={styles.nft_info}>
-          <div className={styles.nft_owner}>{'@' + firstName + '_' + lastName}</div>
-          <div className={styles.nft_price}>{'$' + this.props.nftForm.priceBuyNow}</div>
+          <div className={styles.curr_user}>
+            <MarketplaceAvatar
+              image={
+                typeof(user_img) === 'string' ? Buffer.from(user_img, 'base64') : user_img
+              }
+              imageFormat={this.enc.options.imageFormat}
+              allowUpload={false}
+              resizeImage={{height:35, width:35}}
+            ></MarketplaceAvatar>
+            <div className={styles.curr_userName}> {'@' + user_firstName + '_' + user_lastName}</div>
+          </div>
+          <div className={styles.nft_price}>{'$' + price}</div>
         </div>
       </div>
 
@@ -140,6 +157,8 @@ export async function getServerSideProps(context: any) {
 
   let [not_important, not_important2, id] = req.url.split('/');
 
+  const user = (await getUser(session))?.marketplaceUser;
+
   // If no nft id is provided
   if (!id) {
     return {
@@ -169,7 +188,8 @@ export async function getServerSideProps(context: any) {
       session,
       // if acc with 3act, has a wallet and enough hbar then true; else false
       canPurchase: true,
-      nftForm: nftPojo
+      nftForm: nftPojo,
+      user: user
     }
   }
 }
