@@ -122,7 +122,8 @@ export function toCryptoAccountPojo(account: ICryptoAccount): IPOJOCryptoAccount
     _id: account._id.toString(),
     accountId: Buffer.from(account.accountId).toString('base64'),
     accountIdStr: AccountId.fromBytes(Buffer.from(account.accountId)).toString(),
-    user: account.user?._id.toString()
+    user: account.user?._id.toString(),
+    balance: (account.balance || 0).toString()
   } as IPOJOCryptoAccount;
 }
 

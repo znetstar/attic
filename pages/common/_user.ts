@@ -14,6 +14,7 @@ import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import stripe from './_stripe';
+import {NFT, Royalty} from "./_nft";
 
 export enum UserRoles {
   nftAdmin = 'nftAdmin',
@@ -132,6 +133,28 @@ UserSchema.pre<IUser&{ password?: string }>('save', async function () {
 
     delete this.password;
   }
+
+  await Promise.all([
+    NFT.collection.updateMany({
+      'sellerId': this._id
+    }, {
+      $set: {
+        'sellerInfo.firstName': this.firstName,
+        'sellerInfo.lastName': this.lastName,
+        updatedAt: new Date()
+      }
+    }),
+     NFT.collection.updateMany({
+      'customFees.$.owedTo.user': this._id
+    }, {
+      $set: {
+        'customFees.$.owedTo.firstName': this.firstName,
+        'customFees.$.owedTo.lastName':  this.lastName,
+        'customFees.$.owedTo.image': this.image,
+        'customFees.$.owedTo.updatedAt': new Date()
+      }
+    })
+  ])
 });
 
 type ToUserParsable = (Document<IUser>&IUser)|IUser|Document<IUser>;
