@@ -122,7 +122,6 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
   }
 
   render() {
-    console.log('ppp', this.props.resizeImage)
     return (
       <div className={"avatar-image-wrapper"} onClick={() =>{
         if (this.props.allowUpload) {
