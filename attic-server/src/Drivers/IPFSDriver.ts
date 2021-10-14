@@ -41,7 +41,7 @@ export default class IPFSDriver extends Driver<IHTTPResponse> {
     let iterator: any;
     let buf: Buffer[] = [];
     const files: any[] = [];
-    let contentType = 'application/octet-stream';
+    let contentType = null;
     if (path[path.length - 1] === '/') {
       contentType = 'application/json';
       iterator = await this.ipfsClient.ls(path.substr(0, path.length - 1));
@@ -70,7 +70,7 @@ export default class IPFSDriver extends Driver<IHTTPResponse> {
     }
     return {
       headers: new Map<string,string>([
-        [ 'Content-Type', contentType ],
+        ...contentType ? [ [ 'Content-Type', contentType ] ] : ([] as any[]),
         [ 'Content-Length', body.byteLength.toString() ]
       ]),
       method: 'HEAD',
@@ -84,7 +84,7 @@ export default class IPFSDriver extends Driver<IHTTPResponse> {
     let iterator: any;
     let buf: Buffer[] = [];
     const files: any[] = [];
-    let contentType = 'application/octet-stream';
+    let contentType = null;
     if (path[path.length - 1] === '/') {
       contentType = 'application/json';
       iterator = await this.ipfsClient.ls(path.substr(0, path.length - 1));
@@ -114,7 +114,7 @@ export default class IPFSDriver extends Driver<IHTTPResponse> {
     return {
       body: body,
       headers: new Map<string,string>([
-        [ 'Content-Type', contentType ],
+          ...contentType ? [ [ 'Content-Type', contentType ] ] : ([] as any[]),
         [ 'Content-Length', body.byteLength.toString() ]
       ]),
       method: 'GET',
