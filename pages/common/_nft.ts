@@ -27,13 +27,27 @@ export enum SaleTypes {
 
 export interface IRoyalty {
   _id: ObjectId;
-  owedTo: IUser;
+  owedTo: {
+    firstName?:  string;
+    lastName?: string;
+    image?: Buffer,
+    user: IUser
+  };
   percent: number;
   toCryptoValue: () => Promise<CustomRoyaltyFee>
 }
 
 export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
-  owedTo: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+  owedTo: {
+    firstName: {  type: String },
+    lastName: { type: String },
+    image: { type: Buffer  },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User'
+    }
+  },
   percent: {
     type: Number,
     required: true,
@@ -82,6 +96,7 @@ export type INFT = IToken&INFTMetadata&{
   sellerInfo?: {
     firstName: string;
     lastName: string;
+    image: Buffer;
   },
   public?: boolean;
 }
@@ -99,6 +114,7 @@ export type IListedNFT = {
   sellerInfo: {
     firstName: string;
     lastName: string;
+    image: Buffer;
   };
   public: boolean;
 }
@@ -109,6 +125,7 @@ export class RoyaltiesMustBe100 extends HTTPError {
 
 export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   tags: { type: [String], required: false },
+  description: { type: String, required: false },
   supply: { type: Number, required: false, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: false, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
   customFees: {
@@ -138,6 +155,7 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   sellerInfo: {
     firstName: { type: String, required: false },
     lastName: {  type: String, required: false },
+    image: { type: Buffer, required: false },
     required: false
   },
   image: { type: Buffer, required: false },
@@ -157,7 +175,8 @@ NFTSchema.pre<INFT>('save', async function () {
     const seller = await MarketplaceUser.findById(this.sellerId);
     this.sellerInfo = {
       firstName: seller.firstName,
-      lastName: seller.lastName
+      lastName: seller.lastName,
+      image: seller.image
     };
   }
 });
@@ -172,15 +191,17 @@ export const nftPubFields = [
   'priceStart',
   'priceBuyNow',
   'sellerId',
+  'sellerInfo',
   'public',
-  'minted'
+  'minted',
+  'customFees',
+  'nftFor'
 ]
 
 export const nftPrivFields = [
   ...nftPubFields,
-  'customFees',
   'image',
-  'listOn'
+  'listOn',
 ]
 
 export interface NFTACLOptions {
@@ -314,7 +335,7 @@ export function toListedNFT(nft: INFT): IListedNFT {
     priceStart: pojo.priceStart,
     priceBuyNow: pojo.priceBuyNow,
     public: pojo.public as boolean,
-    sellerInfo: pojo.sellerInfo as { firstName: string, lastName: string }
+    sellerInfo: pojo.sellerInfo as { firstName: string, lastName: string, image:Buffer }
   }
 }
 

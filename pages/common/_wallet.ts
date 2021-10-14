@@ -315,7 +315,6 @@ const syncTransactionsWorker = new Worker('crypto:syncTransactions', async (job)
   connection: CryptoQueue.createConnection(`crypto:syncTransactions:worker`).redis,
 });
 
-
 /**
  * Transfers transaction data from the Hedera API to the database
  * @param transaction

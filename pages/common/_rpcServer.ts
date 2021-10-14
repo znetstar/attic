@@ -27,9 +27,11 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
+import {getWebhookSecret} from "./_stripe";
+import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
+import {marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser} from "./_user";
 
 import { Token } from './_token';
-import {getWebhookSecret} from "./_stripe";
 import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
 import {IUser} from "./_user";
 
@@ -170,6 +172,7 @@ const authorizedMethods = [
   'marketplace:patchNFT',
   'marketplace:deleteNFT',
   'marketplace:getNFT',
+  'marketplace:getAllUsers',
   'marketplace:getWallet',
   'marketplace:beginBuyLegalTender',
   'marketplace:completeBuyLegalTender'
@@ -248,6 +251,7 @@ export function rpcInit() {
   !(rpcServer as any).methodHost.has('marketplace:createNFT') && (rpcServer as any).methodHost.set('marketplace:createNFT',  marketplaceCreateNft);
   !(rpcServer as any).methodHost.has('marketplace:patchNFT') && (rpcServer as any).methodHost.set('marketplace:patchNFT',  marketplacePatchNft);
   !(rpcServer as any).methodHost.has('marketplace:getNFT') && (rpcServer as any).methodHost.set('marketplace:getNFT',  marketplaceGetNft);
+  !(rpcServer as any).methodHost.has('marketplace:getAllUsers') && (rpcServer as any).methodHost.set('marketplace:getAllUsers',  marketplaceGetAllUsers);
   !(rpcServer as any).methodHost.has('marketplace:createUser') && (rpcServer as any).methodHost.set('marketplace:createUser',  marketplaceCreateUser);
   !(rpcServer as any).methodHost.has('marketplace:patchUser') && (rpcServer as any).methodHost.set('marketplace:patchUser',  marketplacePatchUser);
   !(rpcServer as any).methodHost.has('marketplace:getWallet') && (rpcServer as any).methodHost.set('marketplace:getWallet',  async function (...args: any[]): Promise<unknown> {

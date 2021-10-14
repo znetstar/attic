@@ -6,7 +6,8 @@ import SessionComponent, {
 import * as React from 'react';
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {INFT, NFT, nftAcl, nftPubFields} from "../common/_nft";
+import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
+import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields, IUser} from "../common/_user";
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
@@ -22,7 +23,8 @@ export type ListingProps = SessionComponentProps&{
   nftForm?: INFT,
   subpage: string|null
   canEdit: boolean;
-
+  canConfirm: boolean;
+  userList: []
 };
 
 export enum ListingStep {
@@ -47,6 +49,8 @@ export type ListingState = SessionComponentState&{
   isCompleted: boolean;
   notifyMessage: string|null;
   stepNum: ListingStep;
+  pageTitle: string;
+  usersList: IUser[];
 };
 
 
@@ -55,20 +59,36 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
    * Size of the nft image/thumbnail
    */
   imageSize = { width: 200 }
-  state = {
+  state: ListingState = {
     editListingOpen: false,
     settingsOpen: false,
-    stepNum: 1,
+    stepNum: 0,
     isCompleted: false,
     notifyMessage: null,
-    nftForm: this.props.nftForm || {nftFor:'sale'},
+    nftForm: (this.props.nftForm && this.props.nftForm.nftFor) ? this.props.nftForm : {...this.props.nftForm, nftFor:'sale'},
     originalNftForm: { ...(this.props.nftForm || {}) },
-    pageTitle: 'Listing'
+    pageTitle: 'Listing',
+    usersList: []
   } as ListingState
 
 
   constructor(props: ListingProps) {
     super(props);
+  }
+
+  componentDidMount() {
+    if(this.props.session.user) {
+      this.getAllUsers()
+    }
+  }
+
+  getAllUsers = () => {
+    this.rpc['marketplace:getAllUsers']()
+      .then((res) => {
+        let users = [...this.state.usersList, ...res]
+        this.setState({ usersList: users })
+      })
+      .catch(this.handleError)
   }
 
   /**
@@ -90,8 +110,16 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     return this.props.canEdit;
   }
 
+  get canConfirm(): boolean {
+    return this.props.canConfirm;
+  }
+
   public get editListingOpen() {
     return this.canEdit && this.props.subpage === 'edit';
+  }
+
+  public get confirmOpen() {
+    return this.canConfirm && this.props.subpage === 'confirm';
   }
 
 
@@ -108,56 +136,72 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))
   }
 
+  mintNft = () => {
+    // mint logic for NFT
+    console.log(this.state.nftForm, 'Mint NFT here')
+  }
+
   render() {
     return (<div className={"page createNFT"}>
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
       <div>
-        {
-          this.editListingOpen ? (
-            (
-              <div >
-                <div className={"main"}>
-                  <div>
-                    <NFTImg allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
+        { 
+          this.confirmOpen ? (
+            <div className='confirm_wrapper'>
+              {console.log(this.state.nftForm)}
+              <div><NFTImg allowUpload={false} nftForm={this.state.nftForm} /></div>
+              <div>{this.state.nftForm.description}</div>
+              <div></div>
+
+              <div><Button variant="contained" onClick={this.mintNft} >Create NFT</Button></div>
+            </div>
+          ) : (
+            this.editListingOpen ? (
+              (
+                <div >
+                  <div className={"main"}>
+                    <div>
+                      <NFTImg allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
+                    </div>
+                    <div >
+                      {this.state.stepNum === ListingStep.assetForm ?
+                        <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
+                        <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
+                      }
+                    </div>
                   </div>
-                  <div >
-                    {this.state.stepNum === ListingStep.assetForm ?
-                      <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                      <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} />
-                    }
+                </div>
+              )
+            ) : (
+              // <EditProfile
+              //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
+              // ></EditProfile>
+              <div>
+                <div >
+                  <div className={"main"}>
+                    <div>
+                      <NFTImg allowUpload={false} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
+                    </div>
+                    <div >
+                      {
+                        this.canEdit ? (
+                          <Button variant="contained"
+                                  onClick={() => this.nftForm?._id && this.props.router.push(`/listing/${this.nftForm?._id}/edit`)}
+                          >
+                            Edit Listing
+                          </Button>
+                        ) : (
+                          <Button variant="contained" >
+                            Purchase
+                          </Button>
+                        )
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
             )
-          ) : (
-            // <EditProfile
-            //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
-            // ></EditProfile>
-            <div>
-              <div >
-                <div className={"main"}>
-                  <div>
-                    <NFTImg allowUpload={false} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
-                  </div>
-                  <div >
-                    {
-                      this.canEdit ? (
-                        <Button variant="contained"
-                                onClick={() => this.nftForm?._id && this.props.router.push(`/listing/${this.nftForm?._id}/edit`)}
-                        >
-                          Edit Listing
-                        </Button>
-                      ) : (
-                        <Button variant="contained" >
-                          Purchase
-                        </Button>
-                      )
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
           )
         }
       </div>
@@ -201,7 +245,7 @@ export async function getServerSideProps(context: any) {
   }
   // If id is self but is logged in attempt to create a listing
   else if (id === 'new') {
-    // const acl = await nftAcl({ session });
+    const acl = await nftAcl({ session });
 
     if (/*!acl.can('marketplace:createNFT', 'NFT')*/
       !user?.roles || !user?.roles?.includes(UserRoles.nftAdmin)
@@ -221,7 +265,12 @@ export async function getServerSideProps(context: any) {
       treasury,
       supplyType: TokenSupplyType.finite,
       tokenType: TokenType.nft,
-      sellerId: uid
+      sellerId: uid,
+      sellerInfo: {
+        firstName: user.firstName ? user.firstName : null,
+        lastName: user.lastName ? user.lastName : null,
+        image: user.image ? user.image : null
+      }
     });
 
     return {
@@ -264,7 +313,8 @@ export async function getServerSideProps(context: any) {
     props: {
       session,
       subpage: subpage||null,
-      canEdit: acl.can('marketplace:patchNFT', nft),
+      canEdit: acl.can('marketplace:patchNFT', "NFT"),
+      canConfirm: acl.can('marketplace:patchNFT', "NFT"),
       nftForm: nftPojo
     }
   }
