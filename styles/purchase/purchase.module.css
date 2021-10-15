@@ -59,6 +59,12 @@
   transition: 0.25s;
 }
 
+.spacer {
+  width: 24px;
+  padding: 3px;
+  margin-left: 20px;
+
+}
 .bid_form_wrapper {
   width: 100%;
   background-color: lightslategray;

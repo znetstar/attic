@@ -28,7 +28,7 @@ export type PurchaseState = SessionComponentState&{
   currentTab: number;
   purchaseType: string|unknown;
   bidExpand: boolean;
-  bidAmt: number;
+  bidAmt: number|undefined;
 };
 
 
@@ -41,15 +41,11 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
     currentTab: 0,
     purchaseType: this.props.nftForm?.nftFor,
     bidExpand: false,
-    bidAmt: 0
+    bidAmt: undefined
   } as PurchaseState
 
   onBuy = () => {
     console.log('Purchase NFT')
-  }
-
-  onBidFormSubmit = () => {
-    console.log('bid')
   }
 
   onBidConfirm = () => {
@@ -134,7 +130,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
           <div className={styles.bid_wrapper}>
 
             <div className={this.state.bidExpand ? `${styles.bid_button_expanded} ${styles.bid_expand_button}` : styles.bid_expand_button} onClick={(e) => this.setState({bidExpand: !this.state.bidExpand})}>
-              <div></div>
+              <div className={styles.spacer}></div>
               <span>Place a Bid</span>
 
               {this.state.bidExpand ? (
@@ -150,8 +146,8 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
                 <div className={styles.bid_form}>
                   <div>Your bid</div>
 
-                  <form onSubmit={(e) => this.onBidFormSubmit(e)}>
-                    <FormControl className={'form-control'}>
+                  <form onSubmit={(e) =>  e.preventDefault()}>
+                    <FormControl className={'bid-form'}>
                       <TextField onChange={(e) => this.setState({ bidAmt: e.target.value })} 
                                  value={this.state.bidAmt} 
                                  required={true} 
@@ -159,7 +155,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
                                  name={"BidAmount"} 
                                  label="Bid Amount" 
                                  type="number" 
-                                 className={"form-input"}
+                                 className={"bid-form"}
                                  InputLabelProps={{style : {color : "white"} }}
                                  InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, 
                                               inputProps: { min: 0, step:0.01}}}
@@ -174,11 +170,11 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
                     </div>
                     <div className={styles.bid_form_info}>
                       <div>Service fee</div>
-                      <div>$5 USD</div>
+                      <div>{'$' + (this.state.bidAmt ? this.state.bidAmt*0.1 : 0) + ' USD'}</div>
                     </div>
                     <div className={styles.bid_form_info}>
                       <div>Total bid amount</div>
-                      <div>$300 USD</div>
+                      <div>{'$' + (this.state.bidAmt ? (parseFloat(this.state.bidAmt) + (parseFloat(this.state.bidAmt)*0.1)) : 0) + ' USD'}</div>
                     </div>
 
                     <div className={styles.bid_confirm}>
