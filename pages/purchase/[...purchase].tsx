@@ -10,6 +10,7 @@ import {toPojo} from "@thirdact/to-pojo";
 import { MarketplaceAvatar } from "../common/_avatar";
 import {getUser} from "../api/auth/[...nextauth]";
 import {IUser} from "./../common/_user";
+import {Timer} from "./../common/_timer";
 
 import styles from "./../../styles/purchase/purchase.module.css"
 import { Chip, Box, Tab, Tabs, TextField, FormControl, InputAdornment } from '@mui/material';
@@ -103,7 +104,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
       {this.errorDialog}
       {this.makeAppBar(this.props.router, (this.state.purchaseType === 'sale') ? 'Purchase Listing' : 'Auction Listing')}
 
-      <div className={styles.img_wrapper}></div>
+      <div className={styles.img_wrapper}><Timer date={this.props.nftForm?.listOn}/></div>
 
       <div className={styles.nft_info_wrappper}>
         <h2>{name}</h2>
