@@ -149,7 +149,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
 
                   <form onSubmit={(e) =>  e.preventDefault()}>
                     <FormControl className={'bid-form'}>
-                      <TextField onChange={(e) => this.setState({ bidAmt: e.target.value })} 
+                      <TextField onChange={(e) => {(parseFloat(e.target.value) < 0) ? this.setState({ bidAmt: '' }) : this.setState({ bidAmt: Math.floor(parseFloat(e.target.value)*100)/100 })}}
                                  value={this.state.bidAmt} 
                                  required={true} 
                                  variant={"filled"} 
