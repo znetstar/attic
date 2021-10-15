@@ -12,7 +12,10 @@ import {getUser} from "../api/auth/[...nextauth]";
 import {IUser} from "./../common/_user";
 
 import styles from "./../../styles/purchase/purchase.module.css"
-import { Chip, Box, Tab, Tabs } from '@mui/material';
+import { Chip, Box, Tab, Tabs, TextField, FormControl, InputAdornment } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { styled } from "@mui/styles";
 
 
 export type PurchaseProps = SessionComponentProps&{
@@ -24,6 +27,8 @@ export type PurchaseProps = SessionComponentProps&{
 export type PurchaseState = SessionComponentState&{
   currentTab: number;
   purchaseType: string|unknown;
+  bidExpand: boolean;
+  bidAmt: number;
 };
 
 
@@ -34,11 +39,21 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
 
   state = {
     currentTab: 0,
-    purchaseType: this.props.nftForm?.nftFor
+    purchaseType: this.props.nftForm?.nftFor,
+    bidExpand: false,
+    bidAmt: 0
   } as PurchaseState
 
-  onPurchase = () => {
+  onBuy = () => {
     console.log('Purchase NFT')
+  }
+
+  onBidFormSubmit = () => {
+    console.log('bid')
+  }
+
+  onBidConfirm = () => {
+    console.log('bid confirm')
   }
 
   userRender = (infoObj, key:string|number, isOwner:boolean) => {
@@ -60,7 +75,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
             }
             imageFormat={this.enc.options.imageFormat}
             allowUpload={false}
-            resizeImage={{height:80, width:80}}
+            resizeImage={{height:65, width:65}}
           ></MarketplaceAvatar>
         </div>
         {isOwner ? (
@@ -79,18 +94,18 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
   }
 
   render() {
-    console.log(this.props)
+    console.log(this.props, this.state)
     let name = this.props.nftForm?.name
-    let user_firstName = this.props.user?.firstName ? this.props.user?.firstName : '' 
-    let user_lastName =  this.props.user?.lastName ? this.props.user?.lastName : ''
-    let user_img = this.props.user?.image ? this.props.user.image : ''
-    let price = (this.state.purchaseType === 'sale') ? this.props.nftForm.priceBuyNow : this.props.nftForm.priceStart
+    let currOwn_firstName = this.props.user?.firstName ? this.props.user?.firstName : '' 
+    let currOwn_lastName =  this.props.user?.lastName ? this.props.user?.lastName : ''
+    let currOwn_img = this.props.user?.image ? this.props.user.image : ''
+    let price = (this.state.purchaseType === 'sale') ? '$' + this.props.nftForm.priceBuyNow : 'Current Bid $' + this.props.nftForm.priceStart
 
     return (
     <div className={styles.purchase_wrapper}>
 
       {this.errorDialog}
-      {this.makeAppBar(this.props.router, 'Purchase Listing')}
+      {this.makeAppBar(this.props.router, (this.state.purchaseType === 'sale') ? 'Purchase Listing' : 'Auction Listing')}
 
       <div className={styles.img_wrapper}></div>
 
@@ -100,20 +115,81 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
           <div className={styles.curr_user}>
             <MarketplaceAvatar
               image={
-                typeof(user_img) === 'string' ? Buffer.from(user_img, 'base64') : user_img
+                typeof(currOwn_img) === 'string' ? Buffer.from(currOwn_img, 'base64') : currOwn_img
               }
               imageFormat={this.enc.options.imageFormat}
               allowUpload={false}
               resizeImage={{height:35, width:35}}
             ></MarketplaceAvatar>
-            <div className={styles.curr_userName}> {'@' + user_firstName + '_' + user_lastName}</div>
+            <div className={styles.curr_userName}> {'@' + currOwn_firstName + '_' + currOwn_lastName}</div>
           </div>
-          <div className={styles.nft_price}>{'$' + price}</div>
+          <div className={styles.nft_price}>{price}</div>
         </div>
       </div>
 
-      <div className={styles.purchase_Button}>
-        <Chip sx={{ width: "80%" }} label={(this.state.purchaseType === 'sale') ? "Purchase" : "Place a Bid"} onClick={this.onPurchase} />
+      <div className={styles.sale}>
+        {(this.state.purchaseType === 'sale') ? (
+          <Chip sx={{ width: "80%", backgroundColor: "lightslategray" }} label="Purchase" onClick={this.onBuy} />
+        ) : (
+          <div className={styles.bid_wrapper}>
+
+            <div className={this.state.bidExpand ? `${styles.bid_button_expanded} ${styles.bid_expand_button}` : styles.bid_expand_button} onClick={(e) => this.setState({bidExpand: !this.state.bidExpand})}>
+              <div></div>
+              <span>Place a Bid</span>
+
+              {this.state.bidExpand ? (
+                <div className={styles.bid_Arrow}><KeyboardArrowUpIcon onClick={() => this.setState({bidExpand: false})}/></div>
+              ) : (
+                <div className={styles.bid_Arrow}><KeyboardArrowDownIcon onClick={() => this.setState({bidExpand: true})}/></div>
+              )}
+            </div>
+
+            {this.state.bidExpand && (
+              <div className={styles.bid_form_wrapper}>
+                <p>You are about to place a bid for {name} from {'@' + currOwn_firstName + '_' + currOwn_lastName}</p>
+                <div className={styles.bid_form}>
+                  <div>Your bid</div>
+
+                  <form onSubmit={(e) => this.onBidFormSubmit(e)}>
+                    <FormControl className={'form-control'}>
+                      <TextField onChange={(e) => this.setState({ bidAmt: e.target.value })} 
+                                 value={this.state.bidAmt} 
+                                 required={true} 
+                                 variant={"filled"} 
+                                 name={"BidAmount"} 
+                                 label="Bid Amount" 
+                                 type="number" 
+                                 className={"form-input"}
+                                 InputLabelProps={{style : {color : "white"} }}
+                                 InputProps={{startAdornment: <InputAdornment position="start">$</InputAdornment>, 
+                                              inputProps: { min: 0, step:0.01}}}
+                                />
+                    </FormControl>
+                  </form>
+
+                  <div className={styles.line}></div>
+                  <div className={styles.bid_form_info}>
+                      <div>Your balance</div>
+                      <div>$250 USD</div>
+                    </div>
+                    <div className={styles.bid_form_info}>
+                      <div>Service fee</div>
+                      <div>$5 USD</div>
+                    </div>
+                    <div className={styles.bid_form_info}>
+                      <div>Total bid amount</div>
+                      <div>$300 USD</div>
+                    </div>
+
+                    <div className={styles.bid_confirm}>
+                      <Chip sx={{ width: "80%", backgroundColor: "white", color: "black" }} label="Place a Bid" onClick={this.onBidConfirm} />
+                    </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
       </div>
 
       <div className={styles.nft_tabsPanel}>
@@ -132,6 +208,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
         <div hidden={!(this.state.currentTab === 0)} className={styles.info}>
           {this.props.nftForm.description ? '\nDescription\n' + this.props.nftForm.description + '\n\n' : 'No Description Available \n'}
           {this.props.nftForm.tags ? this.props.nftForm.tags.map((tag, idx) => <Chip label={tag} key={idx} sx={{ margin:'10px 3px 10px 3px'}} />) : ''}
+          <h2>{this.props.nftForm.maxSupply ? 'Edition of ' + this.props.nftForm.maxSupply : ''}</h2>
         </div>
 
         <div hidden={!(this.state.currentTab === 1)} className={styles.activity}>Activity</div>

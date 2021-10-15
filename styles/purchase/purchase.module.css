@@ -10,13 +10,91 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   padding: 0 30px 20px 30px;
 }
 
-.purchase_Button {
+.sale {
   width: 100%;
   text-align: center;
   margin: 10px 0;
+}
+
+.bid_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.bid_expand_button {
+  width: 80%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background-color: lightslategray;
+  padding: 8px;
+  border-radius: 100px;
+}
+
+.bid_button_expanded {
+  max-width: 100%;
+  width: 100%;
+  border-radius: 0px;
+}
+
+.bid_expand_button .bid_Arrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3px;
+  margin-right: 20px;
+  border-radius: 50%;
+}
+
+.bid_expand_button .bid_Arrow:hover {
+  background-color: rgba(232, 236, 241, 0.4);
+  transition: 0.25s;
+}
+
+.bid_form_wrapper {
+  width: 100%;
+  background-color: lightslategray;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.bid_form, .bid_form_info{
+  width: 80%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.bid_form_info {
+  padding: 10px 0 15px 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.bid_confirm {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0 40px 0;
+}
+
+.line {
+  width: 100%;
+  border: 0.5px solid black;
+  margin-top: 10px;
 }
 
 .info {
@@ -34,17 +112,16 @@
 }
 
 .user_info {
-  padding: 10px;
+  padding: 6px;
   text-align: center;
 }
 
 .user_name {
   font-size: 16px;
-  padding: 5px;
 }
 
 .user_percent {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
 }
 
@@ -53,7 +130,8 @@
 }
 
 .user_avatar {
-  max-width: 300px;
+  max-width: 80px;
+  max-height: 80px;
 }
 
 .royaltyList {
