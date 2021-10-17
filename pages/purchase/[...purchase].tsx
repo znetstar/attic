@@ -11,6 +11,7 @@ import { MarketplaceAvatar } from "../common/_avatar";
 import {getUser} from "../api/auth/[...nextauth]";
 import {IUser} from "./../common/_user";
 import {Timer} from "./../common/_timer";
+import {marketplaceGetWallet, IPOJOWallet, toWalletPojo} from "./../common/_wallet";
 
 import styles from "./../../styles/purchase/purchase.module.css"
 import { Chip, Box, Tab, Tabs, TextField, FormControl, InputAdornment } from '@mui/material';
@@ -22,7 +23,8 @@ import { styled } from "@mui/styles";
 export type PurchaseProps = SessionComponentProps&{
   canPurchase: boolean;
   nftForm: INFT;
-  user: IUser;
+  user: IUser|null;
+  wallet: IPOJOWallet|null;
 };
 
 export type PurchaseState = SessionComponentState&{
@@ -230,7 +232,19 @@ export async function getServerSideProps(context: any) {
 
   let [not_important, not_important2, id] = req.url.split('/');
 
-  const user = (await getUser(session))?.marketplaceUser;
+  const sessionUser = await getUser(session);
+
+  // if not logged in, redirect to login page
+  if (!sessionUser || !sessionUser.marketplaceUser) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false
+      }
+    }
+  }
+
+  let user = sessionUser?.marketplaceUser
 
   // If no nft id is provided
   if (!id) {
@@ -256,13 +270,17 @@ export async function getServerSideProps(context: any) {
 
   const nftPojo: any = toPojo(nft);
 
+  // get wallet of user
+  const { u, wallet } = await marketplaceGetWallet(sessionUser);
+
   return {
     props: {
       session,
       // if acc with 3act, has a wallet and enough hbar then true; else false
       canPurchase: true,
       nftForm: nftPojo,
-      user: user
+      user: user ? user : null,
+      wallet: wallet ? toWalletPojo(wallet) : null
     }
   }
 }
