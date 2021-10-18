@@ -40,6 +40,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
     super(props);
   }
 
+  serviceFee = 1;
   state = {
     currentTab: 0,
     purchaseType: this.props.nftForm?.nftFor,
@@ -49,6 +50,15 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
 
   onBuy = () => {
     console.log('Purchase NFT')
+    if (parseFloat(this.props.wallet?.balance) >= (parseFloat(this.props.nftForm?.priceBuyNow) + parseFloat(this.props.nftForm?.priceBuyNow) * this.serviceFee)) {
+      console.log('call cryptoTransferNonFungible')
+    } else {
+      if (this.props.user) {
+        this.props.router.push('/wallet/deposit')
+      } else {
+        this.props.router.push('/login')
+      }
+    }
   }
 
   onBidConfirm = () => {
@@ -106,7 +116,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
       {this.errorDialog}
       {this.makeAppBar(this.props.router, (this.state.purchaseType === 'sale') ? 'Purchase Listing' : 'Auction Listing')}
 
-      <div className={styles.img_wrapper}><Timer date={this.props.nftForm?.listOn}/></div>
+      <div className={styles.img_wrapper}>{this.props.nftForm.nftFor === 'auction' && <Timer date={this.props.nftForm?.listOn}/>}</div>
 
       <div className={styles.nft_info_wrappper}>
         <h2>{name}</h2>
@@ -169,15 +179,15 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
                   <div className={styles.line}></div>
                   <div className={styles.bid_form_info}>
                       <div>Your balance</div>
-                      <div>{'$' + (this.props.wallet?.balance) + 'USD'}</div>
+                      <div>{'$' + (this.props.wallet?.balance) + ' USD'}</div>
                     </div>
                     <div className={styles.bid_form_info}>
                       <div>Service fee</div>
-                      <div>{'$' + (this.state.bidAmt ? this.state.bidAmt*0.1 : 0) + ' USD'}</div>
+                      <div>{'$' + (this.state.bidAmt ? (Math.round((this.state.bidAmt*this.serviceFee*100)/100)/100) : 0) + ' USD'}</div>
                     </div>
                     <div className={styles.bid_form_info}>
                       <div>Total bid amount</div>
-                      <div>{'$' + (this.state.bidAmt ? (parseFloat(this.state.bidAmt) + (parseFloat(this.state.bidAmt)*0.1)) : 0) + ' USD'}</div>
+                      <div>{'$' + (this.state.bidAmt ? (Math.round(parseFloat(this.state.bidAmt)) + (Math.round((this.state.bidAmt*this.serviceFee*100)/100)/100)) : 0) + ' USD'}</div>
                     </div>
 
                     <div className={styles.bid_confirm}>
