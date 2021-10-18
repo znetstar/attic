@@ -95,9 +95,9 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
   render() {
     console.log(this.props, this.state)
     let name = this.props.nftForm?.name
-    let currOwn_firstName = this.props.user?.firstName ? this.props.user?.firstName : '' 
-    let currOwn_lastName =  this.props.user?.lastName ? this.props.user?.lastName : ''
-    let currOwn_img = this.props.user?.image ? this.props.user.image : ''
+    let currOwn_firstName = this.props.nftForm.sellerInfo?.firstName ? this.props.nftForm.sellerInfo?.firstName : '' 
+    let currOwn_lastName =  this.props.nftForm.sellerInfo?.lastName ? this.props.nftForm.sellerInfo?.lastName : ''
+    let currOwn_img = this.props.nftForm.sellerInfo?.image ? this.props.nftForm.sellerInfo.image : ''
     let price = (this.state.purchaseType === 'sale') ? '$' + this.props.nftForm.priceBuyNow : 'Current Bid $' + this.props.nftForm.priceStart
 
     return (
@@ -169,7 +169,7 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
                   <div className={styles.line}></div>
                   <div className={styles.bid_form_info}>
                       <div>Your balance</div>
-                      <div>$250 USD</div>
+                      <div>{'$' + (this.props.wallet?.balance) + 'USD'}</div>
                     </div>
                     <div className={styles.bid_form_info}>
                       <div>Service fee</div>
