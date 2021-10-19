@@ -5,6 +5,8 @@
   align-items: center;
   justify-content: center;
   height:62px;
+  position: fixed;
+  bottom: 0;
 }
 
 .nav {

@@ -5,10 +5,10 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 import * as React from "react";
 import {PureComponent} from "react";
-import {SubcomponentProps, SubcomponentPropsWithRouter} from "./_session-component";
+import {SubcomponentPropsWithRouter} from "./_session-component";
+import Link from 'next/link';
 
 import styles from './../../styles/navbar.module.css';
-import { withRouter } from "next/router";
 
 export type NavBarProps =  SubcomponentPropsWithRouter&{
 }
@@ -22,29 +22,27 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
   }
 
   home = () => {
-    console.log('home')
     this.setState({ icon: 1 })
-    this.props.router.push('/')
   }
+
   discover = () => {
-    console.log('discover')
     this.setState({ icon: 2 })
-    this.props.router.push('/discover')
   }
+
   wallet = () => {
-    console.log('wallet')
-    this.setState({ icon: 3 })
-    this.props.router.push('/wallet/deposit')
+      this.setState({ icon: 3 })
   }
+
   profile = () => {
-    console.log('profile')
-    this.setState({ icon: 4 })
-    this.props.router.push('/profile/self')
+      this.setState({ icon: 4 })
   }
+
   render() {
+    console.log(this.props)
     return (
       <div className={styles.navbar_wrapper}>
         <div className={styles.nav}>
+          <Link href='/' passHref>
           <div className={styles.tab} 
                onMouseEnter={() => this.setState({ icon: 1 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
@@ -54,7 +52,9 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
                   <div className={this.state.icon === 1 ? styles.dot : styles.noDot}></div>
                 </div>
           </div>
+          </Link>
 
+          <Link href='/discover' passHref>
           <div className={styles.tab} 
                onMouseEnter={() => this.setState({ icon: 2 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
@@ -64,7 +64,9 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
                   <div className={this.state.icon === 2 ? styles.dot : styles.noDot}></div>
                 </div>
           </div>
+          </Link>
 
+          <Link href={this.props?.wallet ? '/wallet/deposit' : '/login'} passHref>
           <div className={styles.tab} 
                onMouseEnter={() => this.setState({ icon: 3 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
@@ -74,7 +76,9 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
                   <div className={this.state.icon === 3 ? styles.dot : styles.noDot}></div>
                 </div>
           </div>
+          </Link>
 
+          <Link href={this.props.session?.user ? '/profile/self' : '/login'} passHref>
           <div className={styles.tab} 
                onMouseEnter={() => this.setState({ icon: 4 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
@@ -84,10 +88,11 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
                   <div className={this.state.icon === 4 ? styles.dot : styles.noDot}></div>
                 </div>
           </div>
+          </Link>
         </div>
       </div>
     )
   }
 }
 
-export default withRouter(NavBar);
+export default NavBar;
