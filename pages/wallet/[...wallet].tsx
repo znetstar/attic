@@ -163,7 +163,10 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
           this.handleError(Err.message, 'error');
           throw Err;
         }
-        else this.handleError('Payment success', 'success');
+        else {
+          this.handleError('Payment success', 'success');
+          this.props.router.back()
+        }
       }
     }
   }
@@ -280,6 +283,14 @@ export async function getServerSideProps(context: any) {
   const session = await WalletPage.getSession(context);
 
   let [not_important, not_important2, subpage] = req.url.split('/');
+  
+  if (subpage !== 'deposit' || subpage !== 'transactions' || subpage !== 'withdraw') {
+    subpage = req.url.split('=')[1];
+  };
+
+  if (!subpage) {
+    subpage = 'deposit';
+  };
 
 
   const sessionUser = await getUser(session);

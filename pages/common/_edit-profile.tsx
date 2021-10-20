@@ -44,7 +44,7 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
   /**
    * Size of the profile image
    */
-  imageSize = { width: 200 }
+  imageSize = { width: 125, height:125 }
   state = {
     isCompleted: false,
     notifyMessage: null,

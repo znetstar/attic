@@ -1,0 +1,9 @@
+.timer_wrapper {
+  background-color: wheat;
+  color: black;
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 20px;
+  float: right;
+  margin: 10px;
+}
