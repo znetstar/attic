@@ -41,7 +41,7 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
         nft.sellerInfo.firstName.toLowerCase().includes(this.state.searchText) || 
         nft.sellerInfo.lastName.toLowerCase().includes(this.state.searchText)) 
       : []
-      console.log(displayNft)
+      console.log(this.props, 'discover')
     return (
     <div className={"page createNFT"}>
       {this.errorDialog}
@@ -79,7 +79,7 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
             </div>
           )}) : 'Please check later!!!'}
         </div>
-      <NavBar session={this.props.session}/>
+      <NavBar />
     </div>);
   }
 }
