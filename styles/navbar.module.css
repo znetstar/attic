@@ -1,0 +1,46 @@
+.navbar_wrapper {
+  width:100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height:62px;
+  position: fixed;
+  bottom: 0;
+}
+
+.nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.tab {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.dot_wrapper {
+  height: 19px;
+  width: 6px;
+}
+
+.dot {
+  height:6px;
+  width: 6px;
+  background-color: white;
+  border-radius: 100px;
+  margin-top: 8px;
+  margin-bottom: 5px;
+}
+
+.noDot {
+  display: none;
+}
