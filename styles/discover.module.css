@@ -1,0 +1,27 @@
+.input {
+  border-radius: 1000px;
+}
+
+.nftWrapper {
+  width: 100%;
+  display:flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.nft {
+  display: flex;
+  flex-direction: column;
+  margin: 10px;
+}
+
+.nftImg {
+  width: 150px;
+  height: 150px;
+  background-color: gray;
+  border-radius: 20px;
+}
+
+.name {
+  padding-left: 10px;
+}
