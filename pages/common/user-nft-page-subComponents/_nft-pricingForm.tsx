@@ -6,7 +6,7 @@ import {NextRouter, withRouter} from "next/router";
 
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFT } from "../_nft";
-import { IUser } from "../_user";
+import {IPOJOUser, IUser} from "../_user";
 import {SearchBar} from "./../_searchBar"
 import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pricingForm.module.css";
 import {diff, jsonPatchPathConverter} from "just-diff";

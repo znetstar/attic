@@ -22,7 +22,7 @@ export class SearchBar extends PureComponent<SearchBarProps> {
 
   componentDidUpdate (_prevProps: any, prevState: { selected: string; }) {
     if(this.state.selected !== prevState.selected && this.props.searchMenu) {
-      let e = this.props.searchMenu.find(item => item.email === this.state.selected)
+      let e = this.props.searchMenu.find(item => item._id === this.state.selected)
       this.props.onSelect(e)
     }
   }
