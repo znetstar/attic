@@ -187,6 +187,7 @@ UserSchema.pre<IUser&{ password?: string }&Document>('save', async function () {
         }
       })
     ])
+
 });
 
 type ToUserParsable = (Document<IUser>&IUser)|IUser|Document<IUser>;

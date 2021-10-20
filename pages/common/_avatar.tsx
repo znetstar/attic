@@ -133,6 +133,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
       }}>
         <input style={{ display: 'hidden' }} disabled={!this.props.allowUpload} ref={this.inputRef as any} accept={this.imageAccept} type={'file'} name={"file-input"} onChange={(e) => this.onFileChange(e)}></input>
         <Avatar
+          sx={this.props.resizeImage ? this.props.resizeImage : ''}
           className={this.classes.image}
           src={ this.imageUrl } />
       </div>

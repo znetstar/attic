@@ -78,6 +78,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                       userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
                       imageFormat={this.enc.options.imageFormat}
                       allowUpload={false}
+                      resizeImage={{width:125, height:125}}
                     ></MarketplaceAvatar>
                   </div>
                   <div className={"avatar-box"}>

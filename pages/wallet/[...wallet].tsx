@@ -163,7 +163,10 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
           this.handleError(Err.message, 'error');
           throw Err;
         }
-        else this.handleError('Payment success', 'success');
+        else {
+          this.handleError('Payment success', 'success');
+          this.props.router.back()
+        }
       }
     }
   }
