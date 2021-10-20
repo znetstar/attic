@@ -17,8 +17,8 @@ type NftPricingProps = SessionComponentProps&{
   nftForm: INFT;
   onFormChange: Function;
   originalNftForm: INFT;
-  usersList: IUser[];
-  currUser: IUser;
+  usersList: IPOJOUser[];
+  currUser: IPOJOUser;
 }
 
 type PricingState = SessionComponentState&{
@@ -51,7 +51,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       if (this.state.isUserSeller === 'No') {
         this.setState({ showSellerInput: true })
       } else {
-        this.setState({ showSellerInput: false }) 
+        this.setState({ showSellerInput: false })
         this.props.onFormChange('sellerId', this.props.currUser.marketplaceUser._id)
         this.props.onFormChange('sellerInfo', {firstName: this.props.currUser.marketplaceUser.firstName ? this.props.currUser.marketplaceUser.firstName : null, lastName: this.props.currUser.marketplaceUser.lastName ? this.props.currUser.marketplaceUser.lastName : null, image: this.props.currUser.marketplaceUser.image ? this.props.currUser.marketplaceUser.image : null})
       }
@@ -162,7 +162,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
                 </FormControl>
               </div>
             )}
-            
+
             <div>
             <FormControl component="fieldset">
               <FormLabel component="legend">Are you the Seller?</FormLabel>

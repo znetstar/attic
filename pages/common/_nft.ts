@@ -12,7 +12,7 @@ const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
-import {IToken, Token, TokenSupplyType, TokenType} from "./_token";
+import {CannotInteractWithTokenNotCreatedError, IToken, Token, TokenSchema, TokenSupplyType, TokenType} from "./_token";
 import {IPOJOUser, IUser, ToUserPojo, userAcl, userPrivFields, userPubFields, UserRoles, User as MarketplaceUser} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {number} from "prop-types";
@@ -85,7 +85,7 @@ export interface INFTMetadata  {
 
 
 export type INFT = IToken&INFTMetadata&{
-  maxSupply: 0;
+  maxSupply: number;
   nftFor?: SaleTypes;
   priceStart?: number;
   priceBuyNow?: number;
@@ -99,6 +99,9 @@ export type INFT = IToken&INFTMetadata&{
     image: Buffer;
   },
   public?: boolean;
+  cryptoMintToken(metadatas?: HIP10Metadata[]): Promise<void>;
+  cryptoTransferNonFungible(executingAccountId: ObjectId|string, lines: Map<{ to: Buffer, from?: Buffer }, number>): Promise<void>;
+  getHIP10Metadata(): Promise<HIP10Metadata>;
 }
 
 export type IListedNFT = {
@@ -107,7 +110,7 @@ export type IListedNFT = {
   name: string;
   symbol: string;
   tags: string[];
-  maxSupply: 0;
+  maxSupply: number;
   minted: number;
   priceStart?: number;
   priceBuyNow?: number;
@@ -180,6 +183,17 @@ NFTSchema.pre<INFT>('save', async function () {
     };
   }
 });
+
+NFTSchema.methods.cryptoMintToken = async function (
+  metadatas?: HIP10Metadata[]
+): Promise<void> {
+  if (!this.tokenId) {
+    throw new CannotInteractWithTokenNotCreatedError(this.id);
+  }
+
+  let buffers = [].concat(metadatas || []).map((m) => Buffer.from(JSON.stringify(m), 'utf8'))
+  return Token.schema.methods.cryptoMintToken.call(this, void(0), buffers);
+}
 
 export const nftPubFields = [
   '_id',

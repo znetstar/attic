@@ -19,7 +19,8 @@ import {MarketplaceAvatar} from "./_avatar";
 import {IEncodeTools} from "@etomon/encode-tools";
 
 export type EditProfileProps = AuthenticatedSubcomponentProps&{
-
+  marketplaceUser: IUser;
+  userImagesPublicPhotoUrl: string;
 };
 
 /**
@@ -29,7 +30,7 @@ export type EditProfileState = {
   /**
    * Fields for the profile being modified
    */
-  userForm: IUser
+  userForm: IPOJOUser
   /**
    * Is `true` when all required fields have ben satisfied
    */
@@ -54,11 +55,7 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
       password: null,
       ...this.props.session?.user?.marketplaceUser as IPOJOUser,
       ...(
-        this.props.session?.user?.marketplaceUser?.image ? {
-          image: (
-            Buffer.from(this.props.session?.user?.marketplaceUser?.image, 'base64')
-          )
-        } : {}
+        this.props.session?.user?.marketplaceUser?.image ? { image: this.props.session?.user?.marketplaceUser?.image } : {}
       )
     },
     test: 0
@@ -139,7 +136,7 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
    */
   updateForm = () => {
     (async () => {
-      const userForm: IUser = {
+      const userForm: IPOJOUser = {
         ...this.userForm
       };
 
@@ -160,11 +157,16 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
         });
 
       if (this.changedImage && userForm.image) {
-        patches.push({
-          op: 'add',
-          path: '/image',
-          value: userForm.image
-        })
+        const bufImage: string = userForm.image;
+        if (bufImage.substr(0,5) === 'data:') {
+          const b64 = bufImage.split(';base64,').pop() as string;
+          patches.push({
+            op: 'add',
+            path: '/image',
+            value: Buffer.from(b64, 'base64')
+          })
+        }
+
       }
 
       await this.props.rpc["marketplace:patchUser"]({} as any, patches as any)
@@ -220,6 +222,9 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
                       imageFormat={this.props.enc.options.imageFormat}
                       resizeImage={this.imageSize}
                       allowUpload={true}
+
+                      userId={this.props.marketplaceUser._id}
+                      userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
                     ></MarketplaceAvatar>
                   </div>
                   <div>

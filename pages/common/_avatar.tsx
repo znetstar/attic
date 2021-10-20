@@ -8,12 +8,14 @@ export interface MarketplaceAvatarProps {
   /**
    * The actual profile image
    */
-  image?: Buffer;
+  image?: string;
+  userId: string;
+  userImagesPublicPhotoUrl: string;
   /**
    * Called whenever the profile image chnages
    * @param image
    */
-  onChange?: (image: Buffer) => void;
+  onChange?: (image: string) => void;
   /**
    * Image format to convert image to upon upload
    */
@@ -86,9 +88,10 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
         newBuffer = await file.arrayBuffer();
       }
     }
+    const im = `data:${this.mimeType};base64,${Buffer.from(newBuffer).toString('base64')}`
 
     this.props.onChange && this.props.onChange(
-      Buffer.from(newBuffer)
+      im
     );
   }
 
@@ -96,7 +99,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
    * Data URI of the image
    */
   public get imageUrl(): string|undefined {
-    return this.props.image ? `data:${this.mimeType};base64,${Buffer.from(this.props.image).toString('base64')}` : void(0);
+    return this.props.image;
   }
 
   /**

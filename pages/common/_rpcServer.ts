@@ -1,24 +1,19 @@
 import {
-  EncodeToolsSerializer,
-  Transport,
-  ServerSideTransport,
   ClientRequest,
-  Serializer,
-  Response,
+  InternalError,
   Message,
-  Request, InternalError
+  Request,
+  Response,
+  Serializer,
+  ServerSideTransport,
+  Transport
 } from 'multi-rpc-common';
-import * as _ from 'lodash';
-import {
-  Server
-} from 'multi-rpc';
+import {Server} from 'multi-rpc';
 
-import type { NextApiRequest, NextApiResponse } from 'next'
-import {encodeOptions, makeSerializer} from "./_encoder";
+import type {NextApiRequest, NextApiResponse} from 'next'
+import {encodeOptions, makeEncoder, makeSerializer} from "./_encoder";
 
-import {
-  RPCInterface,
-} from '@thirdact/simple-mongoose-interface';
+import {RPCInterface,} from '@thirdact/simple-mongoose-interface';
 import {HTTPError, MarketplaceAPI, UnauthorizedRequest} from "./_rpcCommon";
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import {getSession} from "next-auth/client";
@@ -27,13 +22,10 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
-import {getWebhookSecret} from "./_stripe";
 import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
 import {marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser} from "./_user";
-
-import { Token } from './_token';
 import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
-import {IUser} from "./_user";
+import {EncodeToolsNative as EncodeTools, SerializationFormat} from "@etomon/encode-tools/lib/EncodeToolsNative";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -138,7 +130,7 @@ export function createAtticService() {
     redirect_uri: process.env.SERVICE_REDIRECT_URI as string,
   }, sessionDb, [
     'client_credentials'
-  ]);
+  ], makeEncoder());
 
   return atticService;
 }

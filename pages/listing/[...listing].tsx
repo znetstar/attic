@@ -24,7 +24,7 @@ export type ListingProps = SessionComponentProps&{
   subpage: string|null
   canEdit: boolean;
   canConfirm: boolean;
-  userList: []
+  userList: { email: string }[]
 };
 
 export enum ListingStep {
@@ -50,7 +50,7 @@ export type ListingState = SessionComponentState&{
   notifyMessage: string|null;
   stepNum: ListingStep;
   pageTitle: string;
-  usersList: IUser[];
+  usersList: IPOJOUser[];
 };
 
 
@@ -146,7 +146,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
       <div>
-        { 
+        {
           this.confirmOpen ? (
             <div className='confirm_wrapper'>
               {console.log(this.state.nftForm)}
@@ -257,11 +257,11 @@ export async function getServerSideProps(context: any) {
 
     const { treasury } = await initMarketplace();
 
-    const symName = EncodeTools.WithDefaults.encodeBuffer(EncodeTools.WithDefaults.uniqueId(IDFormat.uuidv1), BinaryEncoding.base32).toLowerCase().substr(0, 100);
+    const name = EncodeTools.WithDefaults.uniqueId(IDFormat.nanoid, 6).toUpperCase();
     const nft = await NFT.create({
       userId: uid,
-      symbol: symName,
-      name: symName,
+      symbol: name,
+      name: name,
       treasury,
       supplyType: TokenSupplyType.finite,
       tokenType: TokenType.nft,

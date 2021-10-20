@@ -5,10 +5,11 @@ import rpcServer, {atticServiceRpcProxy, exposeModel, MarketplaceClientRequest, 
 import {JSONPatch, JSONPatchOp, ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
 import atticConfig from '../../misc/attic-config/config.json';
-import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {ImageFormatMimeTypes, SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import {makeEncoder} from "./_encoder";
-import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
+import {ImageFormat, SerializationFormat} from "@etomon/encode-tools/lib/IEncodeTools";
 const { DEFAULT_USER_SCOPE } = atticConfig;
+import *  as FormData  from 'form-data';
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
@@ -40,6 +41,7 @@ export interface IUser {
    * Image as a `Buffer`
    */
   image?: Buffer
+  imageUrl?: boolean;
 
   /**
    * The password here is a placeholder and does nothing
@@ -92,6 +94,7 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
   },
   atticUserId: { type: String, required: true, unique: true },
   image: { type: Buffer, required: false },
+  imageUrl: { type: Boolean, required: false },
   public: { type: Boolean, required: true, default: () => false },
   follower: {
     type: Number,
@@ -122,39 +125,68 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
   }
 }));
 
-UserSchema.pre<IUser&{ password?: string }>('save', async function () {
-  // Changing the password will update the password on the attic server
-  if (this.password) {
+UserSchema.pre<IUser&{ password?: string }&Document>('save', async function () {
+    // Changing the password will update the password on the attic server
     const atticRpc = atticServiceRpcProxy();
+    if (this.password) {
 
-    await atticRpc.updateUser(this.atticUserId, {
-      password: this.password
-    } as any);
+      await atticRpc.updateUser(this.atticUserId, {
+        password: this.password
+      } as any);
 
-    delete this.password;
-  }
+      delete this.password;
+    }
+    const enc = makeEncoder();
 
-  await Promise.all([
-    NFT.collection.updateMany({
-      'sellerId': this._id
-    }, {
-      $set: {
-        'sellerInfo.firstName': this.firstName,
-        'sellerInfo.lastName': this.lastName,
-        updatedAt: new Date()
+    if (this.modifiedPaths().includes('image')) {
+      const href = `/profile/${this._id.toString()}`;
+      const imageEntityId = await (atticRpc as any).createS3EntityFromLocation({href: `${process.env.USER_IMAGES_S3_URI}${href}`});
+
+      if (this.image) {
+        const payload = {
+          method: 'PUT',
+          headers: {
+            'content-type': SerializationFormatMimeTypes.get(enc.options.serializationFormat as SerializationFormat) as string,
+            'accept': SerializationFormatMimeTypes.get(enc.options.serializationFormat as SerializationFormat) as string
+          },
+          files: Buffer.from(this.image)
+        };
+
+        // @ts-ignore
+        await atticRpc.getHttpResponse({
+          href: `${process.env.USER_IMAGES_PUBLIC_URI}${href}`,
+          driver: 'S3Driver',
+          entity: imageEntityId
+        }, payload);
+        this.image = Buffer.from(`${process.env.USER_IMAGES_PUBLIC_URI}${href}`);
+        this.imageUrl = true;
+      } else {
+        await atticRpc.deleteEntity({_id: imageEntityId})
+        this.image = void (0);
       }
-    }),
-     NFT.collection.updateMany({
-      'customFees.$.owedTo.user': this._id
-    }, {
-      $set: {
-        'customFees.$.owedTo.firstName': this.firstName,
-        'customFees.$.owedTo.lastName':  this.lastName,
-        'customFees.$.owedTo.image': this.image,
-        'customFees.$.owedTo.updatedAt': new Date()
-      }
-    })
-  ])
+    }
+
+    await Promise.all([
+      NFT.collection.updateMany({
+        'sellerId': this._id
+      }, {
+        $set: {
+          'sellerInfo.firstName': this.firstName,
+          'sellerInfo.lastName': this.lastName,
+          updatedAt: new Date()
+        }
+      }),
+      NFT.collection.updateMany({
+        'customFees.$.owedTo.user': this._id
+      }, {
+        $set: {
+          'customFees.$.owedTo.firstName': this.firstName,
+          'customFees.$.owedTo.lastName': this.lastName,
+          'customFees.$.owedTo.image': this.image,
+          'customFees.$.owedTo.updatedAt': new Date()
+        }
+      })
+    ])
 });
 
 type ToUserParsable = (Document<IUser>&IUser)|IUser|Document<IUser>;
@@ -177,9 +209,14 @@ export function toUserPojo(user: ToUserParsable): IPOJOUser {
 
   const mime = ImageFormatMimeTypes.get(enc.options.imageFormat as ImageFormat) as string;
   if ((marketplaceUser as any).image) {
-    const bufImg = Buffer.from(marketplaceUser.image.buffer as Buffer).toString('base64');
-    (marketplaceUser as any).image = bufImg;
+    if (!(marketplaceUser as any).imageUrl) {
+      const bufImg = Buffer.from(marketplaceUser.image.buffer as Buffer).toString('base64');
+      (marketplaceUser as any).image = `data:${mime};base64,${bufImg}`;
+    } else {
+      (marketplaceUser as any).image =  process.env.USER_IMAGES_PUBLIC_URI + '/profile/' + marketplaceUser._id.toString() + '?d=' + Math.round((new Date(marketplaceUser.updatedAt || new Date())).getTime()/1e3);
+    }
   }
+
   return marketplaceUser;
 }
 
@@ -188,7 +225,8 @@ export const userPubFields = [
   'lastName',
   'image',
   'public',
-  '_id'
+  '_id',
+  'updatedAt'
 ];
 export const userPrivFields = [
   ...userPubFields,
@@ -325,7 +363,28 @@ export async function marketplaceGetAllUsers() {
   const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
   const additionalData: RequestData = clientRequest.additionalData;
 
-  const findUsers = User.find();
+
+  // Load user from db
+  const session = await getUser(additionalData?.session);
+
+
+  // If no user throw 401 (not logged in)
+  if (!session) {
+    throw new HTTPError(401);
+  }
+
+  const { marketplaceUser: userDoc } = session;
+
+  // If user lacks `nftAdmin` role throw 403 (permission denied)
+  if (!userDoc?.roles?.includes(UserRoles.nftAdmin)) {
+    throw new HTTPError(403);
+  }
+
+  const proj: any = {};
+  // Only show the public fields
+  for (let k of [ ...userPubFields, 'atticUserId' ]) proj[k] = 1;
+
+  const findUsers = User.find({}, proj);
   const users = await findUsers.exec();
 
     const pojo = toPojo(users);

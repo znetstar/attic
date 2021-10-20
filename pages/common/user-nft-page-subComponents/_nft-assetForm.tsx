@@ -29,6 +29,11 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
                 <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.name}  required={true} className={'form-input'}  variant={"filled"} name={"name"} label="Name" />
               </FormControl>
             </div>
+          <div>
+            <FormControl className={'form-control'}>
+              <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value.toUpperCase().replace( /[^A-Z\d]+/g, '' )) }} value={nftForm.symbol}  required={true} className={'form-input'}  variant={"filled"} name={"symbol"} inputProps={ { pattern: '[A-Z\\d]+' } } label="Symbol" />
+            </FormControl>
+          </div>
             <div>
               <FormControl className={'form-control'}>
                 <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.description}  required={false} className={'form-input'}  variant={"filled"} name={"description"} label="Description" />

@@ -48,7 +48,8 @@ const template =  {
   "expireRefreshTokenIn" : 2592000000,
   "locked" : true
 };
-
+const now = new Date();
+const regex = `^${ process.env.ATTIC_URI.replace(/\/\//g, '\\/\\/') }`;
 const dbInit = [
   {
     "model": "Client",
@@ -62,7 +63,26 @@ const dbInit = [
       redirectUri: process.env.NEXTAUTH_URL + process.env[`ATTIC_LOCAL_REDIRECT_URI`]
     }
   }
+  ,{
+    "model": "Resolver",
+    "query": { "mountPoint.regex": regex, isRootResolver: true },
+    replace: true,
+    "document": {
+      "type" : "RootResolver",
+      "isRootResolver" : true,
+      "mountPoint" : {
+        "options" : "",
+        "regex" : regex,
+        "expression" : `/${regex}/`
+      },
+      "priority" : (0),
+      "createdAt" : now.getTime(),
+      "updatedAt" : now.getTime(),
+      "__v" : (0)
+    }
+  // }
 ];
+
 
 for  (const clientId in clients) {
   const provider = clients[clientId];
@@ -91,7 +111,7 @@ module.exports = {
   ],
   siteUri: process.env.ATTIC_URI,
   DEFAULT_USER_SCOPE,
-  cors: {},
+  // cors: {},
   dbInit//,
   // _oauth_clients_: clients
 }

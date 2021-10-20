@@ -46,12 +46,12 @@ export class SearchBar extends PureComponent<SearchBarProps> {
       {this.state.showList ? (
       <div className='search_list'>
           <div>
-            {this.props.searchMenu.filter(item => item.email ? item.email.toLowerCase().includes(this.state.selected.toLowerCase()) : '').map((item,idx) => (
-              <div key={idx} onClick={this.menuItemClick}>{item.email}</div>)
+            {this.props.searchMenu.filter(item => item._id ? item._id.toLowerCase().includes(this.state.selected) : '').map((item,idx) => (
+              <div key={idx} onClick={this.menuItemClick}>{item.firstName} {item.lastName} ({item._id})</div>)
             )}
         </div>
       </div>
-      ) : ''}  
+      ) : ''}
       </div>
     )
   }

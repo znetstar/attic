@@ -73,7 +73,7 @@ export type IToken = {
   minted: number;
 
   cryptoCreateToken(initalSupply: number, extraFields?: { [name: string]: unknown }): Promise<Buffer>;
-  cryptoMintToken(amount: number, metadatas?: Buffer[]): Promise<void>
+  cryptoMintToken(amount?: number, metadatas?: Buffer[]): Promise<void>
   cryptoBurnToken(amount: number): Promise<void>;
   cryptoTransferFungible(executingAccountId: ObjectId|string, lines: Map<{ to: Buffer, from?: Buffer }, number>): Promise<void>;
   cryptoAssociate(accountId: ObjectId|string): Promise<void>;
@@ -92,12 +92,14 @@ export const TokenSchema: Schema<IToken> = (new (mongoose.Schema)({
   name: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    validate: (x: string) => typeof(x) === 'string' && x.length <= 100
   },
   symbol: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    validate: (x: string) => typeof(x) === 'string' && !x.match(/[^A-Z\d]+/g) && x.length <= 100
   },
   memo: {
     type: String,
@@ -223,7 +225,7 @@ export class WrongTokenTypeError extends HTTPError {
 }
 
 TokenSchema.methods.cryptoCreateToken = async function (
-  initialSupply: number,
+  initialSupply?: number,
   extraFields?: { [name: string]: unknown }
 ): Promise<Buffer> {
   if (this.tokenId)
@@ -237,7 +239,7 @@ TokenSchema.methods.cryptoCreateToken = async function (
         extraFields,
         id
       }: {
-        initialSupply: number,
+        initialSupply?: number,
         extraFields?: { [name: string]: unknown },
         id: string
       } = job.data;
@@ -252,6 +254,8 @@ TokenSchema.methods.cryptoCreateToken = async function (
 
 
       let transaction: any = (new TokenCreateTransaction());
+
+      if (typeof(initialSupply) !== 'undefined') transaction = transaction.setInitialSupply(initialSupply);
 
       let allFields = { ...(token as any)._doc, ...(extraFields || {}) };
 
@@ -294,7 +298,7 @@ TokenSchema.methods.cryptoCreateToken = async function (
         extraFields,
         id
       }: {
-        initialSupply: number,
+        initialSupply?: number,
         extraFields?: { [name: string]: unknown }
         id: string
       } = job.data;
@@ -358,7 +362,7 @@ TokenSchema.methods.cryptoCreateToken = async function (
 }
 
 TokenSchema.methods.cryptoMintToken = async function (
-  amount: number,
+  amount?: number,
   metadatas?: Buffer[]
 ): Promise<void> {
   if (!this.tokenId) {
@@ -373,7 +377,7 @@ TokenSchema.methods.cryptoMintToken = async function (
         id,
         metadatas
       }: {
-        amount: number,
+        amount?: number,
         metadatas?: string[],
         id: string
       } = job.data;
@@ -398,8 +402,10 @@ TokenSchema.methods.cryptoMintToken = async function (
       let transaction = new TokenMintTransaction();
 
       transaction
-        .setTokenId(TokenId.fromBytes(tokenDoc.tokenId))
-        .setAmount(amount);
+        .setTokenId(TokenId.fromBytes(tokenDoc.tokenId));
+
+      if (typeof(amount) !== 'undefined')
+        transaction = transaction.setAmount(amount);
 
       if (metadatas) {
         for (let metadata  of metadatas)
@@ -421,7 +427,7 @@ TokenSchema.methods.cryptoMintToken = async function (
         amount,
         id
       }: {
-        amount: number,
+        amount?: number,
         metadatas?: string[],
         id: string
       } = job.data;
@@ -1022,6 +1028,7 @@ async function onChargeSuccess(job: Job): Promise<void> {
       await token.cryptoMintToken(
         charge.amount
       );
+
       let user: (IUser&Document)|null = null;
       let marketplaceUserId: string|ObjectId = customer?.metadata['marketplace:user'];
       if (!marketplaceUserId && customer && customer?.email) {
