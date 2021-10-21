@@ -3,6 +3,7 @@ import {MarketplaceLogo} from "./common/_logo";
 import {Component, Fragment, ReactNode} from "react";
 import Button  from '@mui/material/Button';
 import EmailIcon from '@mui/icons-material/Email';
+import GoogleIcon from '@mui/icons-material/Google';
 import LoginFormControl from "./common/_login-common";
 const URL = require('core-js/web/url');
 
@@ -140,7 +141,7 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
   get emailPasswordForm() {
     return (
       <div className={styles.emailPasswordForm}>
-        <form method='post' action='/api/auth/callback/credentials'>
+        <form className={styles.form} method='post' action='/api/auth/callback/credentials'>
           <input name='csrfToken' type='hidden' defaultValue={this.props.csrfToken}/>
           <div>
             <LoginFormControl
@@ -160,12 +161,12 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
               required={true}
             ></LoginFormControl>
           </div>
-          <div>
-            <Button variant="contained" onClick={() => this.setState({  slide: LoginPanelSlides.login })}>
-             Back
-            </Button>
-            <Button type={"submit"} variant="contained" onClick={this.onLoginClick} className={styles.submit_btn}>
+          <div className={styles.btnGroup}>
+            <Button type={"submit"} onClick={this.onLoginClick} className={styles.submit_btn}>
               Continue
+            </Button>
+            <Button className={styles.back_btn} onClick={() => this.setState({  slide: LoginPanelSlides.login })}>
+             Back
             </Button>
           </div>
         </form>
@@ -178,10 +179,13 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
       [ LoginPanelSlides.login,
         (
           <Fragment key='1'>
-            <div>
+            <div className={styles.logo}>
               <MarketplaceLogo></MarketplaceLogo>
             </div>
-            <div>
+
+            <div className={styles.title}><h2>Log In</h2></div>
+
+            <div className={styles.txt_wrapper}>
               <h1>{"Let's get Started!"}</h1>
               <div>Choose a method to sign in</div>
             </div>
@@ -194,12 +198,22 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
                   {
                     (provider as any).id === 'credentials' ? (
                       <Button
-                        color={'primary'}
-                        startIcon={<EmailIcon/>}
+                        className={styles.btn} 
+                        sx={{ backgroundColor: btnColor[`${provider.name}`]}}
+                        startIcon={btnIcon[`${provider.name}`]}
                         onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}
-                        variant="contained">Continue with {provider.name}</Button>
+                        variant="contained">
+                          Continue with {provider.name}
+                        </Button>
                     ) : (
-                      <Button color={'primary'} onClick={() => signIn(provider.id)}  variant="contained">Continue with {provider.name}</Button>
+                      <Button 
+                        className={styles.btn}
+                        sx={{ backgroundColor: btnColor[`${provider.name}`] }}
+                        startIcon={btnIcon[`${provider.name}`]}
+                        onClick={() => signIn(provider.id)}  
+                        variant="contained">
+                          Continue with {provider.name}
+                      </Button>
                     )
                   }
 
@@ -212,9 +226,12 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
       [ LoginPanelSlides.emailPassword,
         (
           <Fragment key='2'>
-            <div>
+            <div className={styles.logo}>
               <MarketplaceLogo></MarketplaceLogo>
             </div>
+
+            <div className={styles.title}><h2>Log In</h2></div>
+
             <div>
               <div>Please login below</div>
             </div>
@@ -242,3 +259,13 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
 
 
 export default withRouter(Login);
+
+const btnColor = {
+  Email: '#3fb56c',
+  Google: '#b53f3f'
+}
+
+const btnIcon = {
+  Email: <EmailIcon/>,
+  Google: <GoogleIcon />
+}
