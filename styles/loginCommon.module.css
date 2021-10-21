@@ -1,0 +1,11 @@
+.formControl {
+  width: 80%;
+}
+
+.input {
+  background: white;
+  color: black;
+  border-radius: 10px;
+  border: 0;
+  border-bottom: 0px;
+}

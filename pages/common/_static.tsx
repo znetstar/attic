@@ -1,11 +1,16 @@
 import React, {ChangeEvent, PureComponent} from "react";
-import style from "./../../styles/staticPage/staticPage.module.css";
+import style from "./../styles/staticPage.module.css";
 
 
 /**
  * STATIC PAGES 
  */
 export class StaticPage extends PureComponent {
+
+  state={
+    pageNum: 1,
+    skipToHome: false
+  }
 
   render() {
     const eulaPage = (

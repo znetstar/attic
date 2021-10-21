@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import { withRouter } from 'next/router';
+import styles from '../styles/Home.module.css';
+import {NFTHome} from './common/_nftHome';
 import SessionComponent, {SessionComponentProps, SessionComponentState} from './common/_session-component';
-
-import styles from './../styles/index.module.css';
 
 type HomeState = SessionComponentState&{
 }
@@ -21,6 +21,7 @@ export class Home extends SessionComponent<HomeProps,HomeState> {
         </Head>
   
         <main className={styles.main}>
+        <NFTHome session={this.props.session} loading={this.props.loading} router={this.props.router}/>
         </main>
       </div>
     )
