@@ -166,7 +166,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
         {this.errorDialog}
         {this.makeAppBar(this.props.router, 'SignUp')}
         <div className={styles.signupPanel}>
-          <div>
+          <div className={styles.logo}>
             <MarketplaceLogo></MarketplaceLogo>
           </div>
           <div className={styles.emailPasswordForm}>
@@ -174,11 +174,14 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
               this.submitNewUser();
               e.preventDefault();
             }}>
+
+              <div className={styles.title}><h2>Register</h2></div>
               
               <div className={styles.avatarWrap}>
                 <div className={styles.imgInput} onClick={() =>{(this.inputRef.current as any).click()}}>
                   <input className={styles.fileInput} ref={this.inputRef as any} type={'file'} name={"Avatar"} onChange={(e) => this.onImgAdd(e)}></input>
                   <Avatar
+                    variant="rounded"
                     src={this.state.createPatch.image}
                     sx={{height: 150, width: 150}} />
                 </div>

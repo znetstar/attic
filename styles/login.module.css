@@ -1,0 +1,28 @@
+.loginPanel {
+  min-height: 100vh;
+  background-image: url('./../public/static/main_bg/component-33-9@2x.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-size: 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.emailPasswordForm {
+  width: 100%;
+}
+
+.form-control {
+  width: 100%;
+}
+
+/* .login-panel-buttons {
+  & > div {
+    margin: 1em 0;
+    button {
+      width: 100%;
+    }
+  } */
