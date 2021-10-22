@@ -164,7 +164,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
     return (
       <Fragment>
         {this.errorDialog}
-        {this.makeAppBar(this.props.router, 'SignUp')}
+        {this.makeAppBar(this.props.router, 'DISCOVERY')}
         <div className={styles.signupPanel}>
           <div className={styles.logo}>
             <MarketplaceLogo></MarketplaceLogo>

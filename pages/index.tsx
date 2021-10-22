@@ -4,12 +4,12 @@ import SessionComponent, {SessionComponentProps, SessionComponentState} from './
 
 import styles from './../styles/index.module.css';
 
-type HomeState = SessionComponentState&{
+type IndexState = SessionComponentState&{
 }
-type HomeProps = SessionComponentProps&{
+type IndexProps = SessionComponentProps&{
 }
 
-export class Home extends SessionComponent<HomeProps,HomeState> {
+export class Index extends SessionComponent<IndexProps,IndexState> {
 
   render() {
     return (
@@ -29,7 +29,7 @@ export class Home extends SessionComponent<HomeProps,HomeState> {
 
 export async function getServerSideProps(context: any) {
   const { res, req } = context;
-  const session = await Home.getSession(context);
+  const session = await Index.getSession(context);
 
   return {
     props: {
@@ -38,4 +38,4 @@ export async function getServerSideProps(context: any) {
   }
 }
 
-export default withRouter(Home)
+export default withRouter(Index)

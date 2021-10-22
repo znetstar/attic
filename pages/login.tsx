@@ -15,6 +15,7 @@ import SessionComponent, {
 } from "./common/_session-component";
 import {MarketplaceAppBar, SettingsButton} from "./common/_appbar";
 import * as React from "react";
+import Link from 'next/link';
 
 import styles from "./../styles/login.module.css";
 
@@ -161,13 +162,20 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
               required={true}
             ></LoginFormControl>
           </div>
+
+          <div className={styles.extraOpt_Wrapper}>
+            <Link href='/signup' passHref>
+              <div>Create Account</div>
+            </Link>
+            <div>Forgot password?</div>
+          </div>
           <div className={styles.btnGroup}>
             <Button type={"submit"} onClick={this.onLoginClick} className={styles.submit_btn}>
-              Continue
+              SUBMIT
             </Button>
-            <Button className={styles.back_btn} onClick={() => this.setState({  slide: LoginPanelSlides.login })}>
-             Back
-            </Button>
+            {/* <Button className={styles.back_btn} onClick={() => this.setState({  slide: LoginPanelSlides.login })}>
+             BACK
+            </Button> */}
           </div>
         </form>
       </div>
@@ -183,11 +191,9 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
               <MarketplaceLogo></MarketplaceLogo>
             </div>
 
-            <div className={styles.title}><h2>Log In</h2></div>
-
             <div className={styles.txt_wrapper}>
-              <h1>{"Let's get Started!"}</h1>
-              <div>Choose a method to sign in</div>
+              <h1>{"LET'S GET STARTED"}</h1>
+              <div>CHOOSE A METHOD TO SIGN IN</div>
             </div>
             <div className={styles.loginPanelButtons}>
               {this.providers ? Object.values(this.providers).map(provider => (
@@ -231,10 +237,6 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
             </div>
 
             <div className={styles.title}><h2>Log In</h2></div>
-
-            <div>
-              <div>Please login below</div>
-            </div>
             {this.emailPasswordForm}
           </Fragment>
         )
@@ -246,7 +248,7 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
     return (
         <div>
           {this.errorDialog}
-          {this.makeAppBar(this.props.router, 'Login')}
+          {this.makeAppBar(this.props.router, 'DISCOVERY')}
           <div className={styles.loginPanel}>
             {
               this.slides.get(this.state.slide) || null
