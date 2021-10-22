@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+// import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
@@ -17,6 +17,7 @@ import {SubcomponentProps, SubcomponentPropsWithRouter} from "./_session-compone
 import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from '@mui/icons-material/Login';
 import {NextRouter} from "next/router";
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 
 export type AppBarProps =  SubcomponentPropsWithRouter&{
   rightSideOfAppbar: JSX.Element|null;
@@ -125,8 +126,8 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
     return (
       <div className={"app-bar-wrapper"}>
         <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static">
-            <Toolbar>
+          <AppBar position="static" sx={{ backgroundColor:'transparent' }}>
+            <Toolbar sx={{ backgroundColor:'transparent' }}>
               <IconButton
                 onClick={() => {
                     this.props.router.back();
@@ -137,7 +138,7 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
                 aria-label="back"
                 sx={{ mr: 2 }}
               >
-                <ArrowBackIcon />
+                <ArrowBackIosIcon />
               </IconButton>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                 {this.props.pageTitle}

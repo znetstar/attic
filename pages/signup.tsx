@@ -5,6 +5,7 @@ import Button  from '@mui/material/Button';
 import LoginFormControl from "./common/_login-common";
 import Avatar from "@mui/material/Avatar";
 import React, {ChangeEvent, PureComponent} from "react";
+import { MarketplaceAppBar } from './common/_appbar';
 
 import {NextRouter, withRouter} from "next/router"
 import SessionComponent, {SessionComponentProps, SessionComponentState, ErrorDialog} from "./common/_session-component";
@@ -164,8 +165,8 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
     return (
       <Fragment>
         {this.errorDialog}
-        {this.makeAppBar(this.props.router, 'DISCOVERY')}
         <div className={styles.signupPanel}>
+          <MarketplaceAppBar pageTitle='' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
           <div className={styles.logo}>
             <MarketplaceLogo></MarketplaceLogo>
           </div>

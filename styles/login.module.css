@@ -9,7 +9,13 @@
   align-items: center;
   justify-content: center;
   color: white;
-  min-height: calc(100vh - 56px);
+  min-height: 100vh;
+}
+
+.appbar_wrapper {
+  width: 100%;
+  position: fixed;
+  top: 0;
 }
 
 .emailPasswordForm {
