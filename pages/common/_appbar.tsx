@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
-// import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Typography from "@mui/material/Typography";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
@@ -18,10 +17,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import LoginIcon from '@mui/icons-material/Login';
 import {NextRouter} from "next/router";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import styles from './../../styles/appbar.module.css';
 
 export type AppBarProps =  SubcomponentPropsWithRouter&{
   rightSideOfAppbar: JSX.Element|null;
   pageTitle: string;
+  showBack: string;
 }
 export type AppBarState =  {}
 
@@ -126,20 +127,23 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
     return (
       <div className={"app-bar-wrapper"}>
         <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static" sx={{ backgroundColor:'transparent' }}>
-            <Toolbar sx={{ backgroundColor:'transparent', color: 'black' }}>
-              <IconButton
-                onClick={() => {
-                    this.props.router.back();
-                }}
-                size="large"
-                edge="start"
-                color="inherit"
-                aria-label="back"
-                sx={{ mr: 2 }}
-              >
-                <ArrowBackIosIcon />
-              </IconButton>
+          <AppBar position="static" sx={{ backgroundColor:'transparent', backgroundImage: 'none' }}>
+            <Toolbar sx={{ backgroundColor:'transparent', color: 'black', backgroundImage: 'none' }}>
+              <div className={styles.backWrapper}>
+                <IconButton
+                  onClick={() => {
+                      this.props.router.back();
+                  }}
+                  size="large"
+                  edge="start"
+                  color="inherit"
+                  aria-label="back"
+                  sx={{ mr: 2 }}
+                >
+                  {(this.props.showBack === 'logIn') ? <ArrowBackIosIcon sx={{ backgroundColor:'#7d309d', color: 'white', paddingLeft: '7px', borderRadius: '6px'}} /> :
+                   (this.props.showBack === 'logOut') ?  <ArrowBackIosIcon sx={{ backgroundColor:'transparent', color: 'white'}} /> : ''}
+                </IconButton>
+              </div>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                 {this.props.pageTitle}
               </Typography>

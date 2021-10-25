@@ -233,7 +233,7 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
         (
           <Fragment key='2'>
             <div className={styles.appbar_wrapper}>
-              <MarketplaceAppBar pageTitle='' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
+              <MarketplaceAppBar showBack={'logOut'} pageTitle='' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
             </div>
             <div className={styles.logo}>
               <MarketplaceLogo></MarketplaceLogo>
