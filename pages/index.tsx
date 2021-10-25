@@ -1,8 +1,10 @@
 import Head from 'next/head';
 import { withRouter } from 'next/router';
 import SessionComponent, {SessionComponentProps, SessionComponentState} from './common/_session-component';
+import MarketplaceLogo from './common/_logo';
 
 import styles from './../styles/index.module.css';
+
 
 type IndexState = SessionComponentState&{
 }
@@ -10,6 +12,17 @@ type IndexProps = SessionComponentProps&{
 }
 
 export class Index extends SessionComponent<IndexProps,IndexState> {
+  wait: NodeJS.Timer | undefined;
+
+  componentDidMount() {
+    this.wait = setInterval(
+      () => this.props.router.push('/login'), 1000
+    )
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.wait)
+  }
 
   render() {
     return (
@@ -20,8 +33,11 @@ export class Index extends SessionComponent<IndexProps,IndexState> {
           <link rel="icon" href="/favicon.ico" />
         </Head>
   
-        <main className={styles.main}>
-        </main>
+        <div className={styles.wrapper}>
+          <div className={styles.logo}>
+            <MarketplaceLogo />
+          </div>
+        </div>
       </div>
     )
   }

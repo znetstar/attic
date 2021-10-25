@@ -265,6 +265,7 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
     const atticUserId = await atticRpc.createUser({
       username: form.email,
       password: form.password,
+      
       scope: DEFAULT_USER_SCOPE
     } as any);
 

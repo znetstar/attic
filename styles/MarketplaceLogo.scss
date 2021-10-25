@@ -2,9 +2,10 @@
 .marketplace-logo {
   display: flex;
   flex-direction: column;
-  max-width: 960px;
+  max-width: 400px;
   align-items: center;
   justify-content: space-between;
+  margin: 10px;
 
   .marketplace-logo-title {
     text-align: center;
@@ -16,7 +17,7 @@
     }
 
     img {
-      max-height: 100px;
+      max-height: 50px;
     }
   }
 }

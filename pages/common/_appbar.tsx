@@ -127,7 +127,7 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
       <div className={"app-bar-wrapper"}>
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="static" sx={{ backgroundColor:'transparent' }}>
-            <Toolbar sx={{ backgroundColor:'transparent' }}>
+            <Toolbar sx={{ backgroundColor:'transparent', color: 'black' }}>
               <IconButton
                 onClick={() => {
                     this.props.router.back();

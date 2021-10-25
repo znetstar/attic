@@ -177,7 +177,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
             }}>
 
               <div className={styles.title}><h2>Register</h2></div>
-              
+{/*               
               <div className={styles.avatarWrap}>
                 <div className={styles.imgInput} onClick={() =>{(this.inputRef.current as any).click()}}>
                   <input className={styles.fileInput} ref={this.inputRef as any} type={'file'} name={"Avatar"} onChange={(e) => this.onImgAdd(e)}></input>
@@ -186,7 +186,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
                     src={this.state.createPatch.image}
                     sx={{height: 150, width: 150}} />
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <LoginFormControl

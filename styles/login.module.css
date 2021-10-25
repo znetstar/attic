@@ -1,13 +1,11 @@
 .loginPanel {
-  background-image: url('./../public/static/main_bg/component-33-9@2x.png');
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-color: transparent;
   font-size: 16px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
   color: white;
   min-height: 100vh;
 }
@@ -31,13 +29,13 @@
   width: 70%;
   border-radius: 4px;
   box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.38);
-  margin: 12px auto;
+  margin: 12px auto !important;
   padding: 10px;
 }
 
 .loginPanelButtons{
   width: 100%;
-  margin: 32px auto;
+  margin: 64px auto;
   text-align: center;
 }
 
@@ -49,22 +47,26 @@
 .txt_wrapper > h1 {
   color: rgba(255, 255, 255, 0.87);
   font-weight: 500;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  font-size: 26px;
 }
 
 .txt_wrapper > div {
   color: rgba(255, 255, 255, 0.87);
+  font-size: 16px;
 }
 
 .submit_btn {
-  margin: 0 auto;
-  margin-top: 64px;
-  width: 80%;
-  height: 50px;
-  padding: 16px auto;
-  border-radius: 8px;
-  background-image: linear-gradient(101deg, #ff2562 0%, #fd122d 97%);
-  color: white;
+  margin: 0 auto !important;
+  width: 80% !important;
+  height: 50px !important;
+  padding: 16px auto !important;
+  border-radius: 10px !important;
+  background-image: linear-gradient(101deg, #ff2562 0%, #fd122d 97%) !important;
+  color: white !important;
+  font-size: 16px !important;
+  position: fixed !important;
+  bottom: 80px !important;
 }
 
 .back_btn {
@@ -82,6 +84,8 @@
 .btnGroup {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  align-items: center;
 }
 
 .title {
@@ -100,5 +104,10 @@
   justify-content: space-between;
   align-items: center;
   color: #e5e5e5;
-  margin-top: 32px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.logo {
+  margin: 64px 0 16px 0;
 }

@@ -47,7 +47,6 @@ export class NavBar extends SessionComponent<NavBarProps, NavBarState> {
   }
 
   render() {
-    console.log(this.props)
     return (
       <div className={styles.navbar_wrapper}>
         <div className={styles.nav}>
@@ -75,8 +74,8 @@ export class NavBar extends SessionComponent<NavBarProps, NavBarState> {
           </div>
           </Link>
 
-          <Link href={this.props?.wallet ? '/wallet/deposit' : '/login'} passHref>
-          <div className={styles.tab} 
+          <Link href={this.props?.wallet ? '/wallet/deposit' : ''} passHref>
+          <div className={this.props?.wallet ? styles.tab : styles.noTab} 
                onMouseEnter={() => this.setState({ icon: 3 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
                onClick={this.wallet}>
@@ -88,7 +87,7 @@ export class NavBar extends SessionComponent<NavBarProps, NavBarState> {
           </Link>
 
           <Link href={this.props.session?.user ? '/profile/self' : '/login'} passHref>
-          <div className={styles.tab} 
+          <div className={this.props.session?.user ? styles.tab : styles.noTab} 
                onMouseEnter={() => this.setState({ icon: 4 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
                onClick={this.profile}>
