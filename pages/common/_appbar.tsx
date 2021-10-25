@@ -127,7 +127,7 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
     return (
       <div className={"app-bar-wrapper"}>
         <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static" sx={{ backgroundColor:'transparent', backgroundImage: 'none' }}>
+          <AppBar position="static" sx={{ backgroundColor:'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
             <Toolbar sx={{ backgroundColor:'transparent', color: 'black', backgroundImage: 'none' }}>
               <div className={styles.backWrapper}>
                 <IconButton
@@ -140,8 +140,8 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
                   aria-label="back"
                   sx={{ mr: 2 }}
                 >
-                  {(this.props.showBack === 'logIn') ? <ArrowBackIosIcon sx={{ backgroundColor:'#7d309d', color: 'white', paddingLeft: '7px', borderRadius: '6px'}} /> :
-                   (this.props.showBack === 'logOut') ?  <ArrowBackIosIcon sx={{ backgroundColor:'transparent', color: 'white'}} /> : ''}
+                  {(this.props.showBack === 'logIn') ? <ArrowBackIosIcon sx={{ backgroundColor:'#7d309d', color: 'white', paddingLeft: '7px', borderRadius: '6px', marginLeft: '20px'}} /> :
+                   (this.props.showBack === 'logOut') ?  <ArrowBackIosIcon sx={{ backgroundColor:'transparent', color: 'white', marginLeft: '20px'}} /> : ''}
                 </IconButton>
               </div>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>

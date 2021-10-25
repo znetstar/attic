@@ -16,7 +16,7 @@ export class Index extends SessionComponent<IndexProps,IndexState> {
 
   componentDidMount() {
     this.wait = setInterval(
-      () => this.props.router.push('/login'), 1000
+      () => this.props.router.push('/login'), 500
     )
   }
 

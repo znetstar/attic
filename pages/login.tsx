@@ -135,8 +135,8 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
     return this.props.providers;
   }
 
-  onLoginClick = async () => {
-    fetch('/')
+  onLoginClick = () => {
+    this.props.router.push('/discover')
   }
 
   get emailPasswordForm() {

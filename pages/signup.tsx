@@ -132,6 +132,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
    * Submits a request to create a new user, via the RPC
    */
   submitNewUser = async () => {
+    console.log('a')
     if (this.state.confirmPwd === this.state.emailPasswordForm.password && this.state.confirmPwd) {
       (async () => {
         await this.rpc['marketplace:createUser'](this.state.emailPasswordForm)
@@ -149,6 +150,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
       })()
        .catch(this.handleError);
    } else {
+     console.log('c')
     this.setState(prevState => ({
       emailPasswordForm: {
         ...prevState.emailPasswordForm,
@@ -166,7 +168,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
       <Fragment>
         {this.errorDialog}
         <div className={styles.signupPanel}>
-          <MarketplaceAppBar pageTitle='' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
+          <MarketplaceAppBar showBack={'logOut'} pageTitle='' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
           <div className={styles.logo}>
             <MarketplaceLogo></MarketplaceLogo>
           </div>
@@ -254,6 +256,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
                     id={"password"} 
                     value={this.state.emailPasswordForm.password} 
                     name={"password"}
+                    error={this.state.confirmPwd !== this.state.emailPasswordForm.password}
                     InputProps={{classes: { root: styles.input},}} />
                 </FormControl>
                 </div>
@@ -269,6 +272,7 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
                       id={"confirmPwd"} 
                       value={this.state.confirmPwd} 
                       name={"confirmPwd"}
+                      error={this.state.confirmPwd !== this.state.emailPasswordForm.password}
                       InputProps={{classes: { root: styles.input},}} />
                   </FormControl>
                   </div>
