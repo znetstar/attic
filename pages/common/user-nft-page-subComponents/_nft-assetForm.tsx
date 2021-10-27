@@ -26,7 +26,7 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
         <form onSubmit={(e) => { updateAssetForm(); e.preventDefault(); }}>
            <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.title}  required={true} className={'form-input'}  variant={"filled"} name={"title"} label="Title" />
+                <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.name}  required={true} className={'form-input'}  variant={"filled"} name={"name"} label="Name" />
               </FormControl>
             </div>
             <div>
@@ -41,7 +41,7 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.supply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
+                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.maxSupply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"maxSupply"} label="Supply" />
               </FormControl>
             </div>
             <div>
