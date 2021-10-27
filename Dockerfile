@@ -1,4 +1,4 @@
-FROM public.ecr.aws/b1q3c8q0/attic-server:3.6.3
+FROM public.ecr.aws/znetstar/attic-server:3.6.3
 
 FROM node:12
 
