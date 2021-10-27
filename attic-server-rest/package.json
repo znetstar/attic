@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server-rest",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "description": "Access objects in Attic Server via a REST interface",
     "main": "lib/Atticfile.js",
     "scripts": {
@@ -45,7 +45,7 @@
     "devDependencies": {
         "@types/express": "^4.17.13",
         "@types/lodash": "^4.14.172",
-        "@znetstar/attic-common": "^3.8.0",
+        "@znetstar/attic-common": "^3.13.0",
         "docdash": "^1.2.0",
         "grunt": "^1.4.1",
         "grunt-contrib-clean": "^2.0.0",
