@@ -1,4 +1,4 @@
-FROM public.ecr.aws/znetstar/attic-server:3.6.3
+FROM public.ecr.aws/znetstar/attic-server:3.8.0
 
 FROM node:12
 
@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /opt/attic/attic-server
 
 RUN npm ci && \
-    npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest dotenv
+    npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest @znetstar/attic-server-s3 dotenv
 
 ENV PATH "$PATH:/opt/attic/attic-server/bin"
 
