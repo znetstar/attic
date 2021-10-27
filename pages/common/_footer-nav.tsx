@@ -4,22 +4,31 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 import * as React from "react";
-import {PureComponent} from "react";
-import {SubcomponentPropsWithRouter} from "./_session-component";
 import Link from 'next/link';
+import SessionComponent, {
+  SessionComponentProps,
+  SessionComponentState,
+} from "../common/_session-component";
+import {getUser} from "../api/auth/[...nextauth]";
+import {marketplaceGetWallet, IPOJOWallet, toWalletPojo} from "./../common/_wallet";
 
 import styles from './../../styles/navbar.module.css';
 
-export type NavBarProps =  SubcomponentPropsWithRouter&{
+type NavBarProps =  SessionComponentProps&{
+  wallet: IPOJOWallet|null;
+  pop:string;
 }
-export type NavBarState =  {
+type NavBarState =  SessionComponentState&{
   icon: number;
 }
 
-export class NavBar extends PureComponent<NavBarProps, NavBarState> {
+export class NavBar extends SessionComponent<NavBarProps, NavBarState> {
+  constructor(props: NavBarProps) {
+    super(props);
+  }
   state = {
     icon : 0
-  }
+  } as NavBarState
 
   home = () => {
     this.setState({ icon: 1 })
@@ -38,7 +47,6 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
   }
 
   render() {
-    console.log(this.props)
     return (
       <div className={styles.navbar_wrapper}>
         <div className={styles.nav}>
@@ -66,8 +74,8 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
           </div>
           </Link>
 
-          <Link href={this.props?.wallet ? '/wallet/deposit' : '/login'} passHref>
-          <div className={styles.tab} 
+          <Link href={this.props?.wallet ? '/wallet/deposit' : ''} passHref>
+          <div className={this.props?.wallet ? styles.tab : styles.noTab} 
                onMouseEnter={() => this.setState({ icon: 3 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
                onClick={this.wallet}>
@@ -79,7 +87,7 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
           </Link>
 
           <Link href={this.props.session?.user ? '/profile/self' : '/login'} passHref>
-          <div className={styles.tab} 
+          <div className={this.props.session?.user ? styles.tab : styles.noTab} 
                onMouseEnter={() => this.setState({ icon: 4 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 
                onClick={this.profile}>
@@ -94,5 +102,25 @@ export class NavBar extends PureComponent<NavBarProps, NavBarState> {
     )
   }
 }
+
+
+export async function getServerSideProps(context: any) {
+  const { res, req } = context;
+  const session = await NavBar.getSession(context);
+
+  const user = (await getUser(session))
+
+  const { u, wallet } = await marketplaceGetWallet(user);
+
+  return {
+    props: {
+      session,
+      wallet: wallet ? toWalletPojo(wallet) : null,
+      pop: 'pop'
+    }
+  }
+}
+
+
 
 export default NavBar;

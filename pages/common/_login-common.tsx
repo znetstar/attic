@@ -2,6 +2,7 @@ import FormControl  from '@mui/material/FormControl';
 import TextField  from '@mui/material/TextField';
 import {PureComponent} from "react";
 
+import styles from "./../../styles/loginCommon.module.css";
 
 export interface LoginFormControlProps<V> {
   value: V|null;
@@ -30,8 +31,16 @@ export class LoginFormControl extends PureComponent<LoginFormControlProps<any>> 
     //   </FormControl>
     // )
     return (
-      <FormControl className={'form-control login-form-control'}>
-        <TextField onChange={ this.props.onChange ? (e) => (this.props.onChange as any)(e.currentTarget.value) : void(0) } required={this.props.required || false} variant={"filled"} label={this.props.text} className={'form-input login-form-input'} type={this.props.type} id={this.props.id} value={this.props.value} name={this.props.id} />
+      <FormControl className={styles.formControl}>
+        <TextField onChange={ this.props.onChange ? (e) => (this.props.onChange as any)(e.currentTarget.value) : void(0) } 
+                   required={this.props.required || false} 
+                   variant={"outlined"} 
+                   placeholder={this.props.text} 
+                   type={this.props.type} 
+                   id={this.props.id} 
+                   value={this.props.value} 
+                   name={this.props.id}
+                   InputProps={{classes: { root: styles.input},}} />
       </FormControl>
     )
   }

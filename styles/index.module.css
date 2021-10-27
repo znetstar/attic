@@ -1,0 +1,18 @@
+.wrapper {
+  width: 100%;
+  min-height: 100vh;
+  /* background-image: url('./../public//static//main_bg/component-33-9@3x.png'), url('./../public/static/main_bg/component-33-9@2x.png'), url('./../public//static/main_bg/component-33-9.png');
+  background-color: rgb(85,56,104);
+  background-repeat: no-repeat;
+  background-size: cover; */
+  background-color: transparent;
+  font-size: 16px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  margin: auto 0;
+}

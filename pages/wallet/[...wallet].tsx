@@ -283,6 +283,14 @@ export async function getServerSideProps(context: any) {
   const session = await WalletPage.getSession(context);
 
   let [not_important, not_important2, subpage] = req.url.split('/');
+  
+  if (subpage !== 'deposit' || subpage !== 'transactions' || subpage !== 'withdraw') {
+    subpage = req.url.split('=')[1];
+  };
+
+  if (!subpage) {
+    subpage = 'deposit';
+  };
 
 
   const sessionUser = await getUser(session);

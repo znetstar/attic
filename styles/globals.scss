@@ -1,5 +1,4 @@
 @import './MarketplaceLogo.scss';
-@import './Login.scss';
 @import './Profile.scss';
 @import './EditProfile.scss';
 @import './Avatar.scss';
@@ -10,13 +9,14 @@ html,
 body {
   padding: 0;
   margin: 0;
-  //font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-
-  // From existing site
-  background-color: black;
   color: white;
   font-family: Poppins, sans-serif;
-  font-weight: 500;
+  font-size: 16px;
+
+  background-image: url('./../public//static//main_bg/component-33-9@3x.png'), url('./../public/static/main_bg/component-33-9@2x.png'), url('./../public//static/main_bg/component-33-9.png');
+  background-color: rgb(85,56,104);
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 a {
@@ -83,11 +83,15 @@ form {
   text-align: center;
 }
 
-
 .page.createNFT {
   .avatar-image-wrapper {
     .MuiAvatar-square {
       background-color: unset;
     }
+  }
+}
+@media screen and (min-width: 415px) {
+  body {
+    font-size: 32px;
   }
 }

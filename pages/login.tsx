@@ -3,6 +3,7 @@ import {MarketplaceLogo} from "./common/_logo";
 import {Component, Fragment, ReactNode} from "react";
 import Button  from '@mui/material/Button';
 import EmailIcon from '@mui/icons-material/Email';
+import GoogleIcon from '@mui/icons-material/Google';
 import LoginFormControl from "./common/_login-common";
 const URL = require('core-js/web/url');
 
@@ -14,6 +15,9 @@ import SessionComponent, {
 } from "./common/_session-component";
 import {MarketplaceAppBar, SettingsButton} from "./common/_appbar";
 import * as React from "react";
+import Link from 'next/link';
+
+import styles from "./../styles/login.module.css";
 
 /**
  * Various login provider (e.g., Google)
@@ -95,12 +99,6 @@ export type LoginPanelState = SessionComponentState&{
   notifyMessage: string|null
 }
 
-const styles = {
-  root: {
-
-  }
-}
-
 /**
  * Component to handle login
  */
@@ -137,14 +135,14 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
     return this.props.providers;
   }
 
-  onLoginClick = async () => {
-    fetch('/')
+  onLoginClick = () => {
+    this.props.router.push('/discover')
   }
 
   get emailPasswordForm() {
     return (
-      <div className="email-password-form">
-        <form method='post' action='/api/auth/callback/credentials'>
+      <div className={styles.emailPasswordForm}>
+        <form className={styles.form} method='post' action='/api/auth/callback/credentials'>
           <input name='csrfToken' type='hidden' defaultValue={this.props.csrfToken}/>
           <div>
             <LoginFormControl
@@ -164,13 +162,20 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
               required={true}
             ></LoginFormControl>
           </div>
-          <div>
-            {/*<Button variant="contained" onClick={() => this.setState({  slide: LoginPanelSlides.login })}>*/}
-            {/*  Back*/}
-            {/*</Button>*/}
-            <Button style={{ width: '100%' }} type={"submit"} variant="contained" onClick={this.onLoginClick} color="primary">
-              Continue
+
+          <div className={styles.extraOpt_Wrapper}>
+            <Link href='/signup' passHref>
+              <div>Create Account</div>
+            </Link>
+            <div>Forgot password?</div>
+          </div>
+          <div className={styles.btnGroup}>
+            <Button type={"submit"} onClick={this.onLoginClick} className={styles.submit_btn}>
+              SUBMIT
             </Button>
+            {/* <Button className={styles.back_btn} onClick={() => this.setState({  slide: LoginPanelSlides.login })}>
+             BACK
+            </Button> */}
           </div>
         </form>
       </div>
@@ -181,15 +186,16 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
     return new Map<LoginPanelSlides, JSX.Element>([
       [ LoginPanelSlides.login,
         (
-          <Fragment key="signIn">
-            <div>
+          <Fragment key='1'>
+            <div className={styles.logo}>
               <MarketplaceLogo></MarketplaceLogo>
             </div>
-            <div>
-              <h1>Let's get Started!</h1>
-              <div>Choose a method to sign in</div>
+
+            <div className={styles.txt_wrapper}>
+              <h1>{"LET'S GET STARTED"}</h1>
+              <div>CHOOSE A METHOD TO SIGN IN</div>
             </div>
-            <div className={"login-panel-buttons"}>
+            <div className={styles.loginPanelButtons}>
               {this.providers ? Object.values(this.providers).map(provider => (
                 <div
                   // @ts-ignore
@@ -198,12 +204,22 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
                   {
                     (provider as any).id === 'credentials' ? (
                       <Button
-                        color={'primary'}
-                        startIcon={<EmailIcon/>}
+                        className={styles.btn}
+                        sx={{ backgroundColor: btnColor[`${provider.name}`]}}
+                        startIcon={btnIcon[`${provider.name}`]}
                         onClick={() => { this.setState({ slide: LoginPanelSlides.emailPassword }) }}
-                        variant="contained">Continue with {provider.name}</Button>
+                        variant="contained">
+                          Continue with {provider.name}
+                        </Button>
                     ) : (
-                      <Button color={'primary'} onClick={() => signIn(provider.id)}  variant="contained">Continue with {provider.name}</Button>
+                      <Button
+                        className={styles.btn}
+                        sx={{ backgroundColor: btnColor[`${provider.name}`] }}
+                        startIcon={btnIcon[`${provider.name}`]}
+                        onClick={() => signIn(provider.id)}
+                        variant="contained">
+                          Continue with {provider.name}
+                      </Button>
                     )
                   }
 
@@ -215,13 +231,15 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
       ],
       [ LoginPanelSlides.emailPassword,
         (
-          <Fragment key="login">
-            <div>
+          <Fragment key='2'>
+            <div className={styles.appbar_wrapper}>
+              <MarketplaceAppBar showBack={'logOut'} pageTitle='' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
+            </div>
+            <div className={styles.logo}>
               <MarketplaceLogo></MarketplaceLogo>
             </div>
-            <div>
-              <div>Please login below</div>
-            </div>
+
+            <div className={styles.title}><h2>Log In</h2></div>
             {this.emailPasswordForm}
           </Fragment>
         )
@@ -231,12 +249,13 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
 
   render() {
     return (
-        <div className={"login-panel page"}>
+        <div>
           {this.errorDialog}
-          {this.makeAppBar(this.props.router, 'Login')}
-          {
-            this.slides.get(this.state.slide) || null
-          }
+          <div className={styles.loginPanel}>
+            {
+              this.slides.get(this.state.slide) || null
+            }
+          </div>
         </div>
     )
   }
@@ -244,3 +263,13 @@ export class Login extends SessionComponent<LoginPanelProps,LoginPanelState> {
 
 
 export default withRouter(Login);
+
+const btnColor = {
+  Email: '#3fb56c',
+  Google: '#b53f3f'
+}
+
+const btnIcon = {
+  Email: <EmailIcon/>,
+  Google: <GoogleIcon />
+}
