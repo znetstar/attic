@@ -3,6 +3,8 @@ import {IListedNFT, INFT} from "./_nft";
 import NFTListedItem from "./_nft_listed_item";
 import {MarketplaceAPI} from "./_rpcCommon";
 
+import styles from "../../styles/nftList.module.css";
+
 export interface NFTListenItemProps {
   query?: any;
   nfts?: IListedNFT[];
@@ -39,12 +41,13 @@ export class NFTItemList extends PureComponent<NFTListenItemProps, {}> {
     (async () => {
       const nfts = await this.loadNFTs();
       this.nfts = nfts;
+      console.log('ppp', this.nfts)
     })().catch((err) => console.error(err))
   }
 
   render() {
     return (
-      <ul className={"nft-list"}>
+      <ul className={styles.nftList}>
         {this.nfts.map((nft: IListedNFT) => {
           return (
             <li key={nft._id}>

@@ -12,6 +12,7 @@ import {getUser} from "../api/auth/[...nextauth]";
 import {IUser} from "./../common/_user";
 import {Timer} from "./../common/_timer";
 import {marketplaceGetWallet, IPOJOWallet, toWalletPojo} from "./../common/_wallet";
+import { MarketplaceAppBar } from "../common/_appbar";
 
 import styles from "./../../styles/purchase/purchase.module.css"
 import { Chip, Box, Tab, Tabs, TextField, FormControl, InputAdornment } from '@mui/material';
@@ -114,14 +115,13 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
     <div className={styles.purchase_wrapper}>
 
       {this.errorDialog}
-      {this.makeAppBar(this.props.router, (this.state.purchaseType === 'sale') ? 'Purchase Listing' : 'Auction Listing')}
+      <MarketplaceAppBar showBack={'logIn'} pageTitle={name.toUpperCase()} rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
 
       <div className={styles.img_wrapper}>{this.props.nftForm.nftFor === 'auction' && <Timer date={this.props.nftForm?.listOn}/>}</div>
 
       <div className={styles.nft_info_wrappper}>
-        <h2>{name}</h2>
         <div className={styles.nft_info}>
-          <div className={styles.curr_user}>
+          <div className={styles.own_user}>
             <MarketplaceAvatar
               image={
                 typeof(currOwn_img) === 'string' ? Buffer.from(currOwn_img, 'base64') : currOwn_img
@@ -130,7 +130,10 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
               allowUpload={false}
               resizeImage={{height:35, width:35}}
             ></MarketplaceAvatar>
-            <div className={styles.curr_userName}> {'@' + currOwn_firstName + '_' + currOwn_lastName}</div>
+            <div>
+              <div className={styles.own_userName}> {'@' + currOwn_firstName + '_' + currOwn_lastName}</div>
+              <div className={styles.own_title}> Creator</div>
+            </div>
           </div>
           <div className={styles.nft_price}>{price}</div>
         </div>
