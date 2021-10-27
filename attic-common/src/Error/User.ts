@@ -6,7 +6,7 @@ export class UserAlreadyExistsError extends GenericError {
   }
 
   public static get httpCode(): number {
-    return 410;
+    return 409;
   }
 
   constructor(public message: string = 'Cannot create user. User with the requested username already exists') {

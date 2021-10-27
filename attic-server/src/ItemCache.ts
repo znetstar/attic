@@ -3,7 +3,7 @@ import {Mongoose, Schema, Document, Model} from 'mongoose';
 import mongoose, {redis} from './Database';
 import config from "./Config";
 import ApplicationContext from "./ApplicationContext";
-import { EncodeTools } from '@etomon/encode-tools';
+import { EncodeToolsAuto as EncodeTools } from '@etomon/encode-tools/lib/EncodeToolsAuto';
 import * as ObjectHash  from 'object-hash';
 import * as msgpack from '@msgpack/msgpack';
 import {BinaryEncoding, HashAlgorithm, IDFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";

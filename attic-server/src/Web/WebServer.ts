@@ -1,28 +1,26 @@
-import express from 'express';
-import { JSONSerializer, Response,  Transport, ClientRequest} from 'multi-rpc';
-import { ExpressTransport } from 'multi-rpc-express-transport';
+import express, {Router} from 'express';
+import {ClientRequest, EncodeToolsSerializer, Response, RPCError, Transport} from 'multi-rpc';
+import {ExpressTransport} from 'multi-rpc-express-transport';
 import ResolverMiddleware from './ResolverMiddleware';
-import { RPCServer } from '../RPC';
+import {RPCServer} from '../RPC';
 import Config from '../Config';
-import { Server as HTTPServer} from 'http';
-import {Router} from "express";
+import {Server as HTTPServer} from 'http';
 import SessionMiddleware, {CookieMiddleware} from "./SessionMiddleware";
 import AuthMiddlewares, {AuthMiddleware, restrictScopeMiddleware} from "./AuthMiddleware";
-import * as cookieParser from 'cookie-parser';
 import ApplicationContext, {ListenStatus} from "../ApplicationContext";
-import {Application} from "typedoc";
-import {GenericError} from "@znetstar/attic-common/lib/Error/GenericError";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
+import {getFormatsFromContext} from "@znetstar/attic-common/lib/IRPC";
 import * as ws from 'ws';
 import * as _ from 'lodash';
-import {
-    RPCError
-} from 'multi-rpc';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
-import {asyncMiddleware} from "./Common";
 import * as cors from 'cors';
-
+import {EncodingOptions, SerializationFormat, SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {
+  EncodeToolsAuto as EncodeTools
+} from "@etomon/encode-tools/lib/EncodeToolsAuto";
+import { toPojo } from '@thirdact/to-pojo'
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
+const multer  = require('multer')
 
 function prepareWebError(error: IError|Error|RPCError, httpOpts?: HTTPErrorOpts): IError {
     let err: IError&HTTPErrorOpts;
@@ -72,15 +70,31 @@ export function handleError(error: any, req: any, res: any) {
 export function handleErrorMiddleware() {
   return (handleError);
 }
+export const DEFAULT_ENCODE_OPTIONS:  EncodingOptions = Object.freeze({
+  serializationFormat: SerializationFormat.json
+});
 
 export class AtticExpressTransport extends ExpressTransport {
+
+    protected makeInstance(encodingOptions: EncodingOptions): AtticExpressTransport {
+      return new Proxy(this as AtticExpressTransport,  {
+        get(target: AtticExpressTransport, p: PropertyKey, receiver: any): any {
+          if (p !== 'serializer') {
+            return (target as any)[p];
+          } else {
+            return new EncodeToolsSerializer(encodingOptions);
+          }
+        }
+      })
+    }
 
     protected onRequest(req: any, res: any) {
         const jsonData = (<Buffer>req.body);
         const rawReq = new Uint8Array(jsonData);
 
-        const body = JSON.parse(jsonData.toString('utf8'));
-
+        const { inFormat, outFormat  } = getFormatsFromContext({ req, res }, (DEFAULT_ENCODE_OPTIONS));
+        const enc = new EncodeTools();
+        const body = inFormat === 'json' ? JSON.parse(Buffer.from(rawReq).toString('utf8')) : enc.deserializeObject<any>(rawReq, inFormat);
 
         ApplicationContext.logs.silly({
             method: `rpc.${body.method}.start`,
@@ -95,7 +109,7 @@ export class AtticExpressTransport extends ExpressTransport {
             if (err) handleError(err, req ,res);
             else {
                 const jsonData = (<Buffer>req.body);
-                const rawReq = new Uint8Array(jsonData);
+                const rawReq = Buffer.from(jsonData);
                 const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
                     const headers: any = {};
 
@@ -106,12 +120,17 @@ export class AtticExpressTransport extends ExpressTransport {
                                 httpUrl: req.originalUrl
                             });
                         }
-                        headers["Content-Type"] = this.serializer.content_type;
+
+                        const respPojo = toPojo(response);
+
+                        const outBuf = enc.serializeObject(respPojo, outFormat);
+                        headers["Content-Type"] = SerializationFormatMimeTypes.get(outFormat);
+                        headers['Content-Length'] = Buffer.from(outBuf).byteLength;
+
                         // response.error.message
 
-
                         res.writeHead(200, headers);
-                        res.end(this.serializer.serialize(response));
+                        res.end(outBuf);
                     } else {
                         res.writeHead(204, headers);
                         res.end();
@@ -126,7 +145,7 @@ export class AtticExpressTransport extends ExpressTransport {
                         });
                 }, { req, res });
 
-                this.receive(rawReq, clientRequest);
+                this.makeInstance({ serializationFormat: inFormat }).receive(rawReq, clientRequest);
             }
         });
     }
@@ -185,7 +204,7 @@ export async function loadWebServer() {
     WebExpress.use(SessionMiddleware);
     WebExpress.use(AuthMiddleware);
 
-    RPCTransport = new AtticExpressTransport(new JSONSerializer(), WebRouter);
+    RPCTransport = new AtticExpressTransport(new EncodeToolsSerializer(DEFAULT_ENCODE_OPTIONS), WebRouter);
 
     RPCServer.addTransport(RPCTransport);
 

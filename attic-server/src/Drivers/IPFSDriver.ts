@@ -1,118 +1,129 @@
-import Location, { LocationSchema, ILocation } from '../Location';
-import Entity, {IEntity} from '../Entity';
-import { IDriver} from "@znetstar/attic-common/lib/IDriver";
-import { IHTTPResourceEntity } from '../Entities/HTTPResourceEntity'
-import {IHTTPResponse} from "./HTTPCommon";
-import { Document } from 'mongoose';
-import Constructible from "../Constructible";
+import {ILocation} from '../Location';
+import {getFormatsFromContext, IHTTPResponse} from "./HTTPCommon";
+import {Document} from 'mongoose';
 import Driver from "./Driver";
-import * as _ from 'lodash';
-import {IUser} from "../User";
-import {HTTPDriverBase} from "./HTTPDriverBase";
-import {create, IPFSHTTPClient, Options as IPFSOptions} from 'ipfs-http-client';
 import ApplicationContext from "../ApplicationContext";
-import {HTTPResourceEntity} from "../Entities";
-import URL from 'url';
-
-export default class IPFSDriver extends Driver<IHTTPResponse> {
-  public get ipfsClient(): IPFSHTTPClient {
-    return ApplicationContext.ipfsClient as IPFSHTTPClient;
-  }
-  constructor(public basePathname: string = '', public options?: IPFSOptions) {
-    super();
-  }
-
-  static async connect(options?: IPFSOptions) {
-    if (ApplicationContext.ipfsClient)
-      return;
-    await ApplicationContext.triggerHook(`IPFSDriver.connect.start`);
-    ApplicationContext.ipfsClient = await create({
-      url: ApplicationContext.config.ipfsUri || process.env.IPFS_URI as string,
-      ...(options || {} as IPFSOptions)
-    });
-    await ApplicationContext.triggerHook(`IPFSDriver.connect.complete`);
-  }
-
-  public connect =  async () => {
-    return IPFSDriver.connect(this.options);
-  }
+import {IDriverDelete, IDriverPut} from "@znetstar/attic-common";
+import IPFSResourceEntity, {
+  createEntityFromFile,
+  createEntityFromLocation,
+  IIPFSResourceEntity
+} from "../Entities/IPFSResourceEntity";
 
 
-  public async head(location: ILocation&Document): Promise<IHTTPResponse> {
-    const doc = await this.getHead(location);
+import { IIPFSResourceEntity as IIPFSResourceEntityBase } from "@znetstar/attic-common/lib/IEntity";
+import {SerializationFormat, SerializationFormatMimeTypes} from '@etomon/encode-tools/lib/EncodeTools';
+import {EncodeToolsNative as EncodeTools} from '@etomon/encode-tools/lib/EncodeToolsNative';
+import {GenericError} from "@znetstar/attic-common/lib/Error";
+import {IPutEnvelope, unwrapPut} from "@znetstar/attic-common/lib/IRPC";
 
-    delete doc.body;
-    return doc;
-  }
-
-  public async get(location: ILocation&Document): Promise<IHTTPResponse> {
-    return this.getHead(location);
-  }
-
-  protected async getHead(location: ILocation&Document): Promise<IHTTPResponse> {
-    const path = location.pathname.replace(this.basePathname, '');
-    let iterator: any;
-    let buf: Buffer[] = [];
-    const files: any[] = [];
-    let options: any = { archive: false };
-    const q = new URL.URL(location.href);
-    let contentType = 'application/octet-stream';
-    for (let [k,v] of Array.from(q.searchParams.entries())) {
-      options[k] = JSON.parse(v);
-    }
-    if (options.archive)
-      contentType = 'application/gzip'
-    if (path[path.length - 1] === '/') {
-      contentType = 'application/json';
-      iterator = await this.ipfsClient.ls(path.substr(0, path.length - 1));
-      for await (const file of iterator) {
-        files.push(file);
-      }
-      buf.push(Buffer.from(JSON.stringify(files), 'utf8'));
-    } else {
-      iterator = await this.ipfsClient.ls(path);
-      for await (const file of iterator) {
-        if (file.type === 'file') {
-          iterator = await this.ipfsClient.cat(path, options);
-          for await (const chunk of iterator) {
-            buf.push(chunk);
-          }
-        } else if (file.type === 'dir') {
-          iterator = await this.ipfsClient.get(path, options);
-          for await (const chunk of iterator) {
-            buf.push(chunk);
-          }
-        }
-
-        break;
-      }
-    }
-    const body = Buffer.concat(buf);
-    try {
-      const mmm = require('mmmagic'),
-        Magic = mmm.Magic;
-      const magic = new Magic(mmm.MAGIC_MIME_TYPE);
-      contentType = await new Promise<string>((resolve, reject) => {
-        magic.detectFile(body, function (err: any, result: any) {
-          if (err) reject(err);
-          else resolve(result);
-        });
-      }) || contentType;
-    } catch (err) {
-    }
-    return {
-      body: body,
-      headers: new Map<string,string>([
-          ...contentType ? [ [ 'Content-Type', contentType ] ] : ([] as any[]),
-        [ 'Content-Length', body.byteLength.toString() ]
-      ]),
-      method: 'GET',
-      status: !body.byteLength ? 404 :  200,
-      href: location.href
-    }
-  }
+export class ProtocolMustBeIPFSError extends GenericError {
+  constructor() { super('Protocol must be "ipfs:"', 0, 400); }
 }
 
-ApplicationContext.registerHook('Drivers.IPFSDriver.init', async () => {
-  await IPFSDriver.connect(ApplicationContext.config.ipfsOptions as IPFSOptions|undefined);
-});
+export default class IPFSDriver extends Driver<IHTTPResponse> implements IDriverPut<IHTTPResponse, Buffer, any>, IDriverDelete<IHTTPResponse> {
+
+  constructor(protected encodeTools = new EncodeTools({ serializationFormat: SerializationFormat.json })) {
+    super();
+  }
+  public async getHead(loc: ILocation & Document): Promise<[ IIPFSResourceEntity&Document, IHTTPResponse ] > {
+    let entity: (IIPFSResourceEntity&Document)|null = (loc.entity || await createEntityFromLocation(loc)) as IIPFSResourceEntity&Document;
+    if (!entity) {
+      return [entity, { href: loc.href, status: 404, method: 'HEAD' } ];
+    }
+
+    const headers = new Map<string, string>();
+    if (typeof(entity.size) !== 'undefined')  {
+      headers.set('Content-Length', entity.size.toString());
+    }
+    return [
+      entity, {
+        href: loc.href,
+        status: 200,
+        method: 'HEAD',
+        headers
+      }
+    ];
+  }
+
+  public async head(loc: ILocation & Document): Promise<IHTTPResponse> {
+    const [ entity, httpResp ] = await this.getHead(loc);
+
+    return httpResp;
+  }
+
+  public async get(loc: ILocation & Document): Promise<IHTTPResponse> {
+    const [ entity, httpResp ] = await this.getHead(loc);
+
+    let body: Buffer[] = [];
+    for await (const buf of ApplicationContext.ipfsClient.cat(entity.getCid())) {
+      body.push(Buffer.from(buf));
+    }
+    httpResp.body = Buffer.concat(body);
+
+    return httpResp;
+  }
+
+  public async put(loc: ILocation & Document, data: Buffer, options?: unknown): Promise<IHTTPResponse> {
+    const file = await ApplicationContext.ipfsClient.add(data as any, options);
+
+    const ipfsEntity = new IPFSResourceEntity({
+      ...file,
+      cid: Buffer.from(file.cid.bytes)
+    });
+
+    await ipfsEntity.save();
+
+    // @ts-ignore
+    loc.entity = ipfsEntity;
+    await loc.save();
+
+    return {
+      href: loc.href,
+      status: 201,
+      method: 'PUT',
+      headers: new Map([
+        [ 'Location', `ipfs://${file.cid.toString()}${ file.path ? file.path : '' }` ]
+      ])
+    };
+  }
+
+  public async delete(loc: ILocation & Document): Promise<IHTTPResponse> {
+    const [ entity, resp ] =  await this.getHead(loc);
+
+    if (resp.status !== 200) {
+      return resp;
+    }
+
+    await ApplicationContext.ipfsClient.files.rm(entity.getCid());
+    return {
+      href: loc.href,
+      status: 204,
+      method: 'DELETE'
+    };
+  }
+
+  public async list(loc: ILocation & Document): Promise<IHTTPResponse> {
+    const { outFormat } = getFormatsFromContext(loc.httpContext, this.encodeTools.options);
+    const files: (IIPFSResourceEntity&Document)[] = [];
+    const iterator = await ApplicationContext.ipfsClient.ls(loc.pathname);
+
+    for await (const file of iterator) {
+      files.push(await createEntityFromFile(file));
+    }
+
+    const result = files.map(f => f.toJSON());
+    const body = await this.encodeTools.serializeObject(result, outFormat);
+
+    return {
+      href: loc.href,
+      status: 200,
+      method: 'GET',
+      headers: new Map<string, string>([
+        [ 'Content-Length', body.byteLength.toString() ],
+        [ 'Content-Type', SerializationFormatMimeTypes.get(outFormat) as string]
+      ]),
+      body
+    };
+  }
+}

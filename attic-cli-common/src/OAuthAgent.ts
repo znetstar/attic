@@ -1,6 +1,6 @@
 import {OAuthTokenRequest as OAuthTokenRequestBase} from "@znetstar/attic-common/lib/IRPC";
 import {IRPC} from "@znetstar/attic-common";
-import {Client, HTTPClientTransport, JSONSerializer,RPCError} from "multi-rpc";
+import {Client, HTTPClientTransport,RPCError, EncodeToolsSerializer} from "multi-rpc";
 import Config from "./Config/Config";
 import {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 import {InvalidGrantTypeError} from "@znetstar/attic-common/lib/Error/AccessToken";
@@ -18,7 +18,7 @@ import {
   EncodeTools,
   HashAlgorithm,
   IDFormat,
-  SerializationFormat
+  SerializationFormat, SerializationFormatMimeTypes
 } from '@etomon/encode-tools/lib/EncodeTools';
 
 /**
@@ -474,6 +474,8 @@ export class OAuthAgent {
       notUsed = !accessToken?.used;
       accessToken.used = true;
       headers.set(`Authorization`, `Bearer ${accessToken.access_token}`);
+      headers.set(`Content-Type`, SerializationFormatMimeTypes.get(this.encoder.options.serializationFormat));
+      headers.set(`Accept`, SerializationFormatMimeTypes.get(this.encoder.options.serializationFormat));
 
       return await RPCClient.invoke(method, args as any[]) as T;
     } catch ($err) {
@@ -546,7 +548,7 @@ export class OAuthAgent {
     else if (request && Object.keys(request).length)
       oauthTokenRequest = this.makeFullRequest(request as PartialOAuthTokenRequest);
 
-    let serializer = new JSONSerializer();
+    let serializer = new EncodeToolsSerializer(this.encoder.options);
     let headers = (options?.headers && ((options?.headers instanceof Map) ? options?.headers : new Map<string,string>(Array.from(options?.headers)))) || new Map<string, string>();
 
     let httpTransport = options?.transport || new HTTPClientTransport(serializer, this.serverUri+'/rpc', headers as Map<string,string>);

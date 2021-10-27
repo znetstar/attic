@@ -1,7 +1,7 @@
 import ILocation from "./ILocation";
 
-export interface IDriverPut<T,B> {
-    put(location: ILocation, content: B): Promise<T>;
+export interface IDriverPut<T,B,O> {
+    put(location: ILocation, content: B, options?: O): Promise<T>;
 }
 
 export interface IDriverDelete<T> {
@@ -27,6 +27,6 @@ export interface IDriverConnect<T> {
 
 export type IDriver = IDriverGet<any>&IDriverHead<any>;
 export type IDriverOf<T,B> = IDriverGet<T>&IDriverHead<T>;
-export type IDriverFull = IDriverGet<any>&IDriverHead<any>&IDriverPut<any, any>&IDriverDelete<any>&IDriverList<any>&IDriverConnect<any>;
-export type IDriverOfFull<T,B> = IDriverGet<T>&IDriverHead<T>&IDriverPut<T, B>&IDriverDelete<T>&IDriverList<T>&IDriverConnect<T>;
+export type IDriverFull = IDriverGet<any>&IDriverHead<any>&IDriverPut<any, any, any>&IDriverDelete<any>&IDriverList<any>&IDriverConnect<any>;
+export type IDriverOfFull<T,B, O> = IDriverGet<T>&IDriverHead<T>&IDriverPut<T, B, O>&IDriverDelete<T>&IDriverList<T>&IDriverConnect<T>;
 

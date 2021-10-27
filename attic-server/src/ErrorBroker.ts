@@ -5,8 +5,6 @@ import {
   PartialIError
 } from "@znetstar/attic-common/lib/Server/IErrorBroker";
 
-
-
 export type ErrorMap<T extends IError> = Map<number, ConstructibleError<T>>;
 
 export class ErrorBroker implements IErrorBroker {

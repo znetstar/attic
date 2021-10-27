@@ -1,3 +1,4 @@
+import {EncodingOptions, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
 
 export enum LogLevels {
     silly = 'silly',
@@ -32,6 +33,8 @@ export type DBInitRecordMongoose<T> = DBInitRecordBase<T>&{
 export type DBInitRecord<T> = DBInitRecordMongo<T>|DBInitRecordMongoose<T>;
 
 export interface IConfig {
+    defaultRpcEncodingOptions?: EncodingOptions,
+    uploadTempDir?: string;
     /**
      * Externally facing hostname
      */
@@ -160,11 +163,11 @@ export interface IConfig {
     dbInit?: DBInitRecord<any>[];
     allowGetTokenWithNoRedirectUri?: string[];
 
-  /**
-   * URL to IPFS API server. Leave `undefined` to disable IPFS
-   */
-  ipfsUri?: string;
-  ipfsOptions?: { [name: string]: unknown; }
+    enableIpfs?: boolean;
+    ipfsOptions?: { [name: string]: unknown; }
+
+    // accessTokenFormat?: unknown;
+    // accessTokenEncoding?: unknown;
 }
 
 export default IConfig;

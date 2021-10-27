@@ -157,7 +157,7 @@ export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|st
             let serviceClient = await Client.findOne({ clientId: SERVICE_CLIENT_ID }).exec();
             yield [testScope, new AccessToken({
                 tokenType: 'bearer',
-                token: nanoid(),
+                token: ApplicationContext.makeRandomToken(),
                 scope: [].concat(testScope),
                 user: user,
                 client: serviceClient._id,
@@ -275,7 +275,6 @@ export function userFromRpcContext(rpcContext: any): { context: IScopeContext&{ 
 }
 
 export async function* getFormalAccessTokensForScope (user: IUser&Document|ObjectId|string, scope: string[]|string): AsyncGenerator<ScopeFormalAccessTokenPair> {
-
     for await ( let [ scopeQuery, token ] of getAccessTokensForScope(user, scope) ) {
         let formalToken = token ? await toFormalToken(token as IAccessToken&Document) : null;
 

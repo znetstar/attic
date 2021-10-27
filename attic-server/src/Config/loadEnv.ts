@@ -61,7 +61,7 @@
         'ROOT_GROUPS',
         'LOG_LEVEL',
         'PLUGINS',
-        'IPFS_URI'
+        'UPLOAD_TEMP_DIR'
     ];
 
     const noTransform: any[] = [

@@ -3,20 +3,29 @@ import { ObjectId } from 'mongodb';
 import * as url  from 'url';
 import Config from './Config';
 import mongoose from './Database';
-import { ILocation as ILocationBase, IEntity } from '@znetstar/attic-common/lib';
+import {ILocation as ILocationBase, IEntity, IDriverPut} from '@znetstar/attic-common/lib';
 import {IDriver} from "@znetstar/attic-common/lib/IDriver";
+import { LocationCopyDestinationMustHavePutError, CopyLocationsMustHaveDriverError } from "@znetstar/attic-common/lib/Error/Location";
 import Constructible from "./Constructible";
 import { RPCServer } from './RPC';
 import Resolver, {ResolverSchema} from "./Resolver";
 import { nanoid } from 'nanoid';
+import {HTTPMirroredLocationMustHaveDriverError, HTTPMirroredRequestMustHaveResponseError} from "@znetstar/attic-common/lib/Error/Driver";
 import * as _ from 'lodash';
-import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
+import {
+  BasicFindOptions,
+  BasicFindQueryOptions,
+  BasicTextSearchOptions,
+  wrapPut,
+  unwrapPut
+} from "@znetstar/attic-common/lib/IRPC";
 import {moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
 import {EntitySchema} from "./Entity";
 import {checkScopePermission, IAccessToken} from "./Auth/AccessToken";
 import {IHttpContext} from "./Drivers/HTTPCommon";
 import ItemCache, {DocumentItemCache} from "./ItemCache";
 import {ScopeFormalAccessTokenPair} from "@znetstar/attic-common/lib/IAccessToken";
+import {IDriverOfFull} from "@znetstar/attic-common";
 const drivers = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
 
 type IUser = any;
@@ -24,7 +33,7 @@ type IUser = any;
 export interface ILocationModel {
     id?: ObjectId;
     _id?: ObjectId;
-    auth?: string[];
+    auth?: string[]|string;
     getHref?(): string;
     setHref?(value: string|url.UrlWithStringQuery): void;
     toString?(): string;
@@ -37,6 +46,8 @@ export interface ILocationModel {
     // @ts-ignore
     getUserByLocationAuth?(): AsyncGenerator<IUser&Document>;
     preferredAuthProvider?: string;
+    copy?(...dest: (ILocation)[]): Promise<void>;
+    slashes?: boolean;
 }
 
 
@@ -74,6 +85,7 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
         type: [String],
         required: false
     },
+    slashes: { type: Boolean, required: false },
     entity: {
         type: Schema.Types.ObjectId,
         ref: 'Entity'
@@ -109,7 +121,8 @@ export const LocationSchema = <Schema<ILocation>>(new (mongoose.Schema)({
       validate: (x: number) => x >= 0
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    discriminatorKey: 'protocol'
 }));
 
 LocationSchema.virtual('httpContext')
@@ -152,7 +165,9 @@ LocationSchema.methods.getHref = LocationSchema.methods.toString = function () {
         // clone.auth = [].concat(clone.auth).join(' ');
         delete clone.auth;
     }
-    return url.format(clone);
+    let href = url.format(clone);
+
+    return href;
 }
 
 LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): void {
@@ -193,7 +208,7 @@ LocationSchema.pre([ 'find', 'findOne' ] as any, function () {
 
 // @ts-ignore
 export async function authenticateLocation(location: ILocation, user: IUser): Promise<boolean> {
-    let groups = location.auth;
+    let groups = [].concat(location.auth);
 
     if (!location.auth || !location.auth.length)
         return true;
@@ -219,6 +234,48 @@ LocationSchema.methods.authenticateLocation = async function (user: IUser) {
 
 LocationSchema.methods.getUserByLocationAuth = async function* (): AsyncGenerator<IUser&Document> {
     return getUserByLocationAuth(this);
+}
+
+
+LocationSchema.methods.copy = async function (...dest: ILocation[])  {
+  const drivers = [this.driver ||null, ...dest.map((d) => d.driver || null)];
+
+  if (drivers.includes(null))
+    throw new CopyLocationsMustHaveDriverError();
+
+  await this.populate('entity').execPopulate();
+
+  const source: IDriver = new (this.getDriver())();
+  const b = await source.get(this);
+
+  await Promise.all<void>(dest.map(async (destLocBase) => {
+    const destLoc: ILocation&Document = Location.hydrate(destLocBase);
+
+    destLoc.$locals.httpContext = this.$locals.httpContext;
+
+    const destDriver: IDriverPut<unknown, unknown, unknown>  = new (destLoc.getDriver())() as IDriverOfFull<unknown,unknown,unknown>&IDriverPut<unknown, unknown,unknown>;
+    await destLoc.populate('entity').execPopulate();
+
+    const body = wrapPut({ data: b.body }, destLoc.$locals.httpContext);
+
+    await destDriver.put(
+      destLoc, body
+    );
+  }))
+}
+
+RPCServer.methods.copyLocation = async function (source: string, ...dest: string[]): Promise<void> {
+  const locations = await Promise.all([
+    Location.findById(source).populate('entity').exec(),
+    ...dest.map((m) => Location.findById(m).populate('entity').exec())
+  ]);
+
+  let { req, res } = (this as any).context.clientRequest.additionalData;
+  for (const loc of locations) {
+    loc.$locals.httpContext = { req, res, scopeContext: req.scopeContext };
+  }
+
+  await locations[0].copy(...locations.slice(1));
 }
 
 RPCServer.methods.authenticateLocation = async (locationId: string, userId: string): Promise<boolean> => {

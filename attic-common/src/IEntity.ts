@@ -14,9 +14,17 @@ export interface IHTTPResource {
     status?: number;
 }
 
-export interface IPFSResource {
-  cid: Uint8Array
+export interface IIPFSResource {
+  cid: Uint8Array;
+  path?: string;
+  mode?: number|string;
+  mtime?: number;
+}
+
+export interface IMirroredResource {
+  mirrors: ILocation[];
 }
 
 export type IHTTPResourceEntity = IEntity&IHTTPResource;
-export type IIPFSResourceEntity = IEntity&IPFSResource;
+export type IIPFSResourceEntity = IEntity&IIPFSResource;
+export type IMirroredResourceEntity = IEntity&IMirroredResource;

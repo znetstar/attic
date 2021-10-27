@@ -17,33 +17,40 @@
  *  You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Config, { ConfigType } from "./Config";
-import mongoose, { redis } from './Database';
+import Config, {ConfigType} from "./Config";
+import mongoose, {redis} from './Database';
 import RPCServer from "./RPC";
 import {WebExpress} from "./Web";
-import { EventEmitter2 as EventEmitter } from 'eventemitter2';
+import {EventEmitter2 as EventEmitter} from 'eventemitter2';
 import plugins from "./Plugins";
 import {createLogger} from "./Logs";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
-import  * as fs from 'fs-extra';
+import * as fs from 'fs-extra';
 import * as path from 'path';
-import {  Notification } from 'multi-rpc';
 import {IApplicationContext} from "@znetstar/attic-common/lib/Server/index";
 import Constructible from "./Constructible";
 import {IDriver} from "@znetstar/attic-common/lib/IDriver";
 import {handleErrorMiddleware, WebSocketPaths, WebSocketServer} from "./Web/WebServer";
 import * as ws from 'ws';
 import {DBInitRecordMongo, DBInitRecordMongoose} from "@znetstar/attic-common/lib/Server/IConfig";
-import {create, IPFSHTTPClient} from 'ipfs-http-client'
 import {asyncMiddleware} from "./Web/Common";
 import {ObjectId} from "mongodb";
 import {ErrorBroker} from "./ErrorBroker";
+import {create as createIPFS, IPFS, Options as IPFSOptions} from 'ipfs-core';
+import {EncodeToolsNative} from "@etomon/encode-tools";
+import {BinaryEncoding, IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
 
 export interface ListenStatus {
     urls: string[];
 }
 
 export const drivers: Map<string, Constructible<IDriver>> = (<any>global).drivers = (<any>global).drivers || new Map<string, Constructible<IDriver>>();
+
+export class IPFSNotEnableError extends Error {
+  constructor( )  {
+    super(`IPFS is not enabled`)
+  }
+}
 
 export class ApplicationContextBase extends EventEmitter implements IApplicationContext{
     protected logger: any;
@@ -55,7 +62,6 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
             removeListener: true,
             verboseMemoryLeak: false
         });
-
 
         this.logger = createLogger(this);
 
@@ -71,6 +77,21 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
 
         this.once('launch.complete', this.onLaunchCompleteLog);
         this.once('launch.complete', this.onLaunchCompleteDbInit);
+        if (this.config.enableIpfs)
+          this.once('launch.loadPlugins.complete', this.connectIpfs);
+    }
+
+    makeRandomToken(): string {
+      return EncodeToolsNative.WithDefaults.encodeBuffer(
+        Buffer.from(EncodeToolsNative.WithDefaults.uniqueId(IDFormat.uuidv4)),
+        BinaryEncoding.base64
+      ).toString();
+    }
+
+    connectIpfs = async () => {
+      await this.triggerHook('ApplicationContext.connectIpfs.start');
+      this._ipfsClient = this.config.enableIpfs ? await createIPFS(this.config.ipfsOptions as IPFSOptions|undefined) : void(0);
+      await this.triggerHook('ApplicationContext.connectIpfs.complete');
     }
 
     onLaunchCompleteDbInit = async () =>  {
@@ -189,7 +210,9 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
 
     get redis() { return redis; }
 
-    ipfsClient: IPFSHTTPClient;
+    protected _ipfsClient?: IPFS;
+
+    get ipfsClient(): IPFS { if (this.config.enableIpfs) { return this._ipfsClient as IPFS; } else { throw new IPFSNotEnableError(); } }
 
     get config(): ConfigType {
         return Config as any;

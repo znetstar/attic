@@ -15,7 +15,7 @@ import { ServerOptions } from 'http-proxy';
 import * as URL from 'url';
 import {IDriverOfFull} from "../Driver";
 
-export default class HTTPReverseProxyDriver extends HTTPDriverBase implements IDriverOfFull<IHTTPResponse, Buffer>{
+export default class HTTPReverseProxyDriver extends HTTPDriverBase implements IDriverOfFull<IHTTPResponse, Buffer, unknown>{
     public httpProxy: HTTPProxy;
     constructor(public user?: IUser, protected proxyServerOptions?: ServerOptions) {
         super(user);

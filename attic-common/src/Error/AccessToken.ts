@@ -89,9 +89,10 @@ export class CouldNotFindTokenForScopeError extends GenericError {
     public static get httpCode(): number {
         return 403;
     }
+    public message: string;
 
-    constructor(public query: ScopeAccessTokenPair, public message: string = 'Could not find a token for this scope') {
-        super(message, CouldNotFindTokenForScopeError.code, CouldNotFindTokenForScopeError.httpCode);
+    constructor(public query: ScopeAccessTokenPair, message?: string) {
+        super(message || `Could not find a token for this scope: ${JSON.stringify(query)}`, CouldNotFindTokenForScopeError.code, CouldNotFindTokenForScopeError.httpCode);
     }
 
 }

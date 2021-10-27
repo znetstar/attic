@@ -1,13 +1,12 @@
 import ILocation from "./ILocation";
-import {IDriver} from "./IDriver";
 import IResolver, {IMountPoint} from "./IResolver";
 import IEntity from "./IEntity";
 import IClient from "./IClient";
-import {AccessTokenSet, FormalAccessTokenSet, IFormalAccessToken} from "./IAccessToken";
+import {AccessTokenSet, FormalAccessTokenSet, IAccessToken, IFormalAccessToken} from "./IAccessToken";
 import IUser from "./IUser";
-import {IAccessToken} from "./IAccessToken";
-import {IIdentity, IIdentityEntity} from "./IIdentity";
-
+import {IIdentityEntity} from "./IIdentity";
+import {EncodingOptions, MimeTypesSerializationFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {default as EncodeTools} from "@etomon/encode-tools/lib/EncodeToolsAuto";
 
 export interface BasicTextSearchQueryOptions {
     skip?: number;
@@ -80,6 +79,46 @@ export interface IHTTPResponse {
     method: string;
 }
 
+export interface IHttpContext {
+  req: unknown;
+  res: unknown;
+  scopeContext?: unknown;
+}
+
+export interface IPutEnvelope {
+  data: Uint8Array|string;
+  options?: unknown;
+}
+
+export function unwrapPut(body: Uint8Array, context: IHttpContext) {
+  const { inFormat } = getFormatsFromContext(context);
+  // @ts-ignore
+  const delta: IPutEnvelope = body instanceof Uint8Array ? EncodeTools.WithDefaults.deserializeObject(body, inFormat) : body;
+
+  return delta;
+}
+
+
+export function wrapPut(envelope: IPutEnvelope, context: IHttpContext) {
+  const { outFormat } = getFormatsFromContext(context);
+  const body: Uint8Array = EncodeTools.WithDefaults.serializeObject(envelope, outFormat);
+
+  return body;
+}
+export function getFormatsFromContext(httpContext: IHttpContext, defaultEncodeOptions: EncodingOptions = { serializationFormat: SerializationFormat.json }) {
+  const inType = ((httpContext as IHttpContext) ? ((httpContext as IHttpContext ).req as any).headers.accept || '' : '').split(';').shift();
+  const outType = ((httpContext as IHttpContext) ? ((httpContext as IHttpContext).req as any).headers['content-type'] || '' :'').split(';').shift();
+
+  const inFormat = MimeTypesSerializationFormat.get(inType) || defaultEncodeOptions.serializationFormat;
+  const outFormat = MimeTypesSerializationFormat.get(outType) || defaultEncodeOptions.serializationFormat;
+
+  return {
+    inFormat,
+    outFormat
+  };
+}
+
+
 export type FindEntitiesResult = IEntity[]|number;
 
 export default interface IRPC {
@@ -125,7 +164,7 @@ export default interface IRPC {
     resolveLocation(location: ILocation): Promise<ILocation>;
     resolve(location: ILocation|string, options: ResolveOptions): Promise<ILocation>;
 
-    getHttpResponse(location: ILocation): Promise<IHTTPResponse>;
+    getHttpResponse(location: ILocation, body: unknown): Promise<IHTTPResponse>;
 
     findUsers(query: BasicFindOptions): Promise<IUser[]|number>;
     findUser(query: any): Promise<IUser>;
@@ -157,4 +196,10 @@ export default interface IRPC {
     selfAccessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
 
     redisFlushAll(): Promise<void>;
+
+    createIPFSEntityFromLocation(loc: ILocation, pin?: boolean): Promise<string|null>;
+    pinIPFSEntity(id: string): Promise<void>;
+    unpinIPFSEntity(id: string): Promise<void>;
+    copyLocationToNewIPFSEntity(inLoc: string, pin?: boolean): Promise<string>;
+
 }

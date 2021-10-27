@@ -25,7 +25,7 @@ export interface IClientModel {
     getIdentityEntity(token: IAccessToken&Document): Promise<IIdentityEntity&Document>;
     uriSubstitutions?: Map<string, string>;
     applyUriSubstitutions(qs: any): any;
-    get defaultUser(): IUser|string|undefined;
+    getdefaultUser(): IUser|string|undefined;
     defaultUsername?: string;
 }
 

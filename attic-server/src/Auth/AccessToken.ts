@@ -16,6 +16,7 @@ import {
     AccessTokenNotFoundError
 } from "@znetstar/attic-common/lib/Error/AccessToken";
 import RPCServer from "../RPC";
+import ApplicationContext from "../ApplicationContext";
 
 export {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 
@@ -255,7 +256,7 @@ export async function accessTokenFromRefresh(self: IAccessToken&Document): Promi
 
         let accessToken = new AccessToken({
             tokenType: 'bearer',
-            token: nanoid(),
+            token: ApplicationContext.makeRandomToken(),
             linkedToken: self._id,
             scope: self.scope,
             client: self.client,

@@ -5,14 +5,10 @@ import { Mongoose, Schema, Document } from 'mongoose';
 import config from './Config';
 import mongoose from './Database';
 import { ObjectId } from 'mongodb';
-import {ensureMountPoint} from "@znetstar/attic-common/lib";
-import {ResolverSchema} from "./Resolver";
 import {RPCServer} from "./RPC";
 import {BasicFindOptions, BasicFindQueryOptions, BasicTextSearchOptions} from "@znetstar/attic-common/lib/IRPC";
 import * as _ from "lodash";
-
-import { HTTPResourceEntity } from './Entities';
-import { moveAndConvertValue, parseUUIDQueryMiddleware} from "./misc";
+import { moveAndConvertValue } from "./misc";
 import {userFromRpcContext} from "./User";
 import {FindEntitiesResult} from "@znetstar/attic-common/lib/IRPC";
 
@@ -25,18 +21,18 @@ export interface IEntityModel {
 export type IEntity = IEntityModel&IEntityBase;
 
 export const EntitySchema = <Schema<IEntity>>new (mongoose.Schema)({
-
     source: {
-        type: LocationSchema,
-        unique: true
+      type: LocationSchema,
+      unique: true,
+      required: true
     },
     type: {
-        type: String,
-        required: true,
-        enum: config.entityTypes.slice(0)
+      type: String,
+      required: true,
+      enum: config.entityTypes.slice(0)
     }
 }, {
-    discriminatorKey: 'class',
+    discriminatorKey: 'type',
     timestamps: true
 });
 
@@ -44,7 +40,6 @@ export const EntitySchema = <Schema<IEntity>>new (mongoose.Schema)({
 
 EntitySchema.pre(([ 'find', 'findOne' ] as  any),  function () {
     let self = this as any;
-
 
     moveAndConvertValue(self, '_conditions.source', '_conditions.source.href');
 })
@@ -67,6 +62,10 @@ EntitySchema.index({
 
 
 RPCServer.methods.findEntity = async (query: any) => {
+    if (query.id  || query._id) {
+      query._id = new ObjectId((query.id  || query._id))
+      delete  query.id;
+    }
     let entity = await Entity.findOne(query).exec();
     return entity ? entity.toJSON({ virtuals: true }) : void(0);
 }

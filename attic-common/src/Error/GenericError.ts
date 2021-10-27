@@ -39,6 +39,20 @@ export class NotFoundError extends GenericError {
     }
 }
 
+export class BrokenLinkError extends GenericError {
+  public static get code(): number {
+    return 3;
+  }
+
+  public static get httpCode(): number {
+    return 410;
+  }
+
+  constructor(public message: string = 'Could not locate entity referenced by this location') {
+    super(message, BrokenLinkError.code, BrokenLinkError.httpCode);
+  }
+}
+
 
 
 export default GenericError;

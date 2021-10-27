@@ -1,20 +1,22 @@
-import { Router } from 'express';
 import {asyncMiddleware} from "./Common";
-import {RootResolverSchema} from "../Resolvers/RootResolver";
-import {authenticateLocation, ILocation, Location} from "../Location";
-import {IDriverFull,IDriverOfFull} from "../Driver";
-import {IHTTPResponse} from "../Drivers/HTTPCommon";
+import {ILocation, Location} from "../Location";
+import {IDriverOfFull} from "../Driver";
+import {getFormatsFromContext, IHTTPResponse} from "../Drivers/HTTPCommon";
 import Constructible from "../Constructible";
 import {resolve} from "../Resolver";
 import * as _ from 'lodash';
-import {  } from 'multi-rpc';
 import {IScopeContext} from "../Auth/AccessToken";
 import RPCServer from "../RPC";
 import ApplicationContext from "../ApplicationContext";
 import ItemCache from "../ItemCache";
-import { Document } from 'mongoose';
 import Config from '../Config';
-import {UnauthorizedUserDoesNotHavePermissionToAccessResourceError, UserDoesNotHavePermissionToAccessResourceError} from "@znetstar/attic-common/lib/Error/Auth";
+import {
+  UnauthorizedUserDoesNotHavePermissionToAccessResourceError,
+  UserDoesNotHavePermissionToAccessResourceError
+} from "@znetstar/attic-common/lib/Error/Auth";
+import {ScopeAccessTokenPair} from "@znetstar/attic-common/lib/IAccessToken";
+import {EncodeTools} from "@etomon/encode-tools";
+import {SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
 
 export interface SerializedHTTPResponseExt {
     headers: [string, string][]
@@ -25,55 +27,103 @@ export type SerializedHTTPResponse = IHTTPResponse&SerializedHTTPResponseExt;
 const HTTPResponseCache = new ItemCache<ILocation, SerializedHTTPResponse>('HTTPResponse');
 
 export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res: any, location: ILocation): Promise<O> {
-    let scopeContext: IScopeContext = req.scopeContext;
+  const scopeContext: IScopeContext = req.scopeContext;
+  const inLoc = _.cloneDeep({ href: location.href, auth: location.auth, headers: { 'user-agent': req.headers['user-agent'] } });
+  let method: string = '$';
 
-    let userIsAuth = await authenticateLocation(location, scopeContext.user);
+  if (req.method.toUpperCase() === 'GET')
+    method = '.get';
+  if (req.method.toUpperCase() === 'PUT')
+    method = '.put';
+  if (req.method.toUpperCase() === 'HEAD')
+    method = '.head';
+  if (req.method.toUpperCase() === 'DELETE')
+    method = '.delete';
+  if (req.method.toUpperCase() === 'CONNECT')
+    method = '.connect';
 
-    if (!userIsAuth) {
-        if (scopeContext.user.username === Config.unauthorizedUserName) {
-            throw new UnauthorizedUserDoesNotHavePermissionToAccessResourceError()
-        } else {
-            throw new ((global as any).ApplicationContext.errors.getErrorByName('UserDoesNotHavePermissionToAccessResourceError') as any)();
+  const baseScope = `resolve.no-group${method}`
+
+  const auths = [].concat(inLoc.auth || []);
+
+  let groupScopes: string[] = [];
+  if (auths.length) {
+    // If the location has groups the user cannot be anonymous
+    if (scopeContext.user.username === ApplicationContext.config.unauthorizedUserName) {
+      throw new UnauthorizedUserDoesNotHavePermissionToAccessResourceError();
+    }
+
+    groupScopes.push(
+      ...auths.map((s) => { return `resolve.group.${s}${method}` })
+    );
+  }
+
+  let scopePair: ScopeAccessTokenPair;
+  let baseScopePair: ScopeAccessTokenPair;
+
+  // Must match base scope
+  if (baseScope !== scopeContext.currentScope) {
+    for await (const pair of scopeContext.user.getAccessTokensForScope(baseScope)) {
+      if (pair) {
+        baseScopePair = pair;
+        break;
+      }
+    }
+  } else {
+    baseScopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
+  }
+
+  if (!baseScopePair) throw new UserDoesNotHavePermissionToAccessResourceError();
+
+  // Must match at least one group scope, if given
+  if (groupScopes.length) {
+    if (!groupScopes.includes(scopeContext.currentScope)) {
+      for await (const pair of scopeContext.user.getAccessTokensForScope(groupScopes)) {
+        if (pair) {
+          scopePair = pair;
+          break;
         }
+      }
+    } else {
+      scopePair = [scopeContext.currentScope, scopeContext.currentScopeAccessToken];
     }
 
-    let inLoc = _.cloneDeep({ href: location.href, auth: location.auth, headers: { 'user-agent': req.headers['user-agent'] } });
+    if (!scopePair) throw new UserDoesNotHavePermissionToAccessResourceError();
+  }
 
-    let scope = 'rpc.getResponse';
-    let scopePair = [ scopeContext.currentScope, scopeContext.currentScopeAccessToken ];
-    if (scope !== scopeContext.currentScope)
-        scopePair = (await (await scopeContext.user.getAccessTokensForScope(scope)).next()).value;
+  let cachedResult = await HTTPResponseCache.getObject(inLoc);
+  if (cachedResult) {
+      let response: O = {
+          ...(cachedResult as any),
+          headers: new Map<string, string>(cachedResult.headers)
+      };
+      return response as O;
+  }
 
-    let cachedResult = await HTTPResponseCache.getObject(inLoc);
-    if (cachedResult) {
-        let response: O = {
-            ...(cachedResult as any),
-            headers: new Map<string, string>(cachedResult.headers)
-        };
-        return response as O;
-    }
+  location.httpContext = {
+      req,
+      res,
+      scopeContext: req.context
+  };
 
-    location.httpContext = {
-        req,
-        res,
-        scopeContext: req.context
-    };
+    const Driver: Constructible<IDriverOfFull<IHTTPResponse|null, Buffer, unknown>> = ApplicationContext.drivers.get(location.driver) as Constructible<IDriverOfFull<IHTTPResponse|null, Buffer, unknown>>;
+    const driver = new Driver();
 
-    let Driver: Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>> = ApplicationContext.drivers.get(location.driver) as Constructible<IDriverOfFull<IHTTPResponse|null, Buffer>>;
-    let driver = new Driver();
-
-    let allowedMethods = [
+    const allowedMethods = [
         'get', 'head', 'put', 'delete', 'connect'
     ].filter(m => typeof((driver as any)[m]) !== 'undefined');
 
 
     let response: IHTTPResponse|null;
+
+
     if (req.method === 'GET' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.get(location);
     else if (req.method === 'HEAD' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.head(location);
-    else if (req.method === 'PUT' && allowedMethods.includes(req.method.toLowerCase()))
-        response = await driver.put(location, req.body);
+    else if (req.method === 'PUT' && allowedMethods.includes(req.method.toLowerCase())) {
+      response = await driver.put(location, req.body);
+    }
     else if (req.method === 'DELETE' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.delete(location);
     else if (req.method === 'CONNECT' && allowedMethods.includes(req.method.toLowerCase()))
@@ -98,10 +148,15 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
     return response as O;
 }
 
-RPCServer.methods.getHttpResponse = async function Rpc<O extends IHTTPResponse, I>(location: ILocation): Promise<O> {
-    let { req, res } = this.clientRequest.additionalData;
+RPCServer.methods.getHttpResponse = async function Rpc<O extends IHTTPResponse, I>(location: ILocation, reqOverrides?: unknown): Promise<O> {
+    const { req, res } = this.context.clientRequest.additionalData;
+    for (let k in (reqOverrides || {} as any)) {
+      (req as any)[k] = (reqOverrides as any)[k];
+    }
 
-    return getHttpResponse<O,I>(req, res, Location.hydrate(location));
+    const loc = Location.hydrate(location);
+    await loc.populate('entity').execPopulate();
+    return getHttpResponse<O,I>(req, res, loc);
 }
 
 export default function ResolverMiddleware(req: any, res: any, next: any) {

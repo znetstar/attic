@@ -10,7 +10,11 @@ mongoose.connect(config.mongoUri, {
   useUnifiedTopology: true,
   useFindAndModify: true,
   useCreateIndex: true
-}).catch((err: Error) => {
+})
+.then(() => {
+  return ApplicationContext.triggerHook(`Database.connected`);
+})
+.catch((err: Error) => {
     console.error(`Error connecting to mongoose: ${err.stack}`);
     process.exit(1);
 });

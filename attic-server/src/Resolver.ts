@@ -263,7 +263,8 @@ export async function rootResolverResolve(location: ILocation): Promise<ILocatio
     while (rawResolver = await resolvers.next()) {
         // Attempt to resolve the location
         let outLocation: ILocation&Document;
-        if (rawResolver.isRootResolver) {
+        if (rawResolver.
+          isRootResolver) {
             const resolver = Resolver.hydrate(rawResolver);
             outLocation = await ResolverSchema.methods.resolve.call(resolver, location);
         }

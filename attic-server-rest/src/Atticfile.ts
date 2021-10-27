@@ -234,7 +234,7 @@ export class AtticServerREST implements IPlugin {
               return;
             }
             if ((req as any).scopeContext?.currentScopeAccessToken) { return next(); }
-restrictScopeMiddleware(`rest.${modelName}.findOne`)
+            restrictScopeMiddleware(`rest.${modelName}.findOne`)
             (
               req, res, next
             );
