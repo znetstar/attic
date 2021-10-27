@@ -149,7 +149,7 @@ UserSchema.pre<IUser&{ password?: string }&Document>('save', async function () {
             'content-type': SerializationFormatMimeTypes.get(enc.options.serializationFormat as SerializationFormat) as string,
             'accept': SerializationFormatMimeTypes.get(enc.options.serializationFormat as SerializationFormat) as string
           },
-          files: Buffer.from(this.image)
+          body: Buffer.from(this.image)
         };
 
         // @ts-ignore

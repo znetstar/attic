@@ -165,7 +165,10 @@ export abstract class SessionComponent<P extends SessionComponentProps, S extend
   }
 
   get rpc() {
-    return RPCProxy(this.handleError);
+    return RPCProxy((error) => {
+      this.handleError(error);
+      throw error;
+    });
   }
 
   public static getSession(context: any): Promise<MarketplaceSession|null> {

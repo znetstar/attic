@@ -17,7 +17,7 @@ import {EncodeToolsAuto} from "@etomon/encode-tools";
 export function encodeOptions(overrides?: EncodingOptions) {
   return {
     ...(overrides||{}),
-    serializationFormat: (process.env.WEB_SERIALIZATION_FORMAT || SerializationFormat.cbor) as SerializationFormat,
+    serializationFormat: (process.env.WEB_SERIALIZATION_FORMAT || SerializationFormat.msgpack) as SerializationFormat,
     imageFormat: ImageFormat.jpeg
   } as EncodingOptions;
 }
@@ -28,7 +28,7 @@ export function encodeOptions(overrides?: EncodingOptions) {
  */
 export function makeEncoder(): EncodeTools {
   return new EncodeToolsAuto(encodeOptions({
-    serializationFormat: (process.env.WEB_SERIALIZATION_FORMAT || SerializationFormat.cbor) as SerializationFormat,
+    serializationFormat: (process.env.WEB_SERIALIZATION_FORMAT || SerializationFormat.msgpack) as SerializationFormat,
   }));
 }
 
@@ -41,7 +41,7 @@ export function makeKeyEncoder(): EncodeTools {
 export function makeInternalCryptoEncoder(): EncodeTools {
   return new   EncodeToolsAuto(encodeOptions({
     binaryEncoding: BinaryEncoding.base85,
-    serializationFormat: SerializationFormat.cbor,
+    serializationFormat: SerializationFormat.msgpack,
     uniqueIdFormat: IDFormat.uuidv4String
   }));
 }

@@ -1,14 +1,15 @@
 import React, {PureComponent} from "react";
-import { Button, FormControl, TextField, Switch, Typography } from "@mui/material";
-
-import { INFT } from "../_nft";
-import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-assetForm.module.css"
+import {Button, FormControl, Switch, TextField, Typography} from "@mui/material";
+import  { TokenType, TokenSupplyType } from '../_rpcCommon';
+import {INFT} from "../_nft";
+import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-assetForm.module.css";
 
 interface NftAssetProps {
-  nftForm: INFT;
+  nftForm: INFT & { supply: number };
   updateAssetForm: Function;
   onFormChange: Function;
 }
+
 
 /**
  * Allows the user to upload NFT Asset MetaData
@@ -19,19 +20,32 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
     super(props);
   }
 
+  get isLocked(): boolean {
+    return Boolean(this.props.nftForm.tokenId);
+  }
+
   render() {
     const { nftForm, updateAssetForm, onFormChange } = this.props
     return (
       <div className={styles.nftForm_wrapper}>
         <form onSubmit={(e) => { updateAssetForm(); e.preventDefault(); }}>
+          {
+            this.isLocked ? (
+              <div >
+                <FormControl className={'form-control'}>
+                  <TextField disabled={this.isLocked}  onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.tokenIdStr}  required={true} className={'form-input'}  variant={"filled"} name={"tokenIdStr"} label="Token ID" />
+                </FormControl>
+              </div>
+            ) :  null
+          }
            <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.name}  required={true} className={'form-input'}  variant={"filled"} name={"name"} label="Name" />
+                <TextField disabled={this.isLocked}  onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.name}  required={true} className={'form-input'}  variant={"filled"} name={"name"} label="Name" />
               </FormControl>
             </div>
           <div>
             <FormControl className={'form-control'}>
-              <TextField onChange={(e) => { onFormChange(e.target.name, e.target.value.toUpperCase().replace( /[^A-Z\d]+/g, '' )) }} value={nftForm.symbol}  required={true} className={'form-input'}  variant={"filled"} name={"symbol"} inputProps={ { pattern: '[A-Z\\d]+' } } label="Symbol" />
+              <TextField disabled={this.isLocked}  required={true} onChange={(e) => { onFormChange(e.target.name, e.target.value.toUpperCase().replace( /[^A-Z\d]+/g, '' )) }} value={nftForm.symbol}  required={true} className={'form-input'}  variant={"filled"} name={"symbol"} inputProps={ { pattern: '[A-Z\\d]+' } } label="Symbol" />
             </FormControl>
           </div>
             <div>
@@ -46,9 +60,25 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.maxSupply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"maxSupply"} label="Supply" />
+                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.supply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
               </FormControl>
             </div>
+          <div>
+            <FormControl className={styles.formSwitch}>
+              <Typography>Infinite</Typography>
+              <Switch disabled={this.isLocked}  value={this.props.nftForm.supplyType === TokenSupplyType.finite ? TokenSupplyType.finite  : TokenSupplyType.infinite} onChange={(e) => {let nftFor = (e.target.checked ? TokenSupplyType.finite : TokenSupplyType.infinite); onFormChange(e.target.name, nftFor)}} className={'form-input'} name={"supplyType"} />
+              <Typography>Finite</Typography>
+            </FormControl>
+          </div>
+          {
+            this.props.nftForm.supplyType === TokenSupplyType.finite ? (
+              <div>
+                <FormControl className={'form-control'}>
+                  <TextField disabled={this.isLocked}  onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.maxSupply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"maxSupply"} label="Max Supply" />
+                </FormControl>
+              </div>
+            ) : null
+          }
             <div>
               <FormControl className={styles.formSwitch}>
                 <Typography>Sale</Typography>

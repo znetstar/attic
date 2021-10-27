@@ -222,8 +222,6 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
                       imageFormat={this.props.enc.options.imageFormat}
                       resizeImage={this.imageSize}
                       allowUpload={true}
-
-                      userId={this.props.marketplaceUser._id}
                       userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
                     ></MarketplaceAvatar>
                   </div>

@@ -15,7 +15,7 @@ export interface MarketplaceAvatarProps {
    * Called whenever the profile image chnages
    * @param image
    */
-  onChange?: (image: string) => void;
+  onChange?: (image: string, buf: Uint8Array) => void;
   /**
    * Image format to convert image to upon upload
    */
@@ -32,7 +32,9 @@ export interface MarketplaceAvatarProps {
   /**
    * Dimensions to resize the image to upon upload
    */
-  resizeImage?: ImageDims
+  resizeImage?: ImageDims;
+
+  avatarOptions?: any;
 }
 
 /**
@@ -88,10 +90,12 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
         newBuffer = await file.arrayBuffer();
       }
     }
-    const im = `data:${this.mimeType};base64,${Buffer.from(newBuffer).toString('base64')}`
+    const buf = Buffer.from(newBuffer);
+    const im = `data:${this.mimeType};base64,${buf.toString('base64')}`
 
     this.props.onChange && this.props.onChange(
-      im
+      im,
+      buf
     );
   }
 
@@ -99,7 +103,10 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
    * Data URI of the image
    */
   public get imageUrl(): string|undefined {
-    return this.props.image;
+    return typeof(this.props.image) === 'undefined' ? void(0) :
+    typeof(this.props.image) === 'string' ? this.props.image : (
+      `data:${this.mimeType};base64,${Buffer.from(this.props.image as any).toString('base64')}`
+    );
   }
 
   /**
@@ -135,7 +142,9 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
         <Avatar
           sx={this.props.resizeImage ? this.props.resizeImage : ''}
           className={this.classes.image}
-          src={ this.imageUrl } />
+          src={ this.imageUrl }
+          { ...(this.props.avatarOptions || {}) }
+        />
       </div>
     )
   }

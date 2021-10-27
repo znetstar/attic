@@ -12,13 +12,17 @@ import styles from "./../../../styles/user-nft-pages-subComponents-styles/nft-pr
 import {diff, jsonPatchPathConverter} from "just-diff";
 
 import {RoyaltyAdd} from "./_royaltyAdd"
+import {Buffer} from "buffer";
 
 type NftPricingProps = SessionComponentProps&{
-  nftForm: INFT;
+  nftForm: INFT&{supply: number};
   onFormChange: Function;
-  originalNftForm: INFT;
+  originalNftForm: INFT&{supply: number};
   usersList: IPOJOUser[];
   currUser: IPOJOUser;
+  changedImage?: boolean;
+  onSubmit(): void;
+  updateAssetForm(step: number): void;
 }
 
 type PricingState = SessionComponentState&{
@@ -80,7 +84,12 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       this.props.onFormChange('customFees', customFees)
   }
 
-  submitNewNft = (dataNft: INFT) => {
+
+  protected get changedImage(): boolean {
+    return Boolean(this.props.changedImage);
+  }
+
+  submitNewNft = async (dataNft: INFT&{ supply:  number }) => {
     if ((this as any).props.originalNftForm && (this as any).props.originalNftForm._id) {
       let patches = diff((this as any).props.originalNftForm, dataNft, jsonPatchPathConverter);
 
@@ -95,13 +104,25 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
           return f;
 
         });
+      if (this.changedImage && dataNft.image) {
+        patches.push({
+          op: 'add',
+          path: '/image',
+          value: Buffer.from(dataNft.image)
+        });
+      }
 
-      this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any)
-        .then((res) => {
-          this.handleError('NFT created', 'success')
-          this.props.router.push(`/listing/${this.props.originalNftForm._id}/confirm`)
-        })
-        .catch(this.handleError)
+      try {
+        await this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any);
+
+        this.handleError('NFT created', 'success')
+        this.props.onSubmit();
+        this.props.router.push(`/listing/${this.props.originalNftForm._id}/confirm`)
+
+      } catch (err: any) {
+        console.error(err);
+        this.handleError(err);
+      }
     } else {
           this.props.router.push(`/listing/new`)
     }
@@ -115,6 +136,9 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     } else {
       this.submitNewNft(nftForm)
     }
+  }
+  get isLocked(): boolean {
+    return Boolean(this.props.nftForm.tokenId);
   }
 
   render() {
@@ -180,7 +204,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
 
             <div>
             <FormControl className={'form-control'}>
-                <Button style={{ width: '50%' }} type={"button"} variant="contained" color="primary" disabled>
+                <Button style={{ width: '50%' }} type={"button"} variant="contained" color="primary" onClick={ () => this.props.updateAssetForm(0) }>
                   Back
                 </Button>
               </FormControl>
