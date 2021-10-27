@@ -8,12 +8,14 @@ export interface MarketplaceAvatarProps {
   /**
    * The actual profile image
    */
-  image?: Buffer;
+  image?: string;
+  userId: string;
+  userImagesPublicPhotoUrl: string;
   /**
    * Called whenever the profile image chnages
    * @param image
    */
-  onChange?: (image: Buffer) => void;
+  onChange?: (image: string, buf: Uint8Array) => void;
   /**
    * Image format to convert image to upon upload
    */
@@ -30,7 +32,9 @@ export interface MarketplaceAvatarProps {
   /**
    * Dimensions to resize the image to upon upload
    */
-  resizeImage?: ImageDims
+  resizeImage?: ImageDims;
+
+  avatarOptions?: any;
 }
 
 /**
@@ -86,9 +90,12 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
         newBuffer = await file.arrayBuffer();
       }
     }
+    const buf = Buffer.from(newBuffer);
+    const im = `data:${this.mimeType};base64,${buf.toString('base64')}`
 
     this.props.onChange && this.props.onChange(
-      Buffer.from(newBuffer)
+      im,
+      buf
     );
   }
 
@@ -96,7 +103,10 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
    * Data URI of the image
    */
   public get imageUrl(): string|undefined {
-    return this.props.image ? `data:${this.mimeType};base64,${Buffer.from(this.props.image).toString('base64')}` : void(0);
+    return typeof(this.props.image) === 'undefined' ? void(0) :
+    typeof(this.props.image) === 'string' ? this.props.image : (
+      `data:${this.mimeType};base64,${Buffer.from(this.props.image as any).toString('base64')}`
+    );
   }
 
   /**
@@ -130,8 +140,11 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
       }}>
         <input style={{ display: 'hidden' }} disabled={!this.props.allowUpload} ref={this.inputRef as any} accept={this.imageAccept} type={'file'} name={"file-input"} onChange={(e) => this.onFileChange(e)}></input>
         <Avatar
+          sx={this.props.resizeImage ? this.props.resizeImage : ''}
           className={this.classes.image}
-          src={ this.imageUrl } />
+          src={ this.imageUrl }
+          { ...(this.props.avatarOptions || {}) }
+        />
       </div>
     )
   }

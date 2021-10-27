@@ -87,23 +87,23 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
         {this.state.payee.map((p, idx) => (
           <div key={idx} className={styles.inputSection}>
             <SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.emailChange(idx,user)}/>
-            <TextField onChange={this.percentChange(idx)} 
-                        value={p.percent} 
-                        required={true} 
-                        type="number" 
-                        InputProps={{ inputProps: {min: 0, max: 100} }} 
-                        className={'form-input'}  
-                        name={"percent"} 
+            <TextField onChange={this.percentChange(idx)}
+                        value={p.percent}
+                        required={true}
+                        type="number"
+                        InputProps={{ inputProps: {min: 0, max: 100} }}
+                        className={'form-input'}
+                        name={"percent"}
                         label="percent" />
 
             <button onClick={this.remove(idx)}>X</button>
           </div>
         ))}
-        {this.state.showOptions ? this.state.showAdd ? (        
+        {this.state.showOptions ? this.state.showAdd ? (
         <div onClick={this.addCoOwner} className={styles.addButton}>
           <AddCircleIcon />
           <h2>Add Payee</h2>
-        </div>) 
+        </div>)
         : (
           <div onClick={this.onConfirm}>Confirm Payee</div>
         ) : ''}

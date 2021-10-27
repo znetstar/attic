@@ -1,0 +1,67 @@
+.navbar_wrapper {
+  width:100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height:70px;
+  position: fixed;
+  bottom: 0;
+  background-color: white;
+}
+
+.nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.16);
+  background-color: #fff;
+  color: black;
+  border-radius: 1000px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.noTab {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  color: #d5d5d5;
+  cursor: auto;
+}
+
+.dot_wrapper {
+  height: 19px;
+  width: 6px;
+  display: none;
+}
+
+.dot {
+  /* height:6px;
+  width: 6px;
+  background-color: black;
+  border-radius: 100px;
+  margin-top: 8px;
+  margin-bottom: 5px; */
+  /* dont display dots */
+  display: none;
+}
+
+.noDot {
+  display: none;
+}

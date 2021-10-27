@@ -21,6 +21,17 @@ import {IPOJOUser, IUser} from "./_user";
 import {IPOJOWallet, IWallet, syncTransactions} from "./_wallet";
 import {IToken, Token} from "./_token";
 
+export enum TokenAssociationType {
+  kyc = 'kyc',
+  association = 'association'
+}
+
+export interface ITokenAssociation {
+  type: TokenAssociationType,
+  token: IToken,
+  account: ICryptoAccount
+}
+
 export interface ICryptoAccount {
   _id: ObjectId|string;
 
@@ -42,8 +53,8 @@ export interface ICryptoAccount {
   user?: IUser;
   userName?: string;
 
-  associatedTokens?: (ObjectId)[]|IToken[],
-  kycGrantedTokens?: (ObjectId)[]|IToken[],
+  // associatedTokens?: (ObjectId)[]|IToken[],
+  // kycGrantedTokens?: (ObjectId)[]|IToken[],
 
   /**
    * If absent, will assume this is an external address
@@ -74,28 +85,64 @@ export const CryptoAccountSchema: Schema<ICryptoAccount> = (new (mongoose.Schema
   userName: {
     type: String,
     required: false
-  },
-  associatedTokens: {
-    required: false,
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Token',
-        required: false
-      }
-    ]
-  },
-  kycGrantedTokens: {
-    required: false,
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Token',
-        required: false
-      }
-    ]
   }
+  // ,associatedTokens: {
+  //   required: false,
+  //   type: [
+  //     {
+  //       type: Schema.Types.ObjectId,
+  //       ref: 'Token',
+  //       required: false
+  //     }
+  //   ]
+  // },
+  // kycGrantedTokens: {
+  //   required: false,
+  //   type: [
+  //     {
+  //       type: Schema.Types.ObjectId,
+  //       ref: 'Token',
+  //       required: false
+  //     }
+  //   ]
+  // }
 }, { timestamps:true }));
+
+
+export const TokenAssociationSchema: Schema<ITokenAssociation> = (new (mongoose.Schema)({
+  token: {
+    type: Schema.Types.ObjectId,
+    ref: 'Token',
+    required: true
+  },
+  type: {
+    type: String,
+    enum: [
+      TokenAssociationType.association,
+      TokenAssociationType.kyc
+    ],
+    required: true
+  },
+  account: {
+    type: Schema.Types.ObjectId,
+    ref: 'CryptoAccount',
+    required: true
+  },
+}, { timestamps:true }));
+
+TokenAssociationSchema.index({
+  token: 1,
+  type: 1,
+  account: 1
+}, { unique: true });
+
+
+TokenAssociationSchema.index({
+  account: 1
+});
+
+export const TokenAssociation = mongoose.models.TokenAssociation || mongoose.model<ITokenAssociation>('TokenAssociation', TokenAssociationSchema);
+
 
 CryptoAccountSchema.index({ user: -1 });
 
@@ -319,21 +366,32 @@ export async function cryptoLoadBalance(account: ICryptoAccount): Promise<void> 
         tokenId: Buffer.from(TokenId.fromString(tokenIdStr).toBytes())
       });
 
-      await CryptoAccount.collection.updateOne(
-        { _id: new ObjectId(account._id) },
-        {
-          $addToSet: {
-            kycGrantedTokens: new ObjectId(token._id),
-            associatedTokens: new ObjectId(token._id)
+    await Promise.all([
+        TokenAssociationType.kyc,
+        TokenAssociationType.association
+      ].map(async (type: TokenAssociationType): Promise<void> => {
+        await TokenAssociation.collection.updateOne({
+            token: token._id,
+            account: account._id,
+            type
+          }, {
+            $set: {
+              token: token._id,
+              account: account._id,
+              type,
+              updatedAt: new Date()
+            },
+            $setOnInsert: {
+              createdAt: new Date()
+            },
+            $inc: {
+              __v: 1
+            }
           },
-          $set: {
-            updatedAt: new Date()
-          },
-          $inc: {
-            __v: 1
-          }
-        }
-      );
+          {
+            upsert: true
+          });
+      }));
     })
   )
 

@@ -1,24 +1,19 @@
 import {
-  EncodeToolsSerializer,
-  Transport,
-  ServerSideTransport,
   ClientRequest,
-  Serializer,
-  Response,
+  InternalError,
   Message,
-  Request, InternalError
+  Request,
+  Response,
+  Serializer,
+  ServerSideTransport,
+  Transport
 } from 'multi-rpc-common';
-import * as _ from 'lodash';
-import {
-  Server
-} from 'multi-rpc';
+import {RPCError, Server} from 'multi-rpc';
 
-import type { NextApiRequest, NextApiResponse } from 'next'
-import {encodeOptions, makeSerializer} from "./_encoder";
+import type {NextApiRequest, NextApiResponse} from 'next'
+import {encodeOptions, makeEncoder, makeSerializer} from "./_encoder";
 
-import {
-  RPCInterface,
-} from '@thirdact/simple-mongoose-interface';
+import {RPCInterface,} from '@thirdact/simple-mongoose-interface';
 import {HTTPError, MarketplaceAPI, UnauthorizedRequest} from "./_rpcCommon";
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import {getSession} from "next-auth/client";
@@ -27,13 +22,10 @@ import levelup from "levelup";
 import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
-import {getWebhookSecret} from "./_stripe";
-import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
-import {marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser} from "./_user";
-
-import { Token } from './_token';
+import {marketplaceCreateAndMintNFT, marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft, NFT} from "./_nft";
+import {marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser, UserRoles} from "./_user";
 import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
-import {IUser} from "./_user";
+import {EncodeToolsNative as EncodeTools, SerializationFormat} from "@etomon/encode-tools/lib/EncodeToolsNative";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -98,11 +90,17 @@ export class RPCTransport extends Transport implements ServerSideTransport {
         // @ts-ignore
       if (response.error?.data)
         // @ts-ignore
-        response.error.data = JSON.parse(JSON.stringify(response.error?.data));
+        response.error.data = {
+          message: response.error?.data.message,
+          stack: process.env.NODE_ENV !== 'production' ? response.error?.data.stack : null,
+          code: response.error?.data.code,
+          httpCode: response.error?.data.httpCode
+        };
 
         const val = this.serializer.serialize(response);
-        res.writeHead(200, headers);
-        res.end(val);
+        if (!res.headersSent) res.writeHead(200, headers);
+        res.write(Buffer.from(val));
+        res.end();
       } else {
         res.writeHead(204, headers);
         res.end();
@@ -130,7 +128,7 @@ export class RPCTransport extends Transport implements ServerSideTransport {
  */
 export function createAtticService() {
   const sessionRedis = new Redis(process.env.SERVICE_OAUTH_REDIS_URI);
-  const sessionDb = levelup(new IORedisDown('blah', encodeOptions() as any, { redis: sessionRedis } as any));
+  const sessionDb = levelup(new IORedisDown('blah', void(0), { redis: sessionRedis } as any));
 
   const atticService =  new OAuthAgent(process.env.ATTIC_URI as string, {
     client_id: process.env.SERVICE_CLIENT_ID as string,
@@ -143,15 +141,19 @@ export function createAtticService() {
   return atticService;
 }
 
+export function atticService() {
+  return createAtticService().createRPCProxy({
+    grant_type: 'client_credentials',
+    scope: ['.*'],
+    username: process.env.SERVICE_USERNAME
+  });;
+}
+
 /**
  * Creates an Attic RPC client with superuser permissions
  */
 export function atticServiceRpcProxy() {
-  const { RPCProxy } =  createAtticService().createRPCProxy({
-    grant_type: 'client_credentials',
-    scope: ['.*'],
-    username: process.env.SERVICE_USERNAME
-  });
+  const { RPCProxy } = atticService()
 
   return RPCProxy;
 }
@@ -175,7 +177,8 @@ const authorizedMethods = [
   'marketplace:getAllUsers',
   'marketplace:getWallet',
   'marketplace:beginBuyLegalTender',
-  'marketplace:completeBuyLegalTender'
+  'marketplace:completeBuyLegalTender',
+  'marketplace:createAndMintNFT'
 ]
 
 /**
@@ -201,7 +204,6 @@ export class MarketplaceRPCServer extends Server {
 
   protected async invoke(request: Request, clientRequest?: MarketplaceClientRequest): Promise<void> {
     try {
-
       if (!clientRequest) {
         throw new HTTPError(400);
       }
@@ -214,11 +216,11 @@ export class MarketplaceRPCServer extends Server {
         throw new HTTPError(403);
       }
 
-      const res = await super.invoke(request, clientRequest);
+      return await super.invoke(request, clientRequest);
     } catch (err) {
-      if (!clientRequest || !clientRequest.respond) throw err;
-      const resp = new Response(request.id, new InternalError(err));
-      clientRequest.respond(resp);
+      if (clientRequest?.respond)
+        await clientRequest.respond(new Response(request.id,new InternalError(err)));
+      // throw err;
     }
   }
 }
@@ -254,6 +256,36 @@ export function rpcInit() {
   !(rpcServer as any).methodHost.has('marketplace:getAllUsers') && (rpcServer as any).methodHost.set('marketplace:getAllUsers',  marketplaceGetAllUsers);
   !(rpcServer as any).methodHost.has('marketplace:createUser') && (rpcServer as any).methodHost.set('marketplace:createUser',  marketplaceCreateUser);
   !(rpcServer as any).methodHost.has('marketplace:patchUser') && (rpcServer as any).methodHost.set('marketplace:patchUser',  marketplacePatchUser);
+  !(rpcServer as any).methodHost.has('marketplace:createAndMintNFT') && (rpcServer as any).methodHost.set('marketplace:createAndMintNFT',  async function (id: string, supply: number): Promise<void> {
+    // Extract the session data
+    // @ts-ignore
+    const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+    const additionalData: RequestData = clientRequest.additionalData;
+
+
+    // Load user from db
+    const session = await getUser(additionalData?.session);
+
+
+    // If no user throw 401 (not logged in)
+    if (!session) {
+      throw new HTTPError(401);
+    }
+
+    const { marketplaceUser: userDoc } = session;
+
+    // If user lacks `nftAdmin` role throw 403 (permission denied)
+    if (!userDoc?.roles?.includes(UserRoles.nftAdmin)) {
+      throw new HTTPError(403);
+    }
+
+    const nft = await NFT.findById(id).populate('entity supplyKey kycKey adminKey treasury').exec();
+    if (!nft.tokenId) {
+      nft.tokenId = await nft.cryptoCreateToken(0);
+    }
+
+    await marketplaceCreateAndMintNFT(nft, supply);
+  });
   !(rpcServer as any).methodHost.has('marketplace:getWallet') && (rpcServer as any).methodHost.set('marketplace:getWallet',  async function (...args: any[]): Promise<unknown> {
     // Extract the session data
     // @ts-ignore

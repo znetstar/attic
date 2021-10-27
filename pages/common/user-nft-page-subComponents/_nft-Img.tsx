@@ -3,15 +3,24 @@ import Avatar from "@mui/material/Avatar";
 import {SearchBar} from "./../_searchBar"
 import { INFT } from "../_nft";
 import styles from './../../../styles/user-nft-pages-subComponents-styles/nft-Img.module.css'
+import {MarketplaceAvatar} from "../_avatar";
+import {IEncodeTools} from "@etomon/encode-tools";
+import {makeEncoder} from "../_encoder";
 
 type NftImgProps = {
   allowUpload: true;
   nftForm: INFT;
   onNftInput: Function;
+  userImagesPublicPhotoUrl: string;
+  enc: IEncodeTools;
+  onChange(): void;
 }|{
   allowUpload: false|undefined;
   nftForm: INFT;
   onNftInput?: Function;
+  userImagesPublicPhotoUrl: string;
+  enc: IEncodeTools;
+  onChange(): void;
 }
 
 type nftImgState = {
@@ -48,22 +57,32 @@ export class NFTImg extends PureComponent<NftImgProps> {
     this.props.onNftInput('image', file)
   }
 
+  get nftUrl(): string|undefined {
+    return !this.state.nftUrl ? (this.props.nftForm.imageUrl && (this.props.nftForm.image as any as string) || void(0)) : this.state.nftUrl;
+  }
+
   render() {
     const { nftForm } = this.props
     let b = (nftForm.name || nftForm.priceStart || nftForm.listOn) ? '18px 18px 0 0' : '18px'
     return (
       <div>
-        <div className={styles.nftImg_wrapper} onClick={() =>{
-          if (this.props.allowUpload) {
-            (this.inputRef.current as any).click();
-          }
-        }}>
+        <div className={styles.nftImg_wrapper}>
           <div className={styles.imgInput}>
-            <input className={styles.fileInput} disabled={!this.props.allowUpload} ref={this.inputRef as any} type={'file'} name={"NFT-input"} onChange={(e) => this.onNftAdd(e)}></input>
-            <Avatar
-              src={this.state.nftUrl}
-              variant="square"
-              sx={{height: 200, width: '100%', borderRadius:b}} />
+            <MarketplaceAvatar
+              image={this.nftUrl}
+              onChange={(image, buf) => {
+                if (image)
+                  // @ts-ignore
+                  nftForm.image = buf;
+                this.setState({ nftUrl: image });
+                this.props.onChange();
+              }}
+              resizeImage={{ width: 200 }}
+              allowUpload={this.props.allowUpload}
+              imageFormat={makeEncoder().options.imageFormat}
+              userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
+              avatarOptions={{variant: "square", sx: {height: 200, width: '100%', borderRadius:b}}}
+            ></MarketplaceAvatar>
           </div>
 
         {(nftForm.name || nftForm.priceStart || nftForm.listOn) ? (

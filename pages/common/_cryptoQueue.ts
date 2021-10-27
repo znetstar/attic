@@ -145,12 +145,11 @@ export class CryptoQueue extends EventEmitter {
         });
       }
 
+      const doneJob = await this.queue.getJob(job.id as string) as Job;
       if (state === 'failed') {
-        throw new CryptoQueueError(job);
+        throw new CryptoQueueError(doneJob);
       }
      else {
-        const doneJob = await this.queue.getJob(job.id as string) as Job;
-
         doneJob.returnvalue = await this.getReturnValue(doneJob.data.returnValueKey)
 
         await job.remove();

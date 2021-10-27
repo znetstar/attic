@@ -20,11 +20,11 @@ import {initMarketplace, TokenSupplyType, TokenType} from "../common/_token";
 
 
 export type ListingProps = SessionComponentProps&{
-  nftForm?: INFT,
+  nftForm?: INFT&{ supply: number },
   subpage: string|null
   canEdit: boolean;
   canConfirm: boolean;
-  userList: []
+  userList: { email: string }[]
 };
 
 export enum ListingStep {
@@ -41,8 +41,8 @@ export type ListingState = SessionComponentState&{
   /**
    * Fields for the user nft being modified
    */
-  nftForm: INFT;
-  originalNftForm: INFT;
+  nftForm: INFT&{ supply: number };
+  originalNftForm: INFT&{ supply: number };
   /**
    * Is `true` when all required fields have ben satisfied
    */
@@ -50,7 +50,8 @@ export type ListingState = SessionComponentState&{
   notifyMessage: string|null;
   stepNum: ListingStep;
   pageTitle: string;
-  usersList: IUser[];
+  changedImage?: boolean;
+  usersList: IPOJOUser[];
 };
 
 
@@ -68,7 +69,8 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     nftForm: (this.props.nftForm && this.props.nftForm.nftFor) ? this.props.nftForm : {...this.props.nftForm, nftFor:'sale'},
     originalNftForm: { ...(this.props.nftForm || {}) },
     pageTitle: 'Listing',
-    usersList: []
+    usersList: [],
+    changedImage: false
   } as ListingState
 
 
@@ -128,17 +130,19 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
    * by creating an array of JSONPatch entries for each change, and submitting the patch
    * over rpc.
    */
-  updateAssetForm = () => {
-    this.setState({ stepNum: 1 })
+  updateAssetForm = (stepNum: number = 1) => {
+    this.setState({ stepNum  })
   }
 
   onFormChange = (formName: Partial<INFT>, formValue: any) => {
     this.setState({ nftForm: { ...this.state.nftForm, [formName as string]: formValue } }, () => console.log('main', this.nftForm, formName))
   }
 
-  mintNft = () => {
+  mintNft = async () => {
     // mint logic for NFT
-    console.log(this.state.nftForm, 'Mint NFT here')
+    await this.rpc['marketplace:createAndMintNFT']((this as any).state.nftForm,  this.state.nftForm.supply);
+
+    this.setState({ changedImage: false });
   }
 
   render() {
@@ -146,11 +150,10 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
       <div>
-        { 
+        {
           this.confirmOpen ? (
             <div className='confirm_wrapper'>
-              {console.log(this.state.nftForm)}
-              <div><NFTImg allowUpload={false} nftForm={this.state.nftForm} /></div>
+              <div><NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={false} nftForm={this.state.nftForm} /></div>
               <div>{this.state.nftForm.description}</div>
               <div></div>
 
@@ -162,12 +165,12 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
                 <div >
                   <div className={"main"}>
                     <div>
-                      <NFTImg allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
+                      <NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
                     </div>
                     <div >
                       {this.state.stepNum === ListingStep.assetForm ?
                         <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                        <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
+                        <NFTPricingForm changedImage={this.state.changedImage} updateAssetForm={this.updateAssetForm} originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} onSubmit={() => {  this.setState({ changedImage: false }); } } currUser={this.props.session.user} />
                       }
                     </div>
                   </div>
@@ -257,15 +260,16 @@ export async function getServerSideProps(context: any) {
 
     const { treasury } = await initMarketplace();
 
-    const symName = EncodeTools.WithDefaults.encodeBuffer(EncodeTools.WithDefaults.uniqueId(IDFormat.uuidv1), BinaryEncoding.base32).toLowerCase().substr(0, 100);
+    const name = EncodeTools.WithDefaults.uniqueId(IDFormat.nanoid, 6).toUpperCase().replace(/\W|_/g, '');
     const nft = await NFT.create({
       userId: uid,
-      symbol: symName,
-      name: symName,
+      symbol: name,
+      name: name,
       treasury,
       supplyType: TokenSupplyType.finite,
       tokenType: TokenType.nft,
       sellerId: uid,
+      decimals: 0,
       sellerInfo: {
         firstName: user.firstName ? user.firstName : null,
         lastName: user.lastName ? user.lastName : null,
@@ -281,7 +285,7 @@ export async function getServerSideProps(context: any) {
     }
   }
 
-  let nft: INFT;
+  let nft: INFT&Document;
 
   let proj: any = {};
 
@@ -307,7 +311,13 @@ export async function getServerSideProps(context: any) {
     }
   }
 
-  const nftPojo: any = toPojo(nft);
+  const nftPojo: any = toPojo(nft.toObject({ virtuals: true }));
+
+
+  if (nftPojo.imageUrl) {
+    // @ts-ignore
+    nftPojo.image = `${process.env.USER_IMAGES_PUBLIC_URI}/nft/${nft._id.toString()}`;
+  }
 
   return {
     props: {

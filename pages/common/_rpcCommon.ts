@@ -3,8 +3,8 @@ import {
   CreateModelInterfaceRequestBody,
   PatchModelInterfaceRequestBody, JSONPatchOp
 } from "@thirdact/simple-mongoose-interface";
-import {IUser} from "./_user";
-import {IListedNFT, INFT} from "./_nft";
+import {IPOJOUser, IUser} from "./_user";
+import {createAndMintNFT, IListedNFT, INFT} from "./_nft";
 import {IPOJOWallet} from "./_wallet";
 import {User} from "../api/auth/[...nextauth]";
 
@@ -14,10 +14,11 @@ import {User} from "../api/auth/[...nextauth]";
 export interface MarketplaceAPI {
   'marketplace:patchUser': (patches: JSONPatchOp) => Promise<void>;
   'marketplace:createUser': (user: unknown) => Promise<string>;
-  'marketplace:getAllUsers': () => Promise<IUser[]>;
+  'marketplace:getAllUsers': () => Promise<IPOJOUser[]>;
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<IListedNFT[]>;
   'marketplace:patchNFT': (id: unknown, patches: JSONPatchOp) => Promise<void>;
   'marketplace:createNFT': (nft: INFT) => Promise<string>;
+  'marketplace:createAndMintNFT': (tokenId: string, supply: number) => Promise<void>;
 
   'marketplace:getWallet': (userId?: string) => Promise<IPOJOWallet>;
   'marketplace:beginBuyLegalTender': (amount: number|string) => Promise<string>;
@@ -52,4 +53,14 @@ export class UnauthorizedRequest extends HTTPError {
   constructor(public message: string = 'Unauthorized') {
     super(403, message);
   }
+}
+
+export enum TokenType {
+  token = 0,
+  nft = 1
+}
+
+export enum TokenSupplyType {
+  infinite = 0,
+  finite =1
 }

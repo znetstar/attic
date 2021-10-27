@@ -18,7 +18,7 @@ import fetch  from 'node-fetch';
 import {
   toPojo
 } from '@thirdact/to-pojo';
-import {encodeOptions} from "../../common/_encoder";
+import {encodeOptions, makeEncoder} from "../../common/_encoder";
 /**
  * Connection to redis used for session stuff
  */
@@ -83,7 +83,9 @@ function agentFromRecord(record: DBInitRecord|DBInitRecordWithAgent): OAuthAgent
       client_secret: record.document.clientSecret,
       client_id: record.document.clientId
     },
-    sessionDb
+    sessionDb,
+    void(0),
+    makeEncoder()
   )
 }
 
@@ -112,9 +114,9 @@ localRecord.agent = agentFromRecord(localRecord);
 export const oauthConsumerByName = new Map<string, DBInitRecordWithAgent>(
   atticConfig.dbInit
     .filter((c: any) => {
-      return c.document.role.includes('consumer');
+      return c.document?.role && c.document?.role?.includes('consumer');
     })
-    .map(c => [
+    .map((c: any) => [
       c.document.clientId,
       ({
         ...c as DBInitRecord,
@@ -134,9 +136,9 @@ oauthConsumerByName.set('local', {
 export const oauthProviderByName = new Map<string, DBInitRecord>(
   atticConfig.dbInit
     .filter((c: any) => {
-      return c.document.role.includes('provider');
+      return c.document?.role && c.document.role.includes('provider');
     })
-    .map(c => [
+    .map((c: any) => [
      c.document.clientId, c as DBInitRecord
   ])
 );
@@ -199,7 +201,7 @@ export type MarketplaceSession = Session&{
  * @param atticUser
  */
 async function syncUser(atticUser: AtticUser): Promise<Document<IUser>> {
-  let marketplaceUser: Document<IUser>|null = await MarketplaceUser.findOne({ atticUserId: atticUser._id }).exec();
+  let marketplaceUser: Document<IUser>|null = await MarketplaceUser.findOne({ atticUserId: new ObjectId(atticUser._id) }).exec();
 
   if (!marketplaceUser) {
     let doc: any = {
@@ -301,13 +303,13 @@ export async function getUser(session: MarketplaceSession|null|undefined): Promi
     if (!session.user?.atticUser) {
       const atticUser = await rpcProxy.getSelfUser() as AtticUser;
 
-      const marketplaceUser = toUserPojo(await syncUser(atticUser));
-      session.user = {
-        name: atticUser.username,
-        email: atticUser.username,
-        atticUser,
-        marketplaceUser
-      };
+        const marketplaceUser = toUserPojo(await syncUser(atticUser));
+        session.user = {
+          name: atticUser.username,
+          email: atticUser.username,
+          atticUser,
+          marketplaceUser
+        };
     }
     else if (!session.user?.marketplaceUser) {
       session.user.marketplaceUser = toUserPojo(await syncUser(session.user.atticUser));

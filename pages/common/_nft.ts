@@ -1,22 +1,47 @@
 import mongoose from './_database';
 import {Document, Model, Schema} from "mongoose";
 import {toPojo, ToPojo} from "@thirdact/to-pojo";
-import rpcServer, {atticServiceRpcProxy, exposeModel, MarketplaceClientRequest, RequestData} from "./_rpcServer";
+import rpcServer, {
+  atticService,
+  atticServiceRpcProxy,
+  exposeModel,
+  MarketplaceClientRequest,
+  RequestData
+} from "./_rpcServer";
 import {JSONPatch, ModelInterface, SimpleModelInterface} from "@thirdact/simple-mongoose-interface";
 import {HTTPError} from "./_rpcCommon";
 import atticConfig from '../../misc/attic-config/config.json';
-import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {ImageFormatMimeTypes, SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import {makeEncoder} from "./_encoder";
-import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
+import {ImageFormat, SerializationFormat} from "@etomon/encode-tools/lib/IEncodeTools";
 const { DEFAULT_USER_SCOPE } = atticConfig;
 import * as _ from 'lodash';
 import {AbilityBuilder, Ability, ForbiddenError} from '@casl/ability'
 import { ObjectId } from 'mongodb';
-import {IToken, Token, TokenSupplyType, TokenType} from "./_token";
+import {objectRefs, s3} from './_aws';
+import {
+  CannotInteractWithTokenNotCreatedError,
+  IToken, MissingKeyError,
+  Token,
+  TokenNotFoundError,
+  TokenSchema,
+  TokenSupplyType,
+  TokenType,
+  Royalty,
+  IRoyalty,
+  RoyaltiesMustBe100
+} from "./_token";
 import {IPOJOUser, IUser, ToUserPojo, userAcl, userPrivFields, userPubFields, UserRoles, User as MarketplaceUser} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {number} from "prop-types";
-import {CustomRoyaltyFee} from "@hashgraph/sdk";
+import {CustomRoyaltyFee, PrivateKey, TokenFeeScheduleUpdateTransaction, TokenBurnTransaction, TokenId, TransactionReceipt} from "@hashgraph/sdk";
+import {generateCryptoKeyPair} from "./_keyPair";
+import {getCryptoAccountByKeyName, ICryptoAccount} from "./_account";
+import CryptoQueue from "./_cryptoQueue";
+import {Job} from "bullmq";
+
+export { Royalty, RoyaltiesMustBe100 };
+export type {IRoyalty};
 
 export enum SaleTypes {
   sale = 'sale',
@@ -24,53 +49,33 @@ export enum SaleTypes {
 }
 
 
-
-export interface IRoyalty {
+export interface INFTInstance  {
   _id: ObjectId;
-  owedTo: {
-    firstName?:  string;
-    lastName?: string;
-    image?: Buffer,
-    user: IUser
-  };
-  percent: number;
-  toCryptoValue: () => Promise<CustomRoyaltyFee>
+  nft: INFT;
+  serial: Buffer;
+  owner: ICryptoAccount;
 }
-
-export const Royalty: Schema<IRoyalty> = (new (mongoose.Schema)({
-  owedTo: {
-    firstName: {  type: String },
-    lastName: { type: String },
-    image: { type: Buffer  },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User'
-    }
-  },
-  percent: {
-    type: Number,
+export const NFTInstanceSchema: Schema<INFTInstance> = (new (mongoose.Schema)({
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
-    validate: (x: unknown) => typeof(x) === 'number' && !Number.isNaN(x) && (x >= 0 || x <= 100)
+    ref: 'CryptoAccount'
+  },
+  serial: {
+    type: Buffer,
+    required: true
+  },
+  nft: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'NFT'
   }
-}));
+}, { timestamps: true }));
 
-
-Royalty.methods.toCryptoValue = async function(): Promise<CustomRoyaltyFee> {
-  const self: IRoyalty&Document = this;
-
-
-  const fee = new CustomRoyaltyFee()
-    .setNumerator(self.percent)
-    .setDenominator(100);
-
-
-  return fee;
-}
 
 export interface HIP10Metadata {
   name: string;
-  description: string;
+  description?: string;
   image: string;
   localization?: { uri: string, locales: string[], default: string }
 }
@@ -78,39 +83,44 @@ export interface HIP10Metadata {
 export interface INFTMetadata  {
   name?: string;
   description?: string;
-  image: Buffer;
+  image?: Buffer;
   localization?: { uri: string, locales: string[], default: string },
   tags: string[]
 }
 
 
-export type INFT = IToken&INFTMetadata&{
-  maxSupply: 0;
+export type INFT = {
+  maxSupply: number;
   nftFor?: SaleTypes;
   priceStart?: number;
   priceBuyNow?: number;
   listOn?: Date|string;
-  customFees?: IRoyalty[];
   userId: IUser;
   sellerId?: IUser;
+  tokenType: TokenType.nft,
   sellerInfo?: {
     firstName: string;
     lastName: string;
     image: Buffer;
   },
   public?: boolean;
-}
+  imageUrl?: string;
+  cryptoMintToken(metadatas?: HIP10Metadata[]): Promise<void>;
+  cryptoTransferNonFungible(executingAccountId: ObjectId|string, lines: Map<{ to: Buffer, from?: Buffer }, number>): Promise<void>;
+  getHIP10Metadata(): Promise<HIP10Metadata>;
+  cryptoSyncRoyalties(): Promise<void>;
+}&INFTMetadata&IToken
 
 export type IListedNFT = {
-  image: string;
   _id: string;
   name: string;
   symbol: string;
   tags: string[];
-  maxSupply: 0;
+  maxSupply: number;
   minted: number;
   priceStart?: number;
   priceBuyNow?: number;
+  image?: string;
   sellerInfo: {
     firstName: string;
     lastName: string;
@@ -119,29 +129,12 @@ export type IListedNFT = {
   public: boolean;
 }
 
-export class RoyaltiesMustBe100 extends HTTPError {
-  constructor()  { super(400, `All royalty destinations must equal 100%`);  }
-}
 
 export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   tags: { type: [String], required: false },
   description: { type: String, required: false },
   supply: { type: Number, required: false, min:[1, 'Should be atleast 1 item'] },
   nftFor: {type: String, required: false, enum: { values: ['sale', 'auction'], message: '{VALUE} is not supported!! Should be either sale or auction'}},
-  customFees: {
-    type: [Royalty],
-    validate: (royalties: IRoyalty[]) => {
-      if (!royalties.length) return true;
-
-      let pct: number = 0;
-      for (const royalty of royalties)
-        pct += royalty.percent;
-      if (pct !== 100)
-        throw new RoyaltiesMustBe100();
-
-      return true;
-    }
-  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -152,6 +145,20 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
     required: true,
     ref: 'User'
   },
+  decimals: {
+    type: Number,
+    required: false,
+    // @ts-ignore
+    default: function (x?: number): boolean {
+      // @ts-ignore
+      return this.supplyType === TokenSupplyType.finite ? 0 : undefined;
+    },
+    // @ts-ignore
+    validate: function (x?: number): boolean {
+      // @ts-ignore
+      return this.supplyType === TokenSupplyType.finite ? !Number.isNaN(Number(x)) : undefined;
+    }
+  },
   sellerInfo: {
     firstName: { type: String, required: false },
     lastName: {  type: String, required: false },
@@ -159,10 +166,16 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
     required: false
   },
   image: { type: Buffer, required: false },
+  imageUrl: { type: String, required: false },
   listOn: { type: Date, required: false },
   priceStart: {type: Number, required: false},
   priceBuyNow: {type: Number, required: false},
   public: {type: Boolean, required: false}
+  // tokenType: {
+  //   enum: [ TokenType.nft ],
+  //   type: String,
+  //   default: TokenType.nft
+  // }
 }, {
   discriminatorKey: 'tokenType'
 }));
@@ -170,32 +183,192 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
 export const NFT = (global as any).NFTModel = (global as any).NFTModel || Token.discriminator(TokenType.nft, NFTSchema);
 const nftInterface = new SimpleModelInterface<INFT>(new ModelInterface<INFT>(NFT));
 
-NFTSchema.pre<INFT>('save', async function () {
-  if (this.sellerId) {
-    const seller = await MarketplaceUser.findById(this.sellerId);
-    this.sellerInfo = {
-      firstName: seller.firstName,
-      lastName: seller.lastName,
-      image: seller.image
-    };
+export const NFTInstance = mongoose.models.NFTInstance || mongoose.model<INFTInstance>('NFTInstance', NFTInstanceSchema);
+
+async function nftSave() {
+  try {
+    const { RPCProxy } = atticService();
+
+    // @ts-ignore
+    const self: any = this;
+    const enc = makeEncoder();
+    if (self.sellerId) {
+      const seller = await MarketplaceUser.findById(self.sellerId);
+      self.sellerInfo = {
+        firstName: seller.firstName,
+        lastName: seller.lastName,
+        image: seller.image
+      };
+    }
+
+    const paths = self.modifiedPaths();
+    if (paths.includes('image')) {
+      const href = `/nft/${self._id.toString()}`
+      const s3Href = `${process.env.USER_IMAGES_S3_URI}${href}`;
+
+      if (self.image) {
+        await s3.putObject({
+          ...objectRefs(s3Href),
+          Body: Buffer.from(self.image),
+          ContentType:  ImageFormatMimeTypes.get(makeEncoder().options.imageFormat as ImageFormat) as string
+        }).promise();
+        self.image = Buffer.from(`${process.env.USER_IMAGES_PUBLIC_URI}${href}`);
+
+        const entityId = await (RPCProxy as any).copyLocationToNewIPFSEntity({
+          href: s3Href,
+          driver: 'S3Driver'
+        }, true);
+
+        const entity = await RPCProxy.findEntity({ id: entityId });
+
+        self.imageUrl = entity.source.href.replace('ipfs://ipfs', 'ipfs://');
+      } else {
+        await s3.deleteObject({
+          ...objectRefs(s3Href)
+        }).promise();
+        self.image = void (0);
+      }
+    }
+    const fields = [
+      'adminKey',
+      // 'tokenType',
+      // 'supplyType',
+      'kycKey',
+      'freezeKey',
+      'wipeKey',
+      'supplyKey',
+      'feeScheduleKey'
+    ]
+    for (const field of fields) {
+      if (!self[field]) {
+        self[field] = await generateCryptoKeyPair();
+        await self[field].save();
+      }
+    }
+  } catch (err) {
+    debugger
+    throw err;
   }
-});
+}
+
+NFTSchema.pre<INFT&Document>('save' as any, nftSave);
+
+NFTSchema.methods.getHIP10Metadata = async function (): Promise<HIP10Metadata> {
+  const href = `/nft/${this._id.toString()}`;
+  let meta: HIP10Metadata = {
+    description: this.description,
+    name: this.name,
+    localization: this.localization,
+    image: this.imageUrl || `${process.env.USER_IMAGES_S3_URI}${href}`
+  };
+  return meta;
+}
+
+  NFTSchema.methods.cryptoSyncRoyalties = async function (): Promise<void> {
+  if (!this.tokenId) {
+    throw new CannotInteractWithTokenNotCreatedError(this.id);
+  }
+
+  const queue = CryptoQueue.createCryptoQueue(
+    'crypto:syncRoyalties',
+    async (job: Job) => {
+      let  {
+        id
+      }: {
+        id: string
+      } = job.data;
+
+      const tokenDoc: IToken&Document = await Token.findById(id).populate('supplyKey treasury').exec();
+
+      if (!tokenDoc)
+        throw new TokenNotFoundError(id);
+
+      if (!tokenDoc.tokenId) {
+        throw new CannotInteractWithTokenNotCreatedError(tokenDoc.id);
+      }
+
+      if (!tokenDoc.feeScheduleKey) {
+        throw new MissingKeyError(tokenDoc.id, 'feeScheduleKey');
+      }
+
+      const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
+      const client = await masterAccount.createClient();
+
+      let transaction = new TokenFeeScheduleUpdateTransaction();
+
+      transaction
+        .setTokenId(TokenId.fromBytes(tokenDoc.tokenId))
+
+      if (tokenDoc.customFees) {
+        const cryptoFees = await Promise.all(tokenDoc.customFees.map(f => f.toCryptoValue()));
+        transaction = transaction.setCustomFees(cryptoFees);
+      }
+
+      transaction
+        .freezeWith(client);
+
+      const signTx = await transaction.sign(await tokenDoc.feeScheduleKey?.toCryptoValue() as PrivateKey);
+
+      const txResponse = await signTx.execute(client);
+      return txResponse.transactionId;
+    },
+    async (job: Job, getReceipt: TransactionReceipt) => {
+      let  {
+        id
+      }: {
+        id: string
+      } = job.data;
+
+      const tokenDoc = await Token.findById(id).populate('treasury').exec();
+
+      if (!tokenDoc)
+        throw new TokenNotFoundError(id);
+
+      console.debug(`✅ synced royalties for ${tokenDoc.symbol}`);
+    }
+  );
+
+  await queue.addJob('beforeConfirm', {
+    id: this._id.toString()
+  }, true);
+}
+
+
+NFTSchema.methods.cryptoMintToken = async function (
+  metadatas?: HIP10Metadata[]
+): Promise<void> {
+  if (!this.tokenId) {
+    throw new CannotInteractWithTokenNotCreatedError(this.id);
+  }
+
+  let buffers = ([] as any[]).concat(metadatas || [] as any[]).map((m) => {
+    if (Buffer.isBuffer(m)) return m;
+    else return Buffer.from(JSON.stringify(m), 'utf8');
+  })
+  return Token.schema.methods.cryptoMintToken.call(this, 1, buffers);
+}
 
 export const nftPubFields = [
   '_id',
   'name',
   'description',
   'tags',
+  'tokenId',
+  'tokenIdStr',
   'maxSupply',
   'minted',
   'priceStart',
   'priceBuyNow',
   'sellerId',
   'sellerInfo',
+  'supply',
   'public',
   'minted',
   'customFees',
-  'nftFor'
+  'supplyType',
+  'nftFor',
+  'symbol',
+  'imageUrl'
 ]
 
 export const nftPrivFields = [
@@ -276,7 +449,7 @@ export async function marketplaceCreateNft (form: INFT) {
       symbol: form.symbol,
       description: form.description,
       tags: form.tags,
-      maxSupply: 0,
+      // maxSupply: 1,
       nftFor: form.nftFor,
       customFees: form.customFees,
       userId: user._id,
@@ -378,34 +551,76 @@ export async function marketplaceGetNft (query: unknown, getOpts?: { limit?: num
 }
 
 export async function marketplacePatchNft(id: string, patches: any[]) {
-  // Extract the session data
-  // @ts-ignore
-  const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
-  const additionalData: RequestData = clientRequest.additionalData;
-
-  // additionalData has the raw req/res, in addition to the session
-
-  // Get the user from the session object
-  const user: IUser = (await getUser(additionalData.session))?.marketplaceUser as IUser;
-  if (!user) throw new HTTPError(401);
-  const acl = await nftAcl({session: additionalData?.session});
-
-  // Here you could check if the user has permission to execute
-  // for (const k of args[1].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
-  //   if (!acl.can('marketplace:patchUser', 'User', k))
-  //     throw new HTTPError(403, `You do have p  ermission to patch a user`);
-  // }
-
   try {
-    // Execute the request
+    // Extract the session data
     // @ts-ignore
-    const resp = await nftInterface.patch({
-      query: {
-        _id: new ObjectId(id)
-      }
-    }, patches);
-    return resp
-  } catch (err) {
-    debugger;
+    const clientRequest = (this as { context: { clientRequest: MarketplaceClientRequest } }).context.clientRequest;
+    const additionalData: RequestData = clientRequest.additionalData;
+
+    // additionalData has the raw req/res, in addition to the session
+
+    // Get the user from the session object
+    const user: IUser = (await getUser(additionalData.session))?.marketplaceUser as IUser;
+    if (!user) throw new HTTPError(401);
+    const acl = await nftAcl({session: additionalData?.session});
+
+    // Here you could check if the user has permission to execute
+    // for (const k of args[1].map((k: JSONPatch) => k.path.replace(/^\//, '').replace(/\//g, '.'))) {
+    //   if (!acl.can('marketplace:patchUser', 'User', k))
+    //     throw new HTTPError(403, `You do have p  ermission to patch a user`);
+    // }
+
+    // try {
+    // Execute the request
+
+
+
+    const nft = await NFT.findById(new ObjectId(id)).exec();
+
+    for (const patch of patches) {
+
+      if (patch.path === '/image')
+        patch.value = Buffer.from(patch.value);
+      _.set(nft, patch.path.substr(1).replace(/\//g, '.'), patch.value);
+    }
+
+    await nftSave.call(nft);
+    await nft.save();
+
+    // } catch (err) {
+    //   debugger;
+    // }
+  } catch (err: any) {
+    // debugger
+    throw err;
   }
 }
+
+export async function marketplaceCreateAndMintNFT(nft: INFT&Document, supply: number, updateRoyalties?: boolean) {
+  try {
+    // nft = NFT.hydrate(nft);
+    // debugger
+    // Create the token if we haven't already
+    if (!nft.tokenId) {
+      await NFTSchema.methods.cryptoCreateToken.call(nft, 0);
+    }
+    // Sync royalties if we need to
+    else if (updateRoyalties) {
+      await NFTSchema.methods.cryptoSyncRoyalties.call(nft);
+    }
+
+    const meta: Buffer = Buffer.from(JSON.stringify(await NFTSchema.methods.getHIP10Metadata.call(nft)), 'utf8');
+
+    let bytes: Buffer[] = [];
+    let maxSize = 100;
+    for (let i = 0; i < Math.ceil(meta.byteLength/maxSize); i++) {
+      bytes.push(meta.slice( i*maxSize, (i+1)*maxSize ));
+    }
+
+    for (let i = 0; i < supply; i++)
+      await  NFTSchema.methods.cryptoMintToken.call(nft, bytes);
+  } catch (err: any) {
+    throw err;
+  }
+}
+

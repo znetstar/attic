@@ -1,4 +1,4 @@
-FROM public.ecr.aws/b1q3c8q0/attic-server:3.5.0
+FROM public.ecr.aws/znetstar/attic-server:3.6.3
 
 FROM node:12
 
@@ -23,6 +23,7 @@ ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
 
+
 RUN cd /opt/attic-marketplace-mods && \
     npm ci && \
     npm run build
@@ -32,6 +33,8 @@ ENV EMAIL_HOSTNAME social
 ENV LOG_LEVEL "info"
 
 EXPOSE 80
+
+VOLUME /root/.jsipfs
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
 

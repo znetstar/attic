@@ -5,6 +5,7 @@ services:
     env_file: ".env"
     volumes:
     - "./misc/attic-config:/etc/attic"
+    - ipfs:/root/.jsipfs
     environment:
     - PORT=80
     - HOST=0.0.0.0
@@ -13,6 +14,7 @@ services:
     - "LOG_LEVEL=debug"
     - "ROOT_GROUPS=service,root"
     - MARKETPLACE_MONGO_URI=mongodb://mongo:27017/marketplace
+#    - IPFS_URI=http://ipfs:5001
     ports:
       - "0.0.0.0:8203:80"
     links:
@@ -56,3 +58,4 @@ services:
 volumes:
   mongo:
   redis_mq:
+  ipfs:

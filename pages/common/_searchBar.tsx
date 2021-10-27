@@ -22,7 +22,7 @@ export class SearchBar extends PureComponent<SearchBarProps> {
 
   componentDidUpdate (_prevProps: any, prevState: { selected: string; }) {
     if(this.state.selected !== prevState.selected && this.props.searchMenu) {
-      let e = this.props.searchMenu.find(item => item.email === this.state.selected)
+      let e = this.props.searchMenu.find(item => item._id === this.state.selected)
       this.props.onSelect(e)
     }
   }
@@ -35,8 +35,8 @@ export class SearchBar extends PureComponent<SearchBarProps> {
     }
   }
 
-  menuItemClick = (e: { target: { outerText: any; }; }) => {
-    this.setState({ selected: e.target.outerText, showList: false })
+  menuItemClick = (e: { target: { outerText: any; }; }, item: { _id: any }) => {
+    this.setState({ selected: item._id, showList: false })
   }
 
   render() {
@@ -46,12 +46,12 @@ export class SearchBar extends PureComponent<SearchBarProps> {
       {this.state.showList ? (
       <div className='search_list'>
           <div>
-            {this.props.searchMenu.filter(item => item.email ? item.email.toLowerCase().includes(this.state.selected.toLowerCase()) : '').map((item,idx) => (
-              <div key={idx} onClick={this.menuItemClick}>{item.email}</div>)
+            {this.props.searchMenu.filter(item => item._id ? (item.firstName + ' ' + item.lastName).toLowerCase().includes(this.state.selected) || (item._id.toString()).toLowerCase().includes(this.state.selected) : '').map((item,idx) => (
+              <div key={idx} onClick={(e) => this.menuItemClick(e, item)}>{item.firstName} {item.lastName} ({item._id})</div>)
             )}
         </div>
       </div>
-      ) : ''}  
+      ) : ''}
       </div>
     )
   }

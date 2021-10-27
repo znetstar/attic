@@ -25,6 +25,7 @@ export type ProfileProps = SessionComponentProps&{
   subpage: string|null,
   collections: IListedNFT[];
   listings: IListedNFT[];
+  userImagesPublicPhotoUrl: string;
 };
 
 /**
@@ -73,8 +74,11 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                       image={
                         typeof(this.props.marketplaceUser.image) === 'string' ? Buffer.from(this.props.marketplaceUser.image, 'base64') : this.props.marketplaceUser.image
                       }
+                      userId={this.props.marketplaceUser._id}
+                      userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
                       imageFormat={this.enc.options.imageFormat}
                       allowUpload={false}
+                      resizeImage={{width:125, height:125}}
                     ></MarketplaceAvatar>
                   </div>
                   <div className={"avatar-box"}>
@@ -128,6 +132,8 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
             )
           ) : (
             <EditProfile
+                marketplaceUser={this.props.marketplaceUser}
+                userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
               {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
             ></EditProfile>
           )
@@ -307,7 +313,8 @@ export async function getServerSideProps(context: any) {
       listings: delta ? delta.listings.map((c: INFT) => toListedNFT(c)) : [],
       subpage: subpage || null,
       session,
-      marketplaceUser: pojoUser
+      marketplaceUser: pojoUser,
+      userImagesPublicPhotoUrl: process.env.USER_IMAGES_PUBLIC_URI
     }
   }
 }

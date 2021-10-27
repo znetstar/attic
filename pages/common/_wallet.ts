@@ -135,11 +135,12 @@ export const TransactionSchema: Schema<ITransaction> = (new (mongoose.Schema)({
 }));
 
 
-export async function loadWallet(userId: ObjectId, projection?: any): Promise<IWallet|null> {
+export async function loadWallet(userId: ObjectId, options?: { projection?: any, match?: any }): Promise<IWallet|null> {
   const wallet = (await CryptoAccount.aggregate<IWallet>([
     {
       $match: {
-        user: userId
+        user: userId,
+        ...(options?.match || {})
       }
     },
     {
@@ -175,7 +176,7 @@ export async function loadWallet(userId: ObjectId, projection?: any): Promise<IW
         }
       }
     },
-    ...(projection ? [ { $project: projection } ] : [])
+    ...(options?.projection ? [ { $project: options?.projection } ] : [])
   ]))[0] || null as IWallet|null;
 
   if (wallet && wallet.needsUpdate) {
@@ -444,7 +445,7 @@ export async function marketplaceGetWallet(sessionUser: User|null, userId?: Obje
       proj[field] = 1;
     }
 
-    const wallet: IWallet | null = await loadWallet(new ObjectId(userId || sessionUser?.marketplaceUser?._id), proj);
+    const wallet: IWallet | null = await loadWallet(new ObjectId(userId || sessionUser?.marketplaceUser?._id), { projection: proj });
     if (!wallet) {
       return {
         wallet: null,
