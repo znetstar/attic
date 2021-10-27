@@ -77,7 +77,8 @@ export class NFTImg extends PureComponent<NftImgProps> {
                 this.setState({ nftUrl: image });
                 this.props.onChange();
               }}
-              resizeImage={{ width: 200 }}
+              resizeImage={{ width: 200*4 }}
+              size={{ width: 400 }}
               allowUpload={this.props.allowUpload}
               imageFormat={makeEncoder().options.imageFormat}
               userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}

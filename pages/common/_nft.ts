@@ -479,6 +479,7 @@ export const ToNFTPojo = new ToPojo<ToNFTParsable, INFT&{ image?: string }>();
  * @param marketplaceUser
  */
 export function toListedNFT(nft: INFT): IListedNFT {
+
   const pojo = ToNFTPojo.toPojo(nft, {
     conversions: [
       ...ToNFTPojo.DEFAULT_TO_POJO_OPTIONS.conversions as any,
@@ -487,18 +488,17 @@ export function toListedNFT(nft: INFT): IListedNFT {
           return !!item.image;
         },
         transform: (item: Document<INFT>&INFT) => {
-          const enc = makeEncoder();
+          // @ts-ignore
+         item.image = Buffer.from(item.image as Buffer).toString('utf8');
 
-          const mime = ImageFormatMimeTypes.get(enc.options.imageFormat as ImageFormat) as string;
-          return `data:${mime};base64,${Buffer.from(item.image as Buffer).toString('base64')}`
+         return item;
         }
       }
     ],
     ...ToNFTPojo.DEFAULT_TO_POJO_OPTIONS
   });
-
-  return {
-    image: pojo.image,
+  let o: any = {
+    image: `${process.env.USER_IMAGES_PUBLIC_URI}/nft/${pojo._id.toString()}`,
     _id: pojo._id.toString(),
     name: pojo.name,
     symbol: pojo.symbol,
@@ -509,7 +509,17 @@ export function toListedNFT(nft: INFT): IListedNFT {
     priceBuyNow: pojo.priceBuyNow,
     public: pojo.public as boolean,
     sellerInfo: pojo.sellerInfo as { firstName: string, lastName: string, image:Buffer }
+  };
+
+  // @ts-ignore
+  for (let k in o) {
+    if (typeof(o[k]) === 'undefined') {
+      delete o[k];
+    }
   }
+
+
+  return o;
 }
 
 

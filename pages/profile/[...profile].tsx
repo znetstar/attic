@@ -78,7 +78,8 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                       userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
                       imageFormat={this.enc.options.imageFormat}
                       allowUpload={false}
-                      resizeImage={{width:125, height:125}}
+                      resizeImage={{width:125*4, height:125*4}}
+                      size={{width:125*1, height:125*1}}
                     ></MarketplaceAvatar>
                   </div>
                   <div className={"avatar-box"}>
@@ -223,7 +224,7 @@ export async function getServerSideProps(context: any) {
       {
         $lookup: {
           from: 'tokens',
-          as: 'collections',
+          as: 'tokens',
           let: {
             userId: '$user._id'
           },
@@ -233,14 +234,24 @@ export async function getServerSideProps(context: any) {
                 $expr: {
                   $and: [
                     {
-                      $eq: [
-                        '$sellerId',
-                        '$$userId'
+                      $or: [
+                        {
+                          $eq: [
+                            '$sellerId',
+                            '$$userId'
+                          ]
+                        },
+                        {
+                          $eq: [
+                            '$userId',
+                            '$$userId'
+                          ]
+                        }
                       ]
                     },
                     {
                       $eq: [
-                        'tokenType',
+                        '$tokenType',
                         TokenType.nft
                       ]
                     }
@@ -252,34 +263,32 @@ export async function getServerSideProps(context: any) {
         }
       },
       {
-        $lookup: {
-          from: 'tokens',
-          as: 'listings',
-          let: {
-            userId: '$user._id'
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: [
-                        '$userId',
-                        '$$userId'
-                      ]
-                    },
-                    {
-                      $eq: [
-                        'tokenType',
-                        TokenType.nft
-                      ]
-                    }
-                  ]
-                }
+        $project: {
+          user: 1,
+          collections: {
+            $filter: {
+              input: '$tokens',
+              as: 'token',
+              cond:                         {
+                $eq: [
+                  '$$token.userId',
+                  '$user._id'
+                ]
               }
             }
-          ]
+          },
+          listings: {
+            $filter: {
+              input: '$tokens',
+              as: 'token',
+              cond:                         {
+                $eq: [
+                  '$$token.sellerId',
+                  '$user._id'
+                ]
+              }
+            }
+          }
         }
       }
     ]);

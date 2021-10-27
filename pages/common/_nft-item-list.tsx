@@ -44,15 +44,15 @@ export class NFTItemList extends PureComponent<NFTListenItemProps, {}> {
 
   render() {
     return (
-      <ul className={"nft-list"}>
+      <div className={"nft-list"}>
         {this.nfts.map((nft: IListedNFT) => {
           return (
-            <li key={nft._id}>
+            <div key={nft._id}>
               <NFTListedItem nft={nft}></NFTListedItem>
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
     )
   }
 }

@@ -1,21 +1,31 @@
 .nft-list {
-  &, & > li {
-    list-style-type: none;
-  }
+  align-content: space-around;
+  width: 100%;
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
-}
-.nft-listed-item {
-  display: flex;
-  flex-direction: column;
- .nft-image {
-   img {
-     width: 100%;
-     height: 100%;
-   }
- }
+  justify-content: space-around;
+  padding: 1em;
 
-  .nft-info {
+  & > div {
+    width: 45%;
+    margin: 5px 0;
+    .nft-listed-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      height: 100%;
+      .nft-image {
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+      .nft-info {
+
+      }
+    }
 
   }
 }

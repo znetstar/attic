@@ -34,6 +34,11 @@ export interface MarketplaceAvatarProps {
    */
   resizeImage?: ImageDims;
 
+  /**
+   *
+   */
+  size?: ImageDims;
+
   avatarOptions?: any;
 }
 
@@ -140,7 +145,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
       }}>
         <input style={{ display: 'hidden' }} disabled={!this.props.allowUpload} ref={this.inputRef as any} accept={this.imageAccept} type={'file'} name={"file-input"} onChange={(e) => this.onFileChange(e)}></input>
         <Avatar
-          sx={this.props.resizeImage ? this.props.resizeImage : ''}
+          sx={this.props.size ? this.props.size : ''}
           className={this.classes.image}
           src={ this.imageUrl }
           { ...(this.props.avatarOptions || {}) }
