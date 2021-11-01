@@ -1,14 +1,15 @@
 import {PureComponent} from "react";
 import {IListedNFT, INFT} from "./_nft";
 
-export interface NFTListenItemProps {
+export type NFTListenItemProps = {
   nft: IListedNFT;
+  onClick?: () => void;
 }
 
 export class NFTListedItem extends PureComponent<NFTListenItemProps, {}> {
   render() {
     return (
-      <div className={"nft-listed-item"}>
+      <div className={"nft-listed-item"+(this.props.onClick ? ' clickable' : '')} onClick={this.props.onClick}>
         <div className={"nft-image"}>
           {this.props.nft.image ? (<img src={this.props.nft.image}></img>) : null}
         </div>

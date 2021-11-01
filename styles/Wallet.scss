@@ -17,28 +17,41 @@
 
       .money {
         font-size: 34px;
-
       }
     }
-    .paper-wrapper {
-      & > * {
-        padding: 15px;
-        display: -moz-box;
+
+    .buttons {
+      .button-bar {
         display: flex;
-        justify-content: flex-start;
-        /* min-height: 105px; */
-        height: 70vh;
-        -moz-box-orient: vertical;
-        -moz-box-direction: normal;
-        flex-direction: column;
-        & > * {
-          margin-bottom: 2em;
+        justify-content: center;
+
+        button {
+          margin: 0 1em;
         }
       }
+    }
+  }
+}
 
-      .transfer-title {
-        margin: 5px 0;
+.wallet {
+  .paper-wrapper {
+    & > * {
+      padding: 15px;
+      display: -moz-box;
+      display: flex;
+      justify-content: flex-start;
+      /* min-height: 105px; */
+      height: 70vh;
+      -moz-box-orient: vertical;
+      -moz-box-direction: normal;
+      flex-direction: column;
+      & > * {
+        margin-bottom: 2em;
       }
+    }
+
+    .transfer-title {
+      margin: 5px 0;
     }
   }
 }

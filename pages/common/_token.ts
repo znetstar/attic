@@ -1,7 +1,6 @@
-import {ObjectId} from "mongodb";
+import {Decimal128, ObjectId} from "mongodb";
 import mongoose from "./_database";
 import {Document, Schema} from "mongoose";
-import { IPFS } from './_ipfs';
 import {generateCryptoKeyPair, IKeyPair, KeyNotFoundError, KeyPair, KeyPairSchema} from "./_keyPair";
 import {
   AccountCouldNotBeCreated, CannotCreateCryptoAccountForExternalAccountError,
@@ -51,6 +50,9 @@ import {INFTInstance, NFTInstance, NFTInstanceSchema } from "./_nft";
 
 import { TokenSupplyType, TokenType } from './_rpcCommon';
 import {number} from "prop-types";
+import {IWallet, syncTransactions, Transaction as MarketplaceTransaction  } from "./_wallet";
+import {dinero, multiply} from "dinero.js";
+import {USD} from "@dinero.js/currencies";
 
 export { TokenSupplyType, TokenType };
 
@@ -151,7 +153,7 @@ Royalty.methods.toCryptoValue = async function(): Promise<CustomRoyaltyFee> {
     .setNumerator(self.percent)
     .setDenominator(100);
 
-  debugger
+  //
 
   return fee;
 }
@@ -353,10 +355,8 @@ TokenSchema.methods.cryptoCreateToken = async function (
       }
 
       if (token.customFees) {
-        debugger
         const cryptoFees = await Promise.all(token.customFees.map(f => f.toCryptoValue()));
 
-        debugger
         transaction = transaction.setCustomFees(cryptoFees);
       }
 
@@ -507,6 +507,7 @@ TokenSchema.methods.cryptoMintToken = async function (
   const queue = CryptoQueue.createCryptoQueue(
     'crypto:mintToken',
     async (job: Job) => {
+
       let  {
         amount,
         id,
@@ -520,7 +521,7 @@ TokenSchema.methods.cryptoMintToken = async function (
       let tokenDoc: IToken&Document = await Token.findById(id).populate('supplyKey treasury').exec();
 
       // @ts-ignore
-      metadatas = metadatas.map((metadata) => {
+      metadatas = (metadatas || []).map((metadata) => {
         return makeInternalCryptoEncoder().decodeBuffer(Buffer.from(metadata));
       })
 
@@ -534,6 +535,7 @@ TokenSchema.methods.cryptoMintToken = async function (
       if (!tokenDoc.supplyKey) {
         tokenDoc = await Token.findById(id).populate('supplyKey treasury').exec() as  IToken&Document;
       }
+
 
         if (!tokenDoc)
           throw new TokenNotFoundError(id);
@@ -578,13 +580,14 @@ TokenSchema.methods.cryptoMintToken = async function (
       const treasuryKeyDoc = await KeyPair.findById(tokenDoc.treasury.keyPair as any);
       const treasuryKey = PrivateKey.fromBytes(treasuryKeyDoc.privateKey);
 
-      for (let key of [ treasuryKey, supplyKey ])
+      for (let key of [ supplyKey ])
         transaction = await transaction.sign(key) as any;
 
         const txResponse = await transaction.execute(client);
         return txResponse.transactionId;
     },
     async (job: Job, receipt: TransactionReceipt) => {
+      debugger
       let  {
         amount,
         id
@@ -599,10 +602,14 @@ TokenSchema.methods.cryptoMintToken = async function (
       if (!tokenDoc)
         throw new TokenNotFoundError(id);
 
-      if (receipt.serials) {
-        amount = receipt.serials.length;
+
+      let transactionAmount: string;
+      if (receipt.serials && receipt.serials.length) {
+
+        amount  = receipt.serials.length;
+        transactionAmount = (amount.toString());
         await Promise.all(receipt.serials.map((serial) => {
-          console.debug(`⛏ minted (NFT) ${tokenDoc.symbol.toString()} ${serial.toString()})`);
+          console.debug(`⛏ minted (NFT) ${tokenDoc.symbol.toString()} (${TokenId.fromBytes(Buffer.from(tokenDoc.tokenId)).toString()}) ${Buffer.from(serial.toBytes()).toString('base64')})`);
           return NFTInstance.create({
             nft: tokenDoc,
             owner: tokenDoc.treasury,
@@ -610,10 +617,19 @@ TokenSchema.methods.cryptoMintToken = async function (
           })
         }));
       } else {
-        console.debug(`⛏ minted ${tokenDoc.symbol.toString()}  ฿${amount}`);
+        debugger
+        let usdRep = ((amount as number)/Math.pow(10, tokenDoc.decimals));
+        transactionAmount = (usdRep).toString();
+        console.debug(`⛏ minted ${tokenDoc.symbol.toString()} (${TokenId.fromBytes(Buffer.from(tokenDoc.tokenId)).toString()})  ฿${amount}`);
       }
 
       await Promise.all<any>([
+        MarketplaceTransaction.create({
+          amount: transactionAmount,
+          account: tokenDoc.treasury._id,
+          token: tokenDoc._id,
+          receipt: Buffer.from(receipt.toBytes())
+        }),
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),
         Token.collection.updateOne({
           _id: tokenDoc._id
@@ -630,6 +646,8 @@ TokenSchema.methods.cryptoMintToken = async function (
           TokenAssociationType.kyc,
           TokenAssociationType.association
         ].map(async (type: TokenAssociationType): Promise<void> => {
+
+
           await TokenAssociation.collection.updateOne({
               token: tokenDoc._id,
               account: tokenDoc.treasury._id,
@@ -686,7 +704,7 @@ TokenSchema.methods.cryptoAssociate = async function (accountId: ObjectId|string
   if (!account)
     throw new NoCryptoAccountError(accountId.toString());
 
-  if (associationGrantedTokens?.map((x: any) => ( x.token.toString() )).includes(this._id.toString())) {
+  if ((associationGrantedTokens || []).map((x: any) => ( x.token.toString() )).includes(this._id.toString())) {
     return;
   }
 
@@ -770,7 +788,7 @@ TokenSchema.methods.cryptoGrantKyc = async function (accountId: ObjectId|string)
   if (!account)
     throw new NoCryptoAccountError(accountId.toString());
 
-  if (kycGrantedTokens?.map((x: any) => ( x.token.toString() )).includes(this._id.toString())) {
+  if ((kycGrantedTokens||[]).map((x: any) => ( x.token.toString() )).includes(this._id.toString())) {
     return;
   }
 
@@ -924,7 +942,7 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         );
 
         const refreshAccounts = new Set<string>();
-        const receipt = new Set<{ to: string, from: string, amount: number }>();
+        const receipt = new Set<{ to: string, from: string, amount: number, toId: string, fromId: string, token: string }>();
         for (let [{to, from}, amount] of Array.from(lines.entries())) {
           refreshAccounts.add(to._id.toString());
           refreshAccounts.add(from._id.toString());
@@ -943,6 +961,9 @@ TokenSchema.methods.cryptoTransferFungible = async function (
               (adjAmount * 1)
             );
           receipt.add({
+            token: tokenId.toString(),
+            fromId: from._id.toString(),
+            toId: to._id.toString(),
             from: AccountId.fromBytes(from.accountId).toString(),
             to: AccountId.fromBytes(to.accountId).toString(),
             amount
@@ -995,7 +1016,7 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         rawLines: [{ to: Buffer, from?: Buffer }, number][],
         tokenId: string,
         refreshAccounts: string[],
-        receipt: any,
+        receipt: ({ to: string, from: string, amount: number, fromId: string, toId: string, token: string })[],
         symbol: string
       } = job.data;
 
@@ -1003,15 +1024,34 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         console.debug(`transferred ${amount} ${symbol}: ${from} → ${to} `)
       }
 
-      await Promise.all(
-        refreshAccounts.map(async (id) => {
+      await Promise.all<unknown>([
+        ...receipt.map(async ({ toId: to, fromId: from, amount, token }) => {
+          debugger
+          let usdRep = dinero({ amount: amount, currency: USD });
+
+          await Promise.all([
+            MarketplaceTransaction.insertMany([{
+              amount: (usdRep.toString()),
+              account: new ObjectId(to),
+              token: token,
+              receipt: Buffer.from(getReceipt.toBytes())
+            },
+            {
+              amount: (multiply(usdRep, -1).toString()),
+              account: new ObjectId(from),
+              token: token,
+              receipt: Buffer.from(getReceipt.toBytes())
+            }])
+          ])
+        }),
+        ...refreshAccounts.map(async (id) => {
           const account = await CryptoAccount.findById(id) as ICryptoAccount&Document;
           await Promise.all([
             account.loadBalance(),
             account.syncTransactions()
           ]);
         })
-      );
+      ]);
       return Buffer.from(getReceipt.toBytes())
     }
   );
@@ -1310,6 +1350,8 @@ export async function initMarketplace(): Promise<{ token: IToken, treasury: ICry
           treasuryAccount = await createCryptoAccount(1000, {
             name: 'marketplaceTreasury'
           }) as ICryptoAccount & Document;
+        } else {
+          await syncTransactions(treasuryAccount);
         }
 
         let marketplaceToken: IToken & Document | null = await Token.findOne({
@@ -1341,8 +1383,7 @@ export async function initMarketplace(): Promise<{ token: IToken, treasury: ICry
           treasury: treasuryAccount
         };
         return (global as any).marketInitDone;
-      })(),
-      IPFS
+      })()
     ]).then(([ done ]) => done);
   }
   catch (err) {

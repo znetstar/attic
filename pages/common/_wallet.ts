@@ -57,6 +57,7 @@ export interface ITransaction {
   createdAt: Date;
   updatedAt: Date;
   _id: ObjectId;
+  receipt: Buffer;
 
   loadBalances(): Promise<void>;
 }
@@ -126,14 +127,21 @@ export const TransactionSchema: Schema<ITransaction> = (new (mongoose.Schema)({
       return n && (n.getTime()) <= (new Date()).getTime();
     }
   },
-  settledAt: {
-    type: Date,
-    required: false
+  receipt: {
+    type: Buffer,
+    required: true
   }
 }, {
   timestamps: true
 }));
 
+TransactionSchema.index({
+  account: 1,
+  receipt: 1,
+  token: 1
+}, {
+  unique: true
+});
 
 export async function loadWallet(userId: ObjectId, options?: { projection?: any, match?: any }): Promise<IWallet|null> {
   const wallet = (await CryptoAccount.aggregate<IWallet>([
@@ -204,10 +212,10 @@ export async function loadTransactionsByToken(tokenId: ObjectId): Promise<(ITran
   const transactions = await Transaction.aggregate<ITransaction&Document>([
     {
       $match: {
-        token: new ObjectId(tokenId),
-        confirmedAt: {
-          $exists: true
-        }
+        token: new ObjectId(tokenId)//,
+        // confirmedAt: {
+        //   $exists: true
+        // }
       }
     },
     {
@@ -276,25 +284,10 @@ const syncTransactionsQueue = new Queue('crypto:syncTransactions', {
   }
 });
 
-export async function syncTransactions(account: ICryptoAccount&Document): Promise<Job> {
-  const  { accountId } = account;
-  await account.save();
+export async function syncTransactions(account: ICryptoAccount&Document): Promise<(ITransaction&Document)[]> {
+    const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
+    const client = await masterAccount.createClient();
 
-  const accountIdStr = Buffer.from(makeInternalCryptoEncoder().encodeBuffer(Buffer.from(accountId))).toString('utf8')
-  return syncTransactionsQueue.add('crypto:syncTransactions', {
-    accountId: accountIdStr
-  });
-}
-
-const syncTransactionsWorker = new Worker('crypto:syncTransactions', async (job) => {
-  const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
-  const client = await masterAccount.createClient();
-
-  const accountId = makeInternalCryptoEncoder().decodeBuffer(Buffer.from(job.data.accountId, 'utf8'));
-    const account = await ensureAccount(
-      accountId,
-      masterAccount.networkName
-    );
     const trans = await new AccountRecordsQuery()
       .setAccountId(AccountId.fromBytes(account.accountId))
       .execute(client);
@@ -309,12 +302,17 @@ const syncTransactionsWorker = new Worker('crypto:syncTransactions', async (job)
       })
     );
 
-    return _.flatten(cryptoTrans.map((t) => t.map((tt) => tt._id.toString())));
-}, {
-  concurrency: 5,
-  // @ts-ignore
-  connection: CryptoQueue.createConnection(`crypto:syncTransactions:worker`).redis,
-});
+    return _.flatten(cryptoTrans);
+}
+
+
+// const syncTransactionsWorker = (global as any).syncTransactionsWorker = (global as any).syncTransactionsWorker || new Worker('crypto:syncTransactions', async (job) => {
+//   syncTransactionsInner(await )
+// }, {
+//   concurrency: 1,
+//   // @ts-ignore
+//   connection: CryptoQueue.createConnection(`crypto:syncTransactions:worker`).redis,
+// });
 
 /**
  * Transfers transaction data from the Hedera API to the database

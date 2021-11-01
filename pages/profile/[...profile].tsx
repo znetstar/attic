@@ -117,14 +117,18 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                     </Box>
                     <div role="tabpanel" hidden={this.state.currentTab !== 0}>
                       <NFTItemList
+                        {...this.subcomponentProps()}
                         rpc={this.rpc}
                         nfts={this.props.collections}
+                        clickable={true}
                       ></NFTItemList>
                     </div>
                     <div hidden={this.state.currentTab !== 1}>
                       <NFTItemList
+                        {...this.subcomponentProps()}
                         rpc={this.rpc}
                         nfts={this.props.listings}
+                        clickable={true}
                       ></NFTItemList>
                     </div>
                   </Box>

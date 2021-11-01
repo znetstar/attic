@@ -16,6 +16,7 @@ import { getCryptoAccountByKeyName } from "./_account";
 import IORedis from "ioredis";
 import {makeInternalCryptoEncoder, makeKeyEncoder} from "./_encoder";
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
+import EncodeTools, {IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
 
 const confirmDelay = Number(process.env.CONFIRM_DELAY) || 30e3;
 
@@ -31,6 +32,63 @@ export class CryptoQueueError extends HTTPError {
   }
 }
 
+export type ShimJobState = 'failed'|'completed'|'active'|'waiting'|'delayed';
+
+export class ShimJob<D,R> {
+  public returnvalue?: R;
+  public failedReason?: string;
+  public id: string;
+  constructor(
+    public name: string,
+    public data: D,
+    public worker: (job: ShimJob<D,R>) => Promise<R>,
+    id?: string
+  ) {
+    this.id = id || EncodeTools.WithDefaults.uniqueId(IDFormat.uuidv4String);
+  }
+
+  public static queue: Map<string, ShimJob<any, any>> = new Map<string, ShimJob<any, any>>();
+
+  public async run(sync = false): Promise<void> {
+
+    try {
+      this.returnvalue = await this.worker(this);
+      this.state = 'completed';
+    } catch (err: any) {
+
+      this.failedReason = err.stack;
+      this.state = 'failed';
+      if (sync) throw err;
+    }
+  }
+
+  public moveToDelayed() { this.state = 'delayed'; }
+  public moveToComplete() { this.state = 'completed'; }
+  public moveToFailed() { this.state = 'failed'; }
+  public moveToActive() { this.state = 'active'; }
+  public moveToWaiting() { this.state = 'waiting'; }
+
+  protected state: ShimJobState = 'waiting';
+
+  getState(): ShimJobState  {
+    return this.state;
+  }
+
+
+  public add() { ShimJob.queue.set(this.id, this); }
+  public remove() { ShimJob.queue.delete(this.id); }
+
+  public static create<D,R>(name: string,
+                             data: D,
+                             worker: (job: ShimJob<D,R>) => Promise<R>,
+                             id?: string,
+                            runDelay: number = 100): ShimJob<D,R>  {
+    const job = new ShimJob<D,R>(name, data, worker, id);
+    job.add();
+
+    return job;
+  }
+}
 
 export class CryptoQueue extends EventEmitter {
   public queue: Queue;
@@ -54,9 +112,12 @@ export class CryptoQueue extends EventEmitter {
       defaultJobOptions?: JobsOptions,
       defaultQueueOptions?: QueueOptions,
       defaultWorkerOptions?: WorkerOptions,
-      defaultQueueSchedulerOptions?: QueueSchedulerOptions,   onError?: (job: Job) => void
+      defaultQueueSchedulerOptions?: QueueSchedulerOptions,   onError?: (job: Job) => void,
+       shim?: boolean
     }
   ): CryptoQueue {
+    additionalOptions = additionalOptions  ||  {};
+    additionalOptions.shim = true;
     let queue = CryptoQueue.cryptoQueues.get(name);
 
     if (!queue) {
@@ -118,24 +179,39 @@ export class CryptoQueue extends EventEmitter {
     return value;
   }
 
+  public async getJob(jobId: string): Promise<Job|null> {
+    return  !this.additionalOptions?.shim ? (
+      this.queue.getJob(jobId)
+    ) : (
+      (ShimJob.queue.get(jobId) || null)  as  any
+    );
+  }
+
+
   public async addJob(name: string, data: any, sync: boolean|{ waitDelay: number } = false, jobOpts?: JobsOptions): Promise<Job>  {
-    let job = await this.queue.add(name, {
+
+    let job = !this.additionalOptions?.shim ? await this.queue.add(name, {
       ...data,
       returnValueKey: makeInternalCryptoEncoder().uniqueId()
     }, {
       removeOnComplete: false,
       removeOnFail: false,
       ...(jobOpts||{})
-    });
+    }) : (
+      ShimJob.create<any, any>(
+        name,
+        data,
+        this.processTransaction.bind(this) as any,
+      ) as any
+    );
 
-
-    if (sync) {
+    if (sync && !this.additionalOptions?.shim) {
       let state: string;
       while (
         (state = await job.getState()) && (state !== 'completed' || (state === 'completed' && job.name === 'beforeConfirm')) && state !== 'failed'
       ) {
           if (state === 'completed' && job.name === 'beforeConfirm') {
-            job = await this.queue.getJob('crypto:transaction:'+job.data.returnValueKey ||  job.returnvalue) as Job;
+            job = await this.getJob('crypto:transaction:'+job.data.returnValueKey ||  job.returnvalue) as Job;
             continue;
           }
           await new Promise<void>((resolve) => {
@@ -145,7 +221,7 @@ export class CryptoQueue extends EventEmitter {
         });
       }
 
-      const doneJob = await this.queue.getJob(job.id as string) as Job;
+      const doneJob = await this.getJob(job.id as string) as Job;
       if (state === 'failed') {
         throw new CryptoQueueError(doneJob);
       }
@@ -154,6 +230,17 @@ export class CryptoQueue extends EventEmitter {
 
         await job.remove();
         return doneJob;
+      }
+    }
+    else if (sync) {
+      let  eee: any;
+      try { await job.run(true); }
+      catch (err: any) {  eee = err; }
+      finally {
+        job.remove();
+        if (eee) {
+          throw eee;
+        }
       }
     }
 
@@ -206,7 +293,7 @@ export class CryptoQueue extends EventEmitter {
     let returnValue: any;
     try {
       const client = await (await getCryptoAccountByKeyName('cryptoMaster')).createClient();
-
+      debugger
       if (job.name === 'afterConfirm') {
         // If a transaction already exists we should run `afterConfirm`
         const tidRaw = makeInternalCryptoEncoder().decodeBuffer(job.data.transactionId);
@@ -227,7 +314,7 @@ export class CryptoQueue extends EventEmitter {
             let key: string | undefined;
             if (rawVal) {
               const returnVal = Buffer.from(makeInternalCryptoEncoder().serializeObject({value: rawVal}));
-              const newJob = job.id ? await this.queue.getJob(job.id) : void (0);
+              const newJob = job.id ? await this.getJob(job.id) : void (0);
               key = (newJob || job).data.returnValueKey;
               await this.connection.hsetBuffer(`returnValues`, key, returnVal);
             }
@@ -240,10 +327,11 @@ export class CryptoQueue extends EventEmitter {
       } else if (job.name === 'beforeConfirm') {
         const transactionId = await this.beforeConfirm(job);
         const tidString = makeInternalCryptoEncoder().encodeBuffer(Buffer.from(transactionId.toBytes()));
-        await this.queue.add('afterConfirm', {
+
+        await this.addJob('afterConfirm', {
           ...job.data,
           transactionId: tidString
-        }, {
+        }, true, {
           ...job.opts,
           jobId: 'crypto:transaction:'+job.data.returnValueKey
         });
@@ -291,6 +379,7 @@ export class CryptoQueue extends EventEmitter {
       defaultWorkerOptions?: WorkerOptions,
       defaultQueueSchedulerOptions?: QueueSchedulerOptions,
       onError?: (job: Job) => void,
+      shim?: boolean
     }
   ) {
     super({ wildcard: true, delimiter: ':' });

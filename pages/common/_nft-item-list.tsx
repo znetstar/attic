@@ -2,15 +2,17 @@ import {PureComponent} from "react";
 import {IListedNFT, INFT} from "./_nft";
 import NFTListedItem from "./_nft_listed_item";
 import {MarketplaceAPI} from "./_rpcCommon";
+import {SubcomponentPropsWithRouter} from "./_session-component";
 
-export interface NFTListenItemProps {
+export type NFTListenItemProps = {
   query?: any;
   nfts?: IListedNFT[];
   onDataLoad?: (nfts: IListedNFT[]) => void;
   rpc?: MarketplaceAPI;
   page?: number;
   pageSize?: number;
-}
+  clickable?: boolean;
+}&SubcomponentPropsWithRouter;
 
 export class NFTItemList extends PureComponent<NFTListenItemProps, {}> {
   get nfts(): IListedNFT[]  {
@@ -48,7 +50,7 @@ export class NFTItemList extends PureComponent<NFTListenItemProps, {}> {
         {this.nfts.map((nft: IListedNFT) => {
           return (
             <div key={nft._id}>
-              <NFTListedItem nft={nft}></NFTListedItem>
+              <NFTListedItem onClick={this.props.clickable ? (() => this.props.router.push(`/purchase/${nft._id.toString()}`)) : void(0)} nft={nft}></NFTListedItem>
             </div>
           );
         })}

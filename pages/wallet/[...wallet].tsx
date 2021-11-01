@@ -17,6 +17,7 @@ import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import Button from "@mui/material/Button";
 import {UserRoles} from "../common/_user";
 import {ICryptoAccount} from "../common/_account";
+import {ITransaction, Transaction as MarketplaceTransaction} from "../common/_wallet";
 import {IPOJOWallet, marketplaceGetWallet, toWalletPojo} from "../common/_wallet";
 import {loadStripe, Stripe} from "@stripe/stripe-js";
 import {CardElement, Elements, ElementsConsumer} from '@stripe/react-stripe-js';
@@ -36,6 +37,7 @@ export type WalletProps = SessionComponentProps&{
   subpage: WalletPageSlide;
   wallet: IPOJOWallet|null;
   stripePublicKey: string;
+  transactions: ITransaction[]|null;
 };
 
 /**
@@ -47,6 +49,11 @@ export type WalletState = SessionComponentState&{
   wallet: IPOJOWallet|null;
 };
 
+
+export type TransactionGroup = {
+  actions: ITransaction[];
+  _id: Buffer;
+}
 
 class CheckoutForm extends React.Component<{ stripe: Stripe, elements: any }> {
   handleSubmit = async (event: any) => {
@@ -83,9 +90,14 @@ class CheckoutForm extends React.Component<{ stripe: Stripe, elements: any }> {
     return (
       <form onSubmit={this.handleSubmit}>
         <CardElement />
-        <button type="submit" disabled={!stripe}>
+        <Button
+          type="submit"
+          disabled={!stripe}
+          color={'primary'}
+          variant="contained"
+        >
           Pay
-        </button>
+        </Button>
       </form>
     );
   }
@@ -165,15 +177,45 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
         }
         else {
           this.handleError('Payment success', 'success');
-          this.props.router.back()
+          // this.props.router.back()
         }
       }
     }
   }
 
-  render() {
-    const slides: Map<WalletPageSlide, [ string, JSX.Element ]> = new Map<WalletPageSlide,  [ string, JSX.Element ]>();
+  protected slides?: Map<WalletPageSlide, [ string, JSX.Element ]>;
 
+  render() {
+    const slides: Map<WalletPageSlide, [ string, JSX.Element ]> = this.slides = new Map<WalletPageSlide,  [ string, JSX.Element ]>();
+
+    slides.set(WalletPageSlide.transactions, ['Transactions', (
+      <div className={"paper-wrapper"}>
+        <Paper elevation={1}
+               color={'primary'}
+        >
+          {
+            (this.props.transactions || []).map((trans: ITransaction) => {
+              return (
+                <div>
+                  <div>green dot</div>
+                  <div>
+                    <div>some action</div>
+                    <div>some date</div>
+                  </div>
+                  <div>
+                    <div>
+                      <span>{Math.sign(Number(trans.amount))}</span>
+                      <span>$</span>
+                      <span>{trans.amount}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          }
+        </Paper>
+      </div>
+    )]);
     slides.set(WalletPageSlide.deposit, ['Deposit', this.stripe  ? (
       <div className={"paper-wrapper"}>
         <Elements stripe={this.stripe}>
@@ -239,7 +281,7 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
                       <CircularProgress></CircularProgress>
                     ) : null
                   }
-                >{ this.state.loading ? 'Please wait' : 'Transfer' }</Button>
+                >{ this.state.loading ? 'Please wait' : 'Deposit' }</Button>
               )
             }
           </ElementsConsumer>
@@ -258,6 +300,18 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
           </div>
           <div>
             Balance
+          </div>
+        </div>
+        <div className={"buttons"}>
+          <div className={"button-bar"}>
+            <Button
+              color={'primary'}
+              onClick={() => this.props.router.push('/wallet/deposit')}
+              variant="contained">Deposit</Button>
+            <Button
+              color={'primary'}
+              onClick={() => this.props.router.push('/wallet/transfer')}
+              variant="contained">Transfer</Button>
           </div>
         </div>
         <div className={"main"}>
@@ -283,10 +337,6 @@ export async function getServerSideProps(context: any) {
   const session = await WalletPage.getSession(context);
 
   let [not_important, not_important2, subpage] = req.url.split('/');
-  
-  if (subpage !== 'deposit' || subpage !== 'transactions' || subpage !== 'withdraw') {
-    subpage = req.url.split('=')[1];
-  };
 
   if (!subpage) {
     subpage = 'deposit';
@@ -306,9 +356,36 @@ export async function getServerSideProps(context: any) {
 
   const { user, wallet } = await marketplaceGetWallet(sessionUser);
 
+  let transactions: {   }[] = [];
+  if (subpage === 'transactions' && wallet && wallet !== null) {
+    let checking = await wallet.accounts.filter((f) => f.name === 'checking')[0] as ICryptoAccount;
+    transactions = await MarketplaceTransaction.aggregate([
+      {
+        $match: {
+          account: checking._id
+        }
+      },
+      {
+        $group: {
+          _id: '$token',
+
+        }
+      },
+      {
+        $group: {
+          _id: '$receipt',
+          actions: {
+            $push: '$$ROOT'
+          }
+        }
+      }
+    ]).exec();
+  }
+
   return {
     props: {
       session,
+      transactions: transactions ? toPojo(transactions) : null,
       subpage: subpage||null,
       wallet: wallet ? toWalletPojo(wallet) : null,
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY as string
