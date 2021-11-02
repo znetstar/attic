@@ -271,12 +271,7 @@ export async function getServerSideProps(context: any) {
       sellerInfo: {
         id: uid
       },
-      decimals: 0,
-      sellerInfo: {
-        firstName: user.firstName ? user.firstName : null,
-        lastName: user.lastName ? user.lastName : null,
-        image: user.image ? user.image : null
-      }
+      decimals: 0
     });
 
     return {

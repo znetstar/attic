@@ -51,8 +51,8 @@ export function sellerInfoFill(user: IUser, self: Partial<ISellerInfo> = {})  {
 SellerInfoSchema.methods.fill = async function ()  {
   const self = this as Partial<ISellerInfo>&Document;
 
-  await self.populate('id').execPopulate();
-  sellerInfoFill(self.id, self);
+  const user = await mongoose.models.User.findById(self.id);
+  sellerInfoFill(user, self);
 }
 
 SellerInfoSchema.pre<ISellerInfo>('save', async function () {
