@@ -20,18 +20,9 @@ import {IListedNFT, INFT, toListedNFT} from "../common/_nft";
 import {TokenType} from "../common/_token";
 import NFTItemList from "../common/_nft-item-list";
 
-<<<<<<< Updated upstream
 import styles from "../../styles/profile.module.css";
-
-=======
-<<<<<<< Updated upstream
-=======
 import {NavBar} from "../common/_footer-nav";
 
-import styles from "../../styles/profile.module.css";
-
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 export type ProfileProps = SessionComponentProps&{
   marketplaceUser: IPOJOUser,
   subpage: string|null,
