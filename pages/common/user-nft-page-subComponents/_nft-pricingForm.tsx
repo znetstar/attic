@@ -56,16 +56,16 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         this.setState({ showSellerInput: true })
       } else {
         this.setState({ showSellerInput: false })
-        this.props.onFormChange('sellerId', this.props.currUser.marketplaceUser._id)
-        this.props.onFormChange('sellerInfo', {firstName: this.props.currUser.marketplaceUser.firstName ? this.props.currUser.marketplaceUser.firstName : null, lastName: this.props.currUser.marketplaceUser.lastName ? this.props.currUser.marketplaceUser.lastName : null, image: this.props.currUser.marketplaceUser.image ? this.props.currUser.marketplaceUser.image : null})
+        this.props.onFormChange('sellerInfo', {id: this.props.currUser.marketplaceUser._id})
+        // this.props.onFormChange('sellerInfo', {firstName: this.props.currUser.marketplaceUser.firstName ? this.props.currUser.marketplaceUser.firstName : null, lastName: this.props.currUser.marketplaceUser.lastName ? this.props.currUser.marketplaceUser.lastName : null, image: this.props.currUser.marketplaceUser.image ? this.props.currUser.marketplaceUser.image : null})
       }
     })
   }
 
   setSeller = (user) => {
     if (user && this.state.isUserSeller === 'No') {
-      this.props.onFormChange('sellerId', user._id)
-      this.props.onFormChange('sellerInfo', {firstName: user.firstName ? user.firstName : null, lastName: user.lastName ? user.lastName : null, image: user.image ? user.image : null})
+      this.props.onFormChange('sellerInfo', {id: user._id})
+      // this.props.onFormChange('sellerInfo', {firstName: user.firstName ? user.firstName : null, lastName: user.lastName ? user.lastName : null, image: user.image ? user.image : null})
     }
   }
 
