@@ -105,7 +105,7 @@ export class CryptoQueue extends EventEmitter {
 
   public static createCryptoQueue(
      name: string,
-     beforeConfirm: (job: Job) => Promise<TransactionId>,
+     beforeConfirm: (job: Job) => Promise<TransactionId|undefined>,
      afterConfirm: (job: Job, receipt: TransactionReceipt) => Promise<unknown>,
      additionalOptions?: {
       connection?: any,
@@ -293,7 +293,7 @@ export class CryptoQueue extends EventEmitter {
     let returnValue: any;
     try {
       const client = await (await getCryptoAccountByKeyName('cryptoMaster')).createClient();
-      debugger
+
       if (job.name === 'afterConfirm') {
         // If a transaction already exists we should run `afterConfirm`
         const tidRaw = makeInternalCryptoEncoder().decodeBuffer(job.data.transactionId);
@@ -326,16 +326,17 @@ export class CryptoQueue extends EventEmitter {
         }
       } else if (job.name === 'beforeConfirm') {
         const transactionId = await this.beforeConfirm(job);
-        const tidString = makeInternalCryptoEncoder().encodeBuffer(Buffer.from(transactionId.toBytes()));
+        if (transactionId) {
+          const tidString = makeInternalCryptoEncoder().encodeBuffer(Buffer.from(transactionId.toBytes()));
 
-        await this.addJob('afterConfirm', {
-          ...job.data,
-          transactionId: tidString
-        }, true, {
-          ...job.opts,
-          jobId: 'crypto:transaction:'+job.data.returnValueKey
-        });
-
+          await this.addJob('afterConfirm', {
+            ...job.data,
+            transactionId: tidString
+          }, true, {
+            ...job.opts,
+            jobId: 'crypto:transaction:' + job.data.returnValueKey
+          });
+        }
         returnValue = 'crypto:transaction:'+job.data.returnValueKey
         job.data.afterConfirmId = returnValue;
       }
@@ -369,7 +370,7 @@ export class CryptoQueue extends EventEmitter {
 
   constructor(
     public name: string,
-    protected beforeConfirm: (job: Job) => Promise<TransactionId>,
+    protected beforeConfirm: (job: Job) => Promise<TransactionId|undefined>,
     protected afterConfirm: (job: Job, receipt: TransactionReceipt) => Promise<unknown>,
     protected additionalOptions?: {
       connection?: any,

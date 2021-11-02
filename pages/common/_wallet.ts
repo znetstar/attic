@@ -25,7 +25,15 @@ import { USD } from '@dinero.js/currencies';
 import {makeEncoder, makeInternalCryptoEncoder} from "./_encoder";
 import {ImageFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import {ImageFormat} from "@etomon/encode-tools/lib/IEncodeTools";
-import {IPOJOUser, IUser, userAcl, userPrivFields, userPubFields, UserRoles, User as UserModel } from "./_user";
+import {
+  IPOJOUser,
+  IUser,
+  userAcl,
+  userPrivFields,
+  userPubFields,
+  UserRoles,
+  User as UserModel
+} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {Ability, AbilityBuilder} from "@casl/ability";
 import {MarketplaceClientRequest, RequestData} from "./_rpcServer";
@@ -35,6 +43,7 @@ import {Job, Queue, Worker} from "bullmq";
 import CryptoQueue from "./_cryptoQueue";
 import {CryptoGetAccountRecordsQuery} from "@hashgraph/proto";
 import * as _ from 'lodash';
+import {ISellerInfo, SellerInfoSchema} from "./_sellerInfo";
 
 
 export interface ITransaction {
@@ -46,6 +55,10 @@ export interface ITransaction {
    */
   amount: Decimal128;
   account: ICryptoAccount;
+  counterparty?: {
+    account: ICryptoAccount,
+    userInfo?: ISellerInfo;
+  };
   /**
    * Token to transfer
    */
@@ -110,13 +123,27 @@ export function toWalletPojo(wallet: IWallet): IPOJOWallet {
 
 export const TransactionSchema: Schema<ITransaction> = (new (mongoose.Schema)({
   account: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'CryptoAccount' },
+  counterparty: {
+    required: false,
+    type: {
+      account: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'CryptoAccount'
+      },
+      userInfo: {
+        type: SellerInfoSchema,
+        required: false
+      }
+    }
+  },
   token: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Token' },
   amount: {
     type: mongoose.Schema.Types.Decimal128,
     required: true,
     validate: (x: any): any => {
       let n = Number(x.toString());
-      return !Number.isNaN(n) && n > 0;
+      return !Number.isNaN(n);
     }
   },
   confirmedAt: {
@@ -138,7 +165,8 @@ export const TransactionSchema: Schema<ITransaction> = (new (mongoose.Schema)({
 TransactionSchema.index({
   account: 1,
   receipt: 1,
-  token: 1
+  token: 1,
+  createdAt: 1
 }, {
   unique: true
 });

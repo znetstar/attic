@@ -31,14 +31,27 @@ import {
   IRoyalty,
   RoyaltiesMustBe100
 } from "./_token";
-import {IPOJOUser, IUser, ToUserPojo, userAcl, userPrivFields, userPubFields, UserRoles, User as MarketplaceUser} from "./_user";
+import {
+  IPOJOUser,
+  IUser,
+  ToUserPojo,
+  userAcl,
+  userPrivFields,
+  userPubFields,
+  UserRoles,
+  User as MarketplaceUser
+} from "./_user";
 import {getUser, MarketplaceSession, User} from "../api/auth/[...nextauth]";
 import {number} from "prop-types";
 import {CustomRoyaltyFee, PrivateKey, TokenFeeScheduleUpdateTransaction, TokenBurnTransaction, TokenId, TransactionReceipt} from "@hashgraph/sdk";
 import {generateCryptoKeyPair} from "./_keyPair";
-import {getCryptoAccountByKeyName, ICryptoAccount} from "./_account";
+import {
+  getCryptoAccountByKeyName,
+  ICryptoAccount
+} from "./_account";
 import CryptoQueue from "./_cryptoQueue";
 import {Job} from "bullmq";
+import {ISellerInfo, SellerInfoSchema} from "./_sellerInfo";
 
 export { Royalty, RoyaltiesMustBe100 };
 export type {IRoyalty};
@@ -96,13 +109,9 @@ export type INFT = {
   priceBuyNow?: number;
   listOn?: Date|string;
   userId: IUser;
-  sellerId?: IUser;
+  sellerId?: ObjectId;
   tokenType: TokenType.nft,
-  sellerInfo?: {
-    firstName: string;
-    lastName: string;
-    image: Buffer;
-  },
+  sellerInfo?: ISellerInfo,
   public?: boolean;
   imageUrl?: string;
   cryptoMintToken(metadatas?: HIP10Metadata[]): Promise<void>;
@@ -140,11 +149,6 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
     required: true,
     ref: 'User'
   },
-  sellerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: 'User'
-  },
   decimals: {
     type: Number,
     required: false,
@@ -159,12 +163,7 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
       return this.supplyType === TokenSupplyType.finite ? !Number.isNaN(Number(x)) : undefined;
     }
   },
-  sellerInfo: {
-    firstName: { type: String, required: false },
-    lastName: {  type: String, required: false },
-    image: { type: Buffer, required: false },
-    required: false
-  },
+  sellerInfo: SellerInfoSchema,
   image: { type: Buffer, required: false },
   imageUrl: { type: String, required: false },
   listOn: { type: Date, required: false },
@@ -180,6 +179,18 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   discriminatorKey: 'tokenType'
 }));
 
+NFTSchema.virtual('sellerId')
+  .get(function () {
+    // @ts-ignore
+    return (this as INFT&Document).sellerInfo?._id;
+  })
+  .set(function (val: any) {
+    // @ts-ignore
+     if ((this as INFT&Document).sellerInfo)
+       // @ts-ignore
+      (this as INFT&Document).sellerInfo._id = val;
+  });
+
 export const NFT = (global as any).NFTModel = (global as any).NFTModel || Token.discriminator(TokenType.nft, NFTSchema);
 const nftInterface = new SimpleModelInterface<INFT>(new ModelInterface<INFT>(NFT));
 
@@ -192,14 +203,6 @@ async function nftSave() {
     // @ts-ignore
     const self: any = this;
     const enc = makeEncoder();
-    if (self.sellerId) {
-      const seller = await MarketplaceUser.findById(self.sellerId);
-      self.sellerInfo = {
-        firstName: seller.firstName,
-        lastName: seller.lastName,
-        image: seller.image
-      };
-    }
 
     const paths = self.modifiedPaths();
     if (paths.includes('image')) {
@@ -453,7 +456,9 @@ export async function marketplaceCreateNft (form: INFT) {
       nftFor: form.nftFor,
       customFees: form.customFees,
       userId: user._id,
-      sellerId: form.sellerId,
+      sellerInfo: {
+        id: form.sellerId
+      },
       image: form.image,
       listOn: form.listOn,
       priceStart: form.priceStart,

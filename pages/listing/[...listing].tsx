@@ -268,7 +268,9 @@ export async function getServerSideProps(context: any) {
       treasury,
       supplyType: TokenSupplyType.finite,
       tokenType: TokenType.nft,
-      sellerId: uid,
+      sellerInfo: {
+        id: uid
+      },
       decimals: 0,
       sellerInfo: {
         firstName: user.firstName ? user.firstName : null,

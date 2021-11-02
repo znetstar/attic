@@ -11,7 +11,7 @@ import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../com
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
-import {HTTPError} from "../common/_rpcCommon";
+import {HTTPError, TokenSupplyType, TokenType} from "../common/_rpcCommon";
 import {toPojo} from "@thirdact/to-pojo";
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import Button from "@mui/material/Button";
@@ -26,6 +26,9 @@ import {signIn} from "next-auth/client";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import {InputAdornment} from "@mui/material/";
+import {IToken} from "../common/_token";
+import {ISellerInfo} from "../common/_sellerInfo";
+const moment = require('moment');
 
 export enum WalletPageSlide {
   transactions = 'transactions',
@@ -37,7 +40,7 @@ export type WalletProps = SessionComponentProps&{
   subpage: WalletPageSlide;
   wallet: IPOJOWallet|null;
   stripePublicKey: string;
-  transactions: ITransaction[]|null;
+  transactions: TransactionGroup[]|null;
 };
 
 /**
@@ -46,13 +49,36 @@ export type WalletProps = SessionComponentProps&{
 export type WalletState = SessionComponentState&{
   depositAmount?: number;
   loading?: boolean;
+  subpage: WalletPageSlide;
   wallet: IPOJOWallet|null;
 };
 
+export type  TransactionGroupToken = {
+  _id: string,
+  symbol: string,
+  tokenType: TokenType,
+  supplyType: TokenSupplyType,
+  name: string,
+  decimals: number,
+  createdAt: Date,
+  updatedAt: Date,
+  tokenId: string,
+  imageUrl?: string,
+  isLegalTender: boolean;
+  sellerInfo?: ISellerInfo;
+}
+
 
 export type TransactionGroup = {
-  actions: ITransaction[];
+  // actions: ITransaction[];
+  // actions: (ITransaction&{ token: TransactionGroupToken })[],
+  legalTenderToken: TransactionGroupToken,
+  action: (ITransaction&{ token: TransactionGroupToken }),
   _id: Buffer;
+  completedAt: Date;
+  netAmount: number;
+  netLegalTenderAmount: number;
+  counterparty?: ISellerInfo;
 }
 
 class CheckoutForm extends React.Component<{ stripe: Stripe, elements: any }> {
@@ -110,7 +136,8 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
   imageSize = { width: 200 }
   state = {
     depositAmount: 0,
-    wallet: this.props.wallet
+    wallet: this.props.wallet,
+    subpage: this.props.subpage
   } as WalletState
 
   stripe: Stripe|null = null;
@@ -119,10 +146,24 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
     super(props);
   }
 
+  updateInterval: any;
+
+  componentWillUnmount() {
+    clearInterval(this.updateInterval);
+  }
+
   async componentDidMount() {
     this.stripe = await loadStripe(this.props.stripePublicKey);
 
     this.forceUpdate();
+
+    if (this.updateInterval)  {
+      clearInterval(this.updateInterval);
+    }
+    this.updateInterval = setInterval(() => {
+      this.loadBalance()
+        .catch((err: Error) => this.handleError(err));
+    }, 25e3);
 
     await this.loadBalance();
     return super.componentDidMount?.();
@@ -149,11 +190,15 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
         const clientSecret = await this.rpc['marketplace:beginBuyLegalTender'](this.state.depositAmount as string|number);
         const cardElement = elements.getElement(CardElement);
 
-        await this.stripe?.confirmCardPayment(clientSecret, {
+        const paymentIntentResult = await this.stripe?.confirmCardPayment(clientSecret, {
           payment_method: {
             card: cardElement
           }
         });
+
+        if (paymentIntentResult?.error) {
+          throw paymentIntentResult.error;
+        }
 
         await new Promise<void>((resolve, reject) => {
           setTimeout(async () => {
@@ -183,30 +228,52 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
     }
   }
 
-  protected slides?: Map<WalletPageSlide, [ string, JSX.Element ]>;
+  protected slides?: any;
 
   render() {
-    const slides: Map<WalletPageSlide, [ string, JSX.Element ]> = this.slides = new Map<WalletPageSlide,  [ string, JSX.Element ]>();
+    const slides: any = this.slides = {};
 
-    slides.set(WalletPageSlide.transactions, ['Transactions', (
+    slides[WalletPageSlide.transactions] = ['Transactions', (
       <div className={"paper-wrapper"}>
         <Paper elevation={1}
                color={'primary'}
         >
           {
-            (this.props.transactions || []).map((trans: ITransaction) => {
+            (this.props.transactions || []).map((trans: TransactionGroup) => {
               return (
-                <div>
-                  <div>green dot</div>
-                  <div>
-                    <div>some action</div>
-                    <div>some date</div>
+                <div className={"transaction"}>
+                  <div className={"transaction-image"}>
+                    {
+                      trans.action.token.imageUrl ? (
+                        <img src={trans.action.token.imageUrl}></img>
+                      ) : (
+                        <span className={"green-dot"}></span>
+                      )
+                    }
                   </div>
-                  <div>
+                  <div  className={"transaction-text"}>
                     <div>
-                      <span>{Math.sign(Number(trans.amount))}</span>
-                      <span>$</span>
-                      <span>{trans.amount}</span>
+                      {
+                        trans.action.token.isLegalTender ? 'You deposited funds' : (
+                          !Math.sign(Number(trans.netLegalTenderAmount)) ? (
+                            <React.Fragment>
+                              You purchased <a href={"/listing/"+trans.action.token._id.toString()}>{trans.action.token.name}</a> from <a href={"/profile/"+trans.counterparty?._id.toString()}>{trans.counterparty?.firstName}</a>
+                            </React.Fragment>
+                          ) : (
+                            <React.Fragment>
+                              <a href={"/profile/"+trans.counterparty?._id.toString()}>{trans.counterparty?.firstName}</a> purchased <a href={"/listing/"+trans.action.token._id.toString()}>{trans.action.token.name}</a> from <a href={"/profile/"+trans.action.token.sellerInfo?._id.toString()}>{trans.action.token.sellerInfo?.firstName}</a>
+                            </React.Fragment>
+
+                          )
+                        )
+                      }
+                    </div>
+                    <div className={"date"}><time dateTime={(new Date(trans.completedAt)).toISOString()}>{moment(trans.completedAt).format('MMM Do YYYY, h:mm A')}</time></div>
+                  </div>
+                  <div  className={"transaction-amount"}>
+                    <div>
+                      <span className={!Math.sign(Number(trans.netLegalTenderAmount)) ? 'sign-debit' : 'sign-credit'}>$</span>
+                      <span>{trans.netLegalTenderAmount}</span>
                     </div>
                   </div>
                 </div>
@@ -215,8 +282,8 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
           }
         </Paper>
       </div>
-    )]);
-    slides.set(WalletPageSlide.deposit, ['Deposit', this.stripe  ? (
+    )];
+    slides[WalletPageSlide.deposit] = ['Deposit', this.stripe  ? (
       <div className={"paper-wrapper"}>
         <Elements stripe={this.stripe}>
         <Paper elevation={1}
@@ -288,11 +355,12 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
         </Paper>
         </Elements>
       </div>
-    ) : (<div>{null}</div>)]);
+    ) : (<div>{null}</div>)];
 
+    console.log(this.state.subpage)
     return (<div className={"page wallet"}>
       {this.errorDialog}
-      {this.makeAppBar(this.props.router, (slides.get(this.props.subpage) as [ string, JSX.Element ])[0])}
+      {this.makeAppBar(this.props.router, (slides[(this.state.subpage)] as [ string, JSX.Element ])[0])}
       <div className={"main-wrapper"}>
         <div className={"hero"}>
           <div className={"money"}>
@@ -306,8 +374,12 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
           <div className={"button-bar"}>
             <Button
               color={'primary'}
-              onClick={() => this.props.router.push('/wallet/deposit')}
-              variant="contained">Deposit</Button>
+              onClick={() => {
+                this.setState({
+                  subpage: this.state.subpage === 'deposit' ? 'transactions' : 'deposit'
+                })
+              }}
+              variant="contained">{this.state.subpage === 'deposit' ? 'Transactions' : 'Deposit'}</Button>
             <Button
               color={'primary'}
               onClick={() => this.props.router.push('/wallet/transfer')}
@@ -316,7 +388,7 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
         </div>
         <div className={"main"}>
           {
-            (slides.get(this.props.subpage) as [ string, JSX.Element ])[1]
+            (slides[(this.state.subpage)] as [ string, JSX.Element ])[1]
           }
         </div>
       </div>
@@ -357,7 +429,7 @@ export async function getServerSideProps(context: any) {
   const { user, wallet } = await marketplaceGetWallet(sessionUser);
 
   let transactions: {   }[] = [];
-  if (subpage === 'transactions' && wallet && wallet !== null) {
+  if (wallet && wallet !== null) {
     let checking = await wallet.accounts.filter((f) => f.name === 'checking')[0] as ICryptoAccount;
     transactions = await MarketplaceTransaction.aggregate([
       {
@@ -368,7 +440,80 @@ export async function getServerSideProps(context: any) {
       {
         $group: {
           _id: '$token',
-
+          doc: {
+            $push: '$$ROOT'
+          }
+        }
+      },
+      {
+        $lookup: {
+          from:  'tokens',
+          as: 'token',
+          let: { tokenId:  '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [ '$$tokenId', '$_id' ]
+                }
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                symbol: 1,
+                tokenType: 1,
+                supplyType: 1,
+                name: 1,
+                decimals: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                tokenId: 1,
+                imageUrl: 1,
+                sellerInfo: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: '$doc'
+      },
+      {
+        $addFields: {
+          'doc.token': {
+            $arrayElemAt: [ '$token', 0 ]
+          }
+        }
+      },
+      {
+        $replaceRoot:  {
+          newRoot: '$doc'
+        }
+      },
+      {
+        $addFields: {
+          counterparty: '$counterparty.userInfo',
+          'token.isLegalTender':  { $eq: [ '$token.symbol', process.env.MARKETPLACE_LEGAL_TENDER_FOR_PURCHASE ] },
+          legalTenderToken: {
+            $cond: [
+              { $eq: [ '$token.symbol', process.env.MARKETPLACE_LEGAL_TENDER_FOR_PURCHASE ] },
+              '$token',
+              null
+            ]
+          },
+          legalTenderAmount: {
+            $cond: [
+              { $eq: [ '$token.symbol', process.env.MARKETPLACE_LEGAL_TENDER_FOR_PURCHASE ] },
+              '$amount',
+              0
+            ]
+          }
+        }
+      },
+      {
+        $sort: {
+          createdAt: -1
         }
       },
       {
@@ -376,7 +521,49 @@ export async function getServerSideProps(context: any) {
           _id: '$receipt',
           actions: {
             $push: '$$ROOT'
+          },
+          completedAt: {
+            $max: '$createdAt'
+          },
+          netAmount: {
+            $sum: '$amount'
+          },
+          netLegalTenderAmount: {
+            $sum: '$legalTenderAmount'
+          },
+          legalTenderToken: {
+            $max: '$legalTenderToken'
+          },
+          isNFTPurchase: {
+            $max: '$token.isLegalTender'
           }
+        }
+      },
+      {
+        $addFields:  {
+          isNFTPurchase: {
+            $ne: [ '$isNFTPurchase', true ]
+          },
+          netAmount: { $toLong: '$netAmount' },
+          netLegalTenderAmount: { $toLong: '$netLegalTenderAmount' }
+        }
+      },
+      {
+        $sort:  {
+          completedAt: -1
+        }
+      },
+      {
+        $unwind: '$actions'
+      },
+      {
+        $addFields: {
+          action: '$actions'
+        }
+      },
+      {
+        $project:  {
+          actions: 0
         }
       }
     ]).exec();

@@ -53,5 +53,48 @@
     .transfer-title {
       margin: 5px 0;
     }
+
+
+    .transaction {
+      display: flex;
+      justify-content: space-between;
+      & > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .transaction-image {
+        width: 100px;
+        .green-dot {
+          display: block;
+          background: green;
+          height:  25px;
+          border-radius: 25px;
+          width: 25px;
+        }
+      }
+      .transaction-text  {
+        width: 100%;
+        flex-direction: column;
+        align-items:flex-start;
+        .date {
+          font-size: 0.75em;
+        }
+      }
+
+      .transaction-amount {
+        width: 100px;
+
+        .sign-credit::before {
+          content:  '+';
+          margin: 0 5px;
+        }
+
+        .sign-debit::before {
+          content:  '-';
+          margin: 0 5px;
+        }
+      }
+    }
   }
 }

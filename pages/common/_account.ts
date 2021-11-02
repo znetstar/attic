@@ -17,7 +17,7 @@ import {getLegalTender} from "./_wallet";
 import {add, dinero, toFormat} from "dinero.js";
 import {USD} from "@dinero.js/currencies";
 import TokenBalanceMap from "@hashgraph/sdk/lib/account/TokenBalanceMap";
-import {IPOJOUser, IUser} from "./_user";
+import {IPOJOUser, IUser, toUserPojo} from "./_user";
 import {IPOJOWallet, IWallet, syncTransactions} from "./_wallet";
 import {IToken, Token} from "./_token";
 
@@ -25,6 +25,7 @@ export enum TokenAssociationType {
   kyc = 'kyc',
   association = 'association'
 }
+
 
 export interface ITokenAssociation {
   type: TokenAssociationType,

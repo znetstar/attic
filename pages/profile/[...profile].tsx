@@ -241,7 +241,7 @@ export async function getServerSideProps(context: any) {
                       $or: [
                         {
                           $eq: [
-                            '$sellerId',
+                            '$sellerInfo.id',
                             '$$userId'
                           ]
                         },
@@ -285,9 +285,9 @@ export async function getServerSideProps(context: any) {
             $filter: {
               input: '$tokens',
               as: 'token',
-              cond:                         {
+              cond:  {
                 $eq: [
-                  '$$token.sellerId',
+                  '$$token.sellerInfo.id',
                   '$user._id'
                 ]
               }

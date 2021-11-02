@@ -53,6 +53,7 @@ import {number} from "prop-types";
 import {IWallet, syncTransactions, Transaction as MarketplaceTransaction  } from "./_wallet";
 import {dinero, multiply} from "dinero.js";
 import {USD} from "@dinero.js/currencies";
+import {sellerInfoFill} from "./_sellerInfo";
 
 export { TokenSupplyType, TokenType };
 
@@ -66,6 +67,7 @@ export type IToken = {
   wipeKey?: IKeyPair;
   supplyKey?: IKeyPair;
   feeScheduleKey?: IKeyPair;
+  decimals?: number;
   treasury: ICryptoAccount;
   tokenType: TokenType;
   memo?: string;
@@ -322,8 +324,7 @@ TokenSchema.methods.cryptoCreateToken = async function (
 
   const queue = CryptoQueue.createCryptoQueue(
     'crypto:createToken',
-    async (job: Job) => {
-
+    async (job: Job): Promise<TransactionId|undefined> => {
       let  {
         initialSupply,
         extraFields,
@@ -340,7 +341,7 @@ TokenSchema.methods.cryptoCreateToken = async function (
         throw new TokenNotFoundError(id);
 
       if (token.tokenId)
-        return this.tokenId;
+        return;
 
       const masterAccount = await getCryptoAccountByKeyName('cryptoMaster');
       const client = await masterAccount.createClient();
@@ -587,7 +588,7 @@ TokenSchema.methods.cryptoMintToken = async function (
         return txResponse.transactionId;
     },
     async (job: Job, receipt: TransactionReceipt) => {
-      debugger
+
       let  {
         amount,
         id
@@ -617,18 +618,19 @@ TokenSchema.methods.cryptoMintToken = async function (
           })
         }));
       } else {
-        debugger
+
         let usdRep = ((amount as number)/Math.pow(10, tokenDoc.decimals));
         transactionAmount = (usdRep).toString();
-        console.debug(`⛏ minted ${tokenDoc.symbol.toString()} (${TokenId.fromBytes(Buffer.from(tokenDoc.tokenId)).toString()})  ฿${amount}`);
+        console.debug(`⛏ minted ${usdRep} ${tokenDoc.symbol.toString()} (${TokenId.fromBytes(Buffer.from(tokenDoc.tokenId)).toString()})`);
       }
+      let tidRaw = makeInternalCryptoEncoder().decodeBuffer(job.data.transactionId);
 
       await Promise.all<any>([
         MarketplaceTransaction.create({
           amount: transactionAmount,
           account: tokenDoc.treasury._id,
           token: tokenDoc._id,
-          receipt: Buffer.from(receipt.toBytes())
+          receipt: Buffer.from(tidRaw)
         }),
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),
         Token.collection.updateOne({
@@ -773,6 +775,7 @@ TokenSchema.methods.cryptoAssociate = async function (accountId: ObjectId|string
   });
 }
 
+export type ReceiptLine = { to: string, from: string, amount: number, toId: string, fromId: string, token: string, decimals: number, fromUser?: string, toUser?: string };
 
 TokenSchema.methods.cryptoGrantKyc = async function (accountId: ObjectId|string): Promise<void> {
   let token: IToken&Document = this;
@@ -942,7 +945,7 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         );
 
         const refreshAccounts = new Set<string>();
-        const receipt = new Set<{ to: string, from: string, amount: number, toId: string, fromId: string, token: string }>();
+        const receipt = new Set<ReceiptLine>();
         for (let [{to, from}, amount] of Array.from(lines.entries())) {
           refreshAccounts.add(to._id.toString());
           refreshAccounts.add(from._id.toString());
@@ -960,8 +963,12 @@ TokenSchema.methods.cryptoTransferFungible = async function (
               AccountId.fromBytes(to.accountId),
               (adjAmount * 1)
             );
+
           receipt.add({
+            decimals: token.decimals as number,
             token: tokenId.toString(),
+            fromUser: from.user ? (from.user as unknown as ObjectId).toString() : void(0),
+            toUser: to.user ? (to.user as unknown as ObjectId).toString() : void(0),
             fromId: from._id.toString(),
             toId: to._id.toString(),
             from: AccountId.fromBytes(from.accountId).toString(),
@@ -1016,31 +1023,53 @@ TokenSchema.methods.cryptoTransferFungible = async function (
         rawLines: [{ to: Buffer, from?: Buffer }, number][],
         tokenId: string,
         refreshAccounts: string[],
-        receipt: ({ to: string, from: string, amount: number, fromId: string, toId: string, token: string })[],
+        receipt: (ReceiptLine)[],
         symbol: string
       } = job.data;
 
-      for (let { to, from, amount } of receipt) {
-        console.debug(`transferred ${amount} ${symbol}: ${from} → ${to} `)
+      let tidRaw = makeInternalCryptoEncoder().decodeBuffer(job.data.transactionId);
+
+      for (let { to, from, amount, decimals  } of receipt) {
+        let usdRep = ((amount as number)/Math.pow(10, decimals));
+        console.debug(`💸 transferred ${usdRep } ${symbol}: ${from} → ${to} `)
       }
 
       await Promise.all<unknown>([
-        ...receipt.map(async ({ toId: to, fromId: from, amount, token }) => {
-          debugger
-          let usdRep = dinero({ amount: amount, currency: USD });
+        ...receipt.map(async ({ toId: to, fromId: from, amount, token, decimals, fromUser: fromUserId, toUser: toUserId }) => {
+
+          let usdRep = ((amount as number)/Math.pow(10, decimals));
+          const [
+            fromUser,
+            toUser
+          ]: [ IUser|null, IUser|null ] = await Promise.all([
+            fromUserId ? User.findById(fromUserId) : Promise.resolve(null),
+            toUserId ? User.findById(toUserId) : Promise.resolve(null)
+          ])
 
           await Promise.all([
             MarketplaceTransaction.insertMany([{
               amount: (usdRep.toString()),
               account: new ObjectId(to),
+              counterparty: {
+                account: new ObjectId(from),
+                ...(
+                  fromUser ? { userInfo: sellerInfoFill(fromUser) } : {}
+                )
+              },
               token: token,
-              receipt: Buffer.from(getReceipt.toBytes())
+              receipt: Buffer.from(tidRaw)
             },
             {
-              amount: (multiply(usdRep, -1).toString()),
+              amount: usdRep*-1,
               account: new ObjectId(from),
               token: token,
-              receipt: Buffer.from(getReceipt.toBytes())
+              receipt: Buffer.from(tidRaw),
+              counterparty: {
+                account: new ObjectId(to),
+                ...(
+                  toUser ? { userInfo: sellerInfoFill(toUser) } : {}
+                )
+              }
             }])
           ])
         }),
@@ -1136,8 +1165,8 @@ TokenSchema.methods.cryptoBurnToken = async function (
       if (!tokenDoc)
         throw new TokenNotFoundError(id);
 
-
-      console.debug(`🔥 burned ${amount} ${tokenDoc.symbol}`);
+      let usdRep = ((amount as number)/Math.pow(10, tokenDoc.decimals));
+      console.debug(`🔥 burned ${usdRep} ${tokenDoc.symbol}`);
 
       await Promise.all([
         (tokenDoc.treasury as ICryptoAccount&Document).loadBalance(),

@@ -16,11 +16,14 @@ import { ObjectId } from 'mongodb';
 import {getUser, MarketplaceSession} from "../api/auth/[...nextauth]";
 import stripe from './_stripe';
 import {NFT, Royalty} from "./_nft";
+import {objectRefs, s3} from "./_aws";
 
 export enum UserRoles {
   nftAdmin = 'nftAdmin',
   walletAdmin = 'walletAdmin'
 }
+
+
 
 /**
  * Model for the user profile, with the fields present on each user object
@@ -126,7 +129,10 @@ export const UserSchema: Schema<IUser> = (new (mongoose.Schema)({
 }));
 
 UserSchema.pre<IUser&{ password?: string }&Document>('save', async function () {
-    // Changing the password will update the password on the attic server
+
+  // @ts-ignore
+  const self: any = this;
+  // Changing the password will update the password on the attic server
     const atticRpc = atticServiceRpcProxy();
     if (this.password) {
 
@@ -140,35 +146,27 @@ UserSchema.pre<IUser&{ password?: string }&Document>('save', async function () {
 
     if (this.modifiedPaths().includes('image')) {
       const href = `/profile/${this._id.toString()}`;
-      const imageEntityId = await (atticRpc as any).createS3EntityFromLocation({href: `${process.env.USER_IMAGES_S3_URI}${href}`});
+      const s3Href = `${process.env.USER_IMAGES_S3_URI}${href}`;
 
       if (this.image) {
-        const payload = {
-          method: 'PUT',
-          headers: {
-            'content-type': SerializationFormatMimeTypes.get(enc.options.serializationFormat as SerializationFormat) as string,
-            'accept': SerializationFormatMimeTypes.get(enc.options.serializationFormat as SerializationFormat) as string
-          },
-          body: Buffer.from(this.image)
-        };
-
-        // @ts-ignore
-        await atticRpc.getHttpResponse({
-          href: `${process.env.USER_IMAGES_PUBLIC_URI}${href}`,
-          driver: 'S3Driver',
-          entity: imageEntityId
-        }, payload);
-        this.image = Buffer.from(`${process.env.USER_IMAGES_PUBLIC_URI}${href}`);
+        await s3.putObject({
+          ...objectRefs(s3Href),
+          Body: Buffer.from(self.image),
+          ContentType:  ImageFormatMimeTypes.get(makeEncoder().options.imageFormat as ImageFormat) as string
+        }).promise();
+        self.image = Buffer.from(`${process.env.USER_IMAGES_PUBLIC_URI}${href}`);
         this.imageUrl = true;
       } else {
-        await atticRpc.deleteEntity({_id: imageEntityId})
-        this.image = void (0);
+        await s3.deleteObject({
+          ...objectRefs(s3Href)
+        }).promise();
+        self.image = void (0);
       }
     }
 
     await Promise.all([
       NFT.collection.updateMany({
-        'sellerId': this._id
+        'sellerInfo.id': this._id
       }, {
         $set: {
           'sellerInfo.firstName': this.firstName,
@@ -305,7 +303,7 @@ export async function marketplaceCreateUser (form: IUser&{[name:string]:unknown}
     const atticUserId = await atticRpc.createUser({
       username: form.email,
       password: form.password,
-      
+
       scope: DEFAULT_USER_SCOPE
     } as any);
 
