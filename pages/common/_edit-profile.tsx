@@ -5,7 +5,6 @@ import {
 } from "./_session-component";
 import {IPOJOUser, IUser} from "./_user";
 import {Buffer} from "buffer";
-import {ProfileState} from "../[...profile]";
 import {IIdentityEntity} from "@znetstar/attic-common/lib/IIdentity";
 import {IUser as AtticUser} from "@znetstar/attic-common";
 import {diff, jsonPatchPathConverter} from "just-diff";
@@ -13,10 +12,11 @@ import {MarketplaceSession} from "../api/auth/[...nextauth]";
 import {MarketplaceAPI} from "./_rpcCommon";
 import {MarketplaceLogo} from "./_logo";
 import Button  from '@mui/material/Button';
-import FormControl  from '@mui/material/FormControl';
 import TextField  from '@mui/material/TextField';
 import {MarketplaceAvatar} from "./_avatar";
 import {IEncodeTools} from "@etomon/encode-tools";
+
+import styles from "./../../styles/editProfile.module.css";
 
 export type EditProfileProps = AuthenticatedSubcomponentProps&{
 
@@ -194,19 +194,19 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
 
   render() {
     return (
-      <div className={"edit-profile"}>
+      <div className={styles.editProfile}>
         {this.props.errorDialog}
         <header>
           <div>Please fill out the information below</div>
         </header>
         <div>
-          <form onSubmit={(e) => { this.updateForm(); e.preventDefault(); }}>
+          <form className={styles.form} onSubmit={(e) => { this.updateForm(); e.preventDefault(); }}>
             <div>
-              <FormControl className={'form-control'}>
-                <div className={"avatar-wrapper"}>
+                <div className={styles.avatarWrapper}>
                   <div>
                     <MarketplaceAvatar
                       image={this.userForm.image}
+                      variant="rounded"
                       onChange={(image) => {
 
                         this.changedImage = true;
@@ -222,26 +222,23 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
                       allowUpload={true}
                     ></MarketplaceAvatar>
                   </div>
-                  <div>
-                    <small>Add image (optional)</small>
-                  </div>
                 </div>
-              </FormControl>
             </div>
             <div>
-              <FormControl className={'form-control'}>
                 <TextField required={false} value={
                   this.fakeEmail ? null : this.userForm.email
-                }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={'form-input'} type={"email"}  variant={"filled"} name={"email"} label="Email" />
-              </FormControl>
+                }  onChange={(e) => { (this as any).state.userForm.email = e.currentTarget.value; this.forceUpdate(); }} className={styles.formInput} type={"email"}  variant={"filled"} name={"email"} label="Email" />
             </div>
             <div>
-              <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { (this as any).state.userForm.password = e.currentTarget.value; this.forceUpdate(); }} required={false} className={'form-input'} type={"password"} variant={"filled"} name={"password"} label="Password" />
-              </FormControl>
+                <TextField onChange={(e) => { (this as any).state.userForm.password = e.currentTarget.value; this.forceUpdate(); }} 
+                required={false} 
+                className={styles.formInput} 
+                type={"password"} 
+                variant={"filled"} 
+                name={"password"} 
+                label="Password" />
             </div>
             <div>
-              <FormControl className={'form-control'}>
                 <TextField onChange={(e) => {
                   this.setState({
                     userForm: {
@@ -249,11 +246,14 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
                       firstName: e.currentTarget.value
                     }
                   })
-                }}  value={this.userForm.firstName} required={true} className={'form-input'} variant={"filled"} name={"first-name"} label="First Name" />
-              </FormControl>
+                }}  value={this.userForm.firstName} 
+                required={true} 
+                className={styles.formInput} 
+                variant={"filled"} 
+                name={"first-name"} 
+                label="First Name" />
             </div>
             <div>
-              <FormControl className={'form-control'}>
                 <TextField
                   onChange={(e) => {
                     this.setState({
@@ -263,11 +263,14 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
                       }
                     })
                   }}
-                  value={this.userForm.middleName} required={false} className={'form-input'}  variant={"filled"} name={"middle-name"} label="Middle Name" />
-              </FormControl>
+                  value={this.userForm.middleName} 
+                  required={false} 
+                  className={styles.formInput}  
+                  variant={"filled"} 
+                  name={"middle-name"} 
+                  label="Middle Name" />
             </div>
             <div>
-              <FormControl className={'form-control'}>
                 <TextField
                   onChange={(e) => {
                     this.setState({
@@ -277,18 +280,20 @@ export class EditProfile extends Component<EditProfileProps, EditProfileState> {
                       }
                     })
                   }}
-                  value={this.userForm.lastName}  required={true} className={'form-input'}  variant={"filled"} name={"last-name"} label="Last Name" />
-              </FormControl>
+                  value={this.userForm.lastName}  
+                  required={true} 
+                  className={styles.formInput}  
+                  variant={"filled"} 
+                  name={"last-name"} 
+                  label="Last Name" />
             </div>
             <div>
-              <FormControl className={'form-control'}>
                 {/*<Button variant="contained" onClick={() => history.back()} color="primary">*/}
                 {/*  Back*/}
                 {/*</Button>*/}
-                <Button style={{ width: '100%' }} type={"submit"} variant="contained" color="primary">
+                <Button type={"submit"} variant="contained" color="primary" className={styles.submit_btn}>
                   Continue
                 </Button>
-              </FormControl>
             </div>
           </form>
         </div>

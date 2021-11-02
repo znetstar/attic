@@ -30,7 +30,22 @@ export interface MarketplaceAvatarProps {
   /**
    * Dimensions to resize the image to upon upload
    */
+<<<<<<< Updated upstream
   resizeImage?: ImageDims
+=======
+  resizeImage?: ImageDims;
+<<<<<<< Updated upstream
+
+  /**
+   *
+   */
+  size?: ImageDims;
+
+  avatarOptions?: any;
+=======
+  variant?: string | null;
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 }
 
 /**
@@ -132,7 +147,17 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
         <Avatar
           sx={this.props.resizeImage ? this.props.resizeImage : ''}
           className={this.classes.image}
+<<<<<<< Updated upstream
           src={ this.imageUrl } />
+=======
+          src={ this.imageUrl }
+<<<<<<< Updated upstream
+          { ...(this.props.avatarOptions || {}) }
+        />
+=======
+          variant={ this.props.variant ? this.props.variant : null} />
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
       </div>
     )
   }

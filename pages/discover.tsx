@@ -67,7 +67,6 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
         nft.sellerInfo.firstName.toLowerCase().includes(this.state.searchText) || 
         nft.sellerInfo.lastName.toLowerCase().includes(this.state.searchText)) 
       : []
-      console.log(this.props)
     return (
     <div className={styles.discoverWrap}>
       {this.errorDialog}

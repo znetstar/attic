@@ -205,8 +205,8 @@ export class Purchase extends SessionComponent<PurchaseProps, PurchaseState> {
       </div>
 
       <div className={styles.nft_tabsPanel}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', width:'100%'}}>
-          <Tabs variant="fullWidth" value={this.state.currentTab} onChange={(e, newVal) => {
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', width:'100%' }}>
+          <Tabs textColor="gray" variant="fullWidth" value={this.state.currentTab} onChange={(e, newVal) => {
             this.setState({ currentTab: Number(newVal) })
           }} aria-label="NFT Information Tabs">
             <Tab value={0} label="Information" />

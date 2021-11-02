@@ -4,6 +4,7 @@ import { MarketplaceAppBar } from "./_appbar";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./_session-component";
 
 import styles from "./../../styles/nftHome.module.css";
+import NavBar from "./_footer-nav";
 
 type NftHomeProps = SessionComponentProps&{
 }
@@ -64,6 +65,7 @@ export class NFTHome extends SessionComponent<NftHomeProps,NftHomeState> {
           <div className={styles.nft}></div>
         </div>
 
+        <NavBar session={this.props.session} wallet={null}/>
       </div>
     )
   }
