@@ -200,7 +200,10 @@ export class CryptoQueue extends EventEmitter {
     }) : (
       ShimJob.create<any, any>(
         name,
-        data,
+        {
+          ...data,
+          returnValueKey: makeInternalCryptoEncoder().uniqueId()
+        },
         this.processTransaction.bind(this) as any,
       ) as any
     );
