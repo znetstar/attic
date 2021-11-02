@@ -212,7 +212,7 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
           }, 10e3);
         });
       } catch (err: any) {
-        console.log(err);
+        console.error(err);
         Err = err;
       } finally {
         this.setState({ loading: false });
@@ -357,7 +357,7 @@ export class WalletPage extends SessionComponent<WalletProps, WalletState> {
       </div>
     ) : (<div>{null}</div>)];
 
-    console.log(this.state.subpage)
+    // console.log(this.state.subpage)
     return (<div className={"page wallet"}>
       {this.errorDialog}
       {this.makeAppBar(this.props.router, (slides[(this.state.subpage)] as [ string, JSX.Element ])[0])}
