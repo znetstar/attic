@@ -1,8 +1,10 @@
 import { withRouter } from "next/router";
 import React from "react";
+import { MarketplaceAppBar } from "./_appbar";
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "./_session-component";
 
 import styles from "./../../styles/nftHome.module.css";
+import NavBar from "./_footer-nav";
 
 type NftHomeProps = SessionComponentProps&{
 }
@@ -20,7 +22,7 @@ export class NFTHome extends SessionComponent<NftHomeProps,NftHomeState> {
     return (
       <div className={styles.nftHome_wrapper}>
         {this.errorDialog}
-        {this.makeAppBar(this.props.router, 'Home')}
+        <MarketplaceAppBar showBack={'none'} pageTitle='HOME' rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
         <div className={styles.mainCarousel}>
           <p>Trending</p>
           <div className={styles.nftMainCarousel_wrapper}>
@@ -63,6 +65,7 @@ export class NFTHome extends SessionComponent<NftHomeProps,NftHomeState> {
           <div className={styles.nft}></div>
         </div>
 
+        <NavBar session={this.props.session} wallet={null}/>
       </div>
     )
   }

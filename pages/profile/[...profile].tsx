@@ -19,6 +19,10 @@ import {getUser} from "../api/auth/[...nextauth]";
 import {IListedNFT, INFT, toListedNFT} from "../common/_nft";
 import {TokenType} from "../common/_token";
 import NFTItemList from "../common/_nft-item-list";
+import {nftImg} from "./../common/user-nft-page-subComponents/_nft-Img";
+
+import styles from "../../styles/profile.module.css";
+import {NavBar} from "../common/_footer-nav";
 
 export type ProfileProps = SessionComponentProps&{
   marketplaceUser: IPOJOUser,
@@ -35,6 +39,7 @@ export type ProfileState = SessionComponentState&{
   editProfileOpen: boolean;
   settingsOpen: boolean;
   currentTab: number;
+  nftCollections: INFT;
 };
 
 
@@ -46,12 +51,9 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
     currentTab: 0
   } as ProfileState
 
-
-
   constructor(props: ProfileProps) {
     super(props);
   }
-
 
   get isSelf(): boolean { return this.props.session && this.props.marketplaceUser._id === this.props.session?.user?.marketplaceUser?._id }
 
@@ -60,16 +62,16 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
   }
 
   render() {
-    return (<div className={"page profile"}>
+    return (<div className={styles.profile}>
       {this.errorDialog}
-      {this.makeAppBar(this.props.router, 'Profile')}
+      <MarketplaceAppBar showBack={'none'} pageTitle={this.props.marketplaceUser.firstName + ' ' + (this.props.marketplaceUser.middleName ? this.props.marketplaceUser.middleName : '') + ' ' + this.props.marketplaceUser.lastName} rightSideOfAppbar={null} rpc={this.rpc} handleError={this.handleError} enc={this.enc} errorDialog={this.errorDialog} router={this.props.router}/>
       <div>
         {
           !this.editProfileOpen ? (
             (
               <div >
-                <div className={"main"}>
-                  <div>
+                <div className={styles.profile_wrapper}>
+                  <div className={styles.avatar}>
                     <MarketplaceAvatar
                       image={
                         typeof(this.props.marketplaceUser.image) === 'string' ? Buffer.from(this.props.marketplaceUser.image, 'base64') : this.props.marketplaceUser.image
@@ -82,37 +84,44 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                       size={{width:125*1, height:125*1}}
                     ></MarketplaceAvatar>
                   </div>
-                  <div className={"avatar-box"}>
-                    <Typography variant="h5">{this.props.marketplaceUser.firstName} {this.props.marketplaceUser.lastName}</Typography>
+                  <div className={styles.profileInfo}>
+                    <div className={styles.name}>{this.props.marketplaceUser.firstName} {this.props.marketplaceUser.lastName}</div>
                     { this.props.marketplaceUser.handle ? <div><small>{this.props.marketplaceUser.handle}</small></div> : null }
                     {
                       this.isSelf ? (
                         <Button variant="contained"
                                 onClick={() => this.props.router.push(`/profile/self/edit`)}
+                                className={styles.edit}
                         >
                           Edit Profile
                         </Button>
                       ) : (
-                        <Button variant="contained" >
-                          Follow
-                        </Button>
+                        ''
+                        /* For Follow Button
+                        / <Button variant="contained" >
+                        /   Follow
+                        / </Button>
+                        */
                       )
                     }
-                    <div className={"following-bar"}>
+                    {/* <div className={styles.followWrap}>
                       { typeof(this.props.marketplaceUser.following) === 'number' ? <span><small>Followers {this.props.marketplaceUser.following.toLocaleString()}</small></span> : null }
                       { typeof(this.props.marketplaceUser.followers) === 'number' ? <span><small>Following {this.props.marketplaceUser.followers.toLocaleString()}</small></span> : null }
-                    </div>
+                    </div> */}
                     {this.props.marketplaceUser.bio ? <p className={"bio-box"}>{this.props.marketplaceUser.bio}</p> : null }
                   </div>
                 </div>
                 <div>
                   <Box sx={{ width: '100%' }}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                      <Tabs value={this.state.currentTab} onChange={(e, newValue) => {
-                        this.setState({ currentTab: Number(newValue) })
-                      }} aria-label="basic tabs example">
-                        <Tab value={0} label="Collections" />
-                        <Tab value={1} label="Listings" />
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider', background: 'white', color: 'black' }}>
+                      <Tabs value={this.state.currentTab} 
+                            onChange={(e, newValue) => { this.setState({ currentTab: Number(newValue) }) }} 
+                            aria-label="My NFTs"
+                            variant="fullWidth"
+                            indicatorColor="secondary"
+                            textColor="inherit">
+                        <Tab value={0} label="LISTINGS" />
+                        <Tab value={1} label="COLLECTION" />
                       </Tabs>
                     </Box>
                     <div role="tabpanel" hidden={this.state.currentTab !== 0}>
@@ -121,6 +130,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                         rpc={this.rpc}
                         nfts={this.props.collections}
                         clickable={true}
+                        query={{ sellerId: this.props.marketplaceUser.id }}
                       ></NFTItemList>
                     </div>
                     <div hidden={this.state.currentTab !== 1}>
@@ -133,6 +143,7 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                     </div>
                   </Box>
                 </div>
+                <NavBar session={this.props.session} wallet={null}/>
               </div>
             )
           ) : (

@@ -68,22 +68,11 @@ export class NFTImg extends PureComponent<NftImgProps> {
       <div>
         <div className={styles.nftImg_wrapper}>
           <div className={styles.imgInput}>
-            <MarketplaceAvatar
-              image={this.nftUrl}
-              onChange={(image, buf) => {
-                if (image)
-                  // @ts-ignore
-                  nftForm.image = buf;
-                this.setState({ nftUrl: image });
-                this.props.onChange();
-              }}
-              resizeImage={{ width: 200*4 }}
-              size={{ width: 400 }}
-              allowUpload={this.props.allowUpload}
-              imageFormat={makeEncoder().options.imageFormat}
-              userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
-              avatarOptions={{variant: "square", sx: {height: 200, width: '100%', borderRadius:b}}}
-            ></MarketplaceAvatar>
+            <input className={styles.fileInput} disabled={!this.props.allowUpload} ref={this.inputRef as any} type={'file'} name={"NFT-input"} onChange={(e) => this.onNftAdd(e)}></input>
+            <Avatar
+              src={this.state.nftUrl}
+              variant="square"
+              sx={{height: 200, width: '100%', borderRadius:b}} />
           </div>
 
         {(nftForm.name || nftForm.priceStart || nftForm.listOn) ? (

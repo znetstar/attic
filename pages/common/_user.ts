@@ -386,8 +386,7 @@ export async function marketplaceGetAllUsers() {
 
   const findUsers = User.find({}, proj);
   const users = await findUsers.exec();
-
-    const pojo = toPojo(users);
+  const pojo = toPojo(users);
     return pojo;
   } catch (err:any) {
     throw new HTTPError(err?.httpCode || 500, (
@@ -396,3 +395,20 @@ export async function marketplaceGetAllUsers() {
   }
 }
 
+export async function marketplaceGetUserById(id:string) {
+  try {
+    // Extract the session data
+  // @ts-ignore
+  const clientRequest = (this as { context: { clientRequest:  MarketplaceClientRequest } }).context.clientRequest;
+  const additionalData: RequestData = clientRequest.additionalData;
+
+  const findUser = (await User.find({ _id: new ObjectId(id) }, {}).exec())[0];
+
+    const pojo = toPojo(findUser);
+    return pojo;
+  } catch (err:any) {
+    throw new HTTPError(err?.httpCode || 500, (
+      _.get(err, 'data.message') || _.get(err, 'innerError.message') || err.message || err.toString()
+    ));
+  }
+}

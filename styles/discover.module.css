@@ -23,7 +23,7 @@
 
 .nftWrapper {
   width: 100vw;
-  min-height: 100vh;
+  min-height: calc(100vh-56px-40px);
   display:flex;
   flex-direction: row;
   justify-content: center;

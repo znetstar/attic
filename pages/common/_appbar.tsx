@@ -140,7 +140,7 @@ export class MarketplaceAppBar extends PureComponent<AppBarProps, AppBarState> {
                   aria-label="back"
                   sx={{ mr: 2 }}
                 >
-                  {(this.props.showBack === 'logIn') ? <ArrowBackIosIcon sx={{ backgroundColor:'#7d309d', color: 'white', paddingLeft: '7px', borderRadius: '6px', marginLeft: '20px'}} /> :
+                  {(this.props.showBack === 'logIn') ? <ArrowBackIosIcon sx={{ backgroundColor:'#fd2154', color: 'white', paddingLeft: '7px', borderRadius: '6px', marginLeft: '20px'}} /> :
                    (this.props.showBack === 'logOut') ?  <ArrowBackIosIcon sx={{ backgroundColor:'transparent', color: 'white', marginLeft: '20px'}} /> : ''}
                 </IconButton>
               </div>

@@ -15,7 +15,7 @@ export class Home extends SessionComponent<HomeProps,HomeState> {
     return (
       <div className={styles.container}>
         <Head>
-          <title>The Third Act</title>
+          <title>Third Act</title>
           <meta name="description" content="Theater NFT marketplace platform" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

@@ -1,0 +1,23 @@
+.nftList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.nftListedItem {
+  display: flex;
+  flex-direction: column;
+  margin: 10px;
+ }
+
+.nftImage {
+  width: 100%;
+  height: 100%;
+}
+
+.nftInfo {
+  display: flex;
+  flex-direction: column;
+}

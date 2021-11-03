@@ -4,7 +4,7 @@ import {
   PatchModelInterfaceRequestBody, JSONPatchOp
 } from "@thirdact/simple-mongoose-interface";
 import {IPOJOUser, IUser} from "./_user";
-import {createAndMintNFT, IListedNFT, INFT} from "./_nft";
+import {IListedNFT, INFT} from "./_nft";
 import {IPOJOWallet} from "./_wallet";
 import {User} from "../api/auth/[...nextauth]";
 
@@ -16,6 +16,7 @@ export interface MarketplaceAPI {
   'marketplace:createUser': (user: unknown) => Promise<string>;
   'marketplace:getAllUsers': () => Promise<IPOJOUser[]>;
   'marketplace:getNFT': (q: unknown, getOpts?: { limit?: number, skip?: number }) => Promise<IListedNFT[]>;
+  'marketplace:getUserById': (id: unknown) =>Promise<IUser>;
   'marketplace:patchNFT': (id: unknown, patches: JSONPatchOp) => Promise<void>;
   'marketplace:createNFT': (nft: INFT) => Promise<string>;
   'marketplace:createAndMintNFT': (tokenId: string, supply: number) => Promise<void>;
