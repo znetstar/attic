@@ -6,8 +6,8 @@ import SessionComponent, {
 import * as React from 'react';
 import {ObjectId} from "mongodb";
 import {withRouter} from "next/router";
-import {INFT, NFT, nftAcl, nftPubFields} from "../common/_nft";
-import {IUser} from "../common/_user";
+import {IListedNFT, INFT, NFT, nftAcl, nftPrivFields, nftPubFields} from "../common/_nft";
+import {IPOJOUser, toUserPojo, User, userAcl, userPrivFields, userPubFields, IUser} from "../common/_user";
 import NFTImg from "../common/user-nft-page-subComponents/_nft-Img";
 import NFTAssetForm from "../common/user-nft-page-subComponents/_nft-assetForm";
 import NFTPricingForm from "../common/user-nft-page-subComponents/_nft-pricingForm";
@@ -150,9 +150,6 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
               </div>
             )
           ) : (
-            // <EditProfile
-            //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
-            // ></EditProfile>
             <div>
               <div >
                 <div className={"main"}>

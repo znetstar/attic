@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> TAA-36
 export async function getServerSideProps(context: any) {
   return {
     redirect: {
@@ -12,3 +16,7 @@ export function blank () {
 }
 
 export default blank;
+<<<<<<< HEAD
+=======
+
+>>>>>>> TAA-36

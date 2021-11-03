@@ -19,6 +19,7 @@ import {getUser} from "../api/auth/[...nextauth]";
 import {IListedNFT, INFT, toListedNFT} from "../common/_nft";
 import {TokenType} from "../common/_token";
 import NFTItemList from "../common/_nft-item-list";
+import {nftImg} from "./../common/user-nft-page-subComponents/_nft-Img";
 
 import styles from "../../styles/profile.module.css";
 import {NavBar} from "../common/_footer-nav";
@@ -37,6 +38,7 @@ export type ProfileState = SessionComponentState&{
   editProfileOpen: boolean;
   settingsOpen: boolean;
   currentTab: number;
+  nftCollections: INFT;
 };
 
 

@@ -32,7 +32,7 @@ import { Token } from './_token';
 import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
 import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
 import {getWebhookSecret} from "./_stripe";
-import {IUser, marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser} from "./_user";
+import {IUser, marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser, marketplaceGetUserById} from "./_user";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -174,7 +174,8 @@ const authorizedMethods = [
   'marketplace:getWallet',
   'marketplace:beginBuyLegalTender',
   'marketplace:completeBuyLegalTender',
-  'marketplace:getAllUsers'
+  'marketplace:getAllUsers',
+  'marketplace:getUserById',
 ]
 
 /**
@@ -293,5 +294,6 @@ export function rpcInit() {
 (rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
 (rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
 (rpcServer as any).methodHost.set('marketplace:getAllUsers', marketplaceGetAllUsers);
+(rpcServer as any).methodHost.set('marketplace:getUserById', marketplaceGetUserById);
 
 export default rpcServer;

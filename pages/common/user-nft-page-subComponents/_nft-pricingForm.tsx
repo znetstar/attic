@@ -1,9 +1,6 @@
 import React, {PureComponent} from "react";
 import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, InputAdornment, FormLabel } from "@mui/material/";
-
-
 import {NextRouter, withRouter} from "next/router";
-
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFT } from "../_nft";
 import { IUser } from "../_user";
@@ -166,7 +163,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
               <div><SearchBar searchMenu={this.props.usersList} onSelect={(user) => this.setSeller(user)}/></div>
             ) : ''}
 
-            <div><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
+            <div className={styles.royaltyWrapper}><RoyaltyAdd submitRoyaltyList={this.submitRoyaltyList} usersList={this.props.usersList} /></div>
 
             <div>
             <FormControl className={'form-control'}>

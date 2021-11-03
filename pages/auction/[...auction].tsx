@@ -9,12 +9,21 @@ import {withRouter} from "next/router";
 import {NFTImg} from "../common/user-nft-page-subComponents/_nft-Img"
 import { INFT, NFT } from "../common/_nft";
 import {toPojo} from "@thirdact/to-pojo";
+<<<<<<< HEAD
 import styles from "./../../styles/auction/auction.module.css"
 
 import {IUser, User} from "./../common/_user"
 
 export type AuctionProps = SessionComponentProps&{
   nft: INFT
+=======
+import styles from "./../../styles/auction.module.css"
+
+import {IUser} from "./../common/_user"
+
+export type AuctionProps = SessionComponentProps&{
+  nft: INFTData
+>>>>>>> TAA-36
 };
 
 /**
@@ -35,13 +44,21 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
   state: AuctionState = {
     optSelect : 'Information',
     owner: {},
+<<<<<<< HEAD
     payee: [],
     pageTitle: 'Auction'
+=======
+    payee: []
+>>>>>>> TAA-36
   }
 
   componentDidMount() {
     if(this.props.nft.userId) {
+<<<<<<< HEAD
       this.getUserById(this.props.nft.userId, (res:any) => this.setState({ owner: res }))
+=======
+      this.getUserById(this.props.nft.userId, (res) => this.setState({ owner: res }))
+>>>>>>> TAA-36
     }
     }
 
@@ -49,11 +66,23 @@ export class Auction extends SessionComponent<AuctionProps, AuctionState> {
     this.setState({ optSelect: e.target.innerText })
   }
 
+<<<<<<< HEAD
   getUserById = async(id:ObjectId, setInState:Function) => {
     setInState((await User.find({ _id: new ObjectId(id) }, {}).limit(1).exec())[0]);
   }
 
   jsxForOpt = (opt:string) => {
+=======
+  getUserById = (id, setInState) => {
+    this.rpc['marketplace:getUserById'](id)
+    .then((res) => {
+      setInState(res)
+    })
+    .catch(this.handleError)
+  }
+
+  jsxForOpt = (opt) => {
+>>>>>>> TAA-36
     let jsx = (<div></div>)
     switch(this.state.optSelect) {
       case 'Information':
@@ -151,4 +180,7 @@ export async function getServerSideProps(context: any) {
 
 
 export default withRouter(Auction);
+<<<<<<< HEAD
 
+=======
+>>>>>>> TAA-36

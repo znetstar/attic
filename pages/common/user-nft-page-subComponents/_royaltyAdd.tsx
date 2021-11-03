@@ -44,7 +44,6 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
     this.setState({ payee: payee, showAdd: false, showOptions: true })
   }
 
-
   emailChange = (i, user) => {
     let payee = [...this.state.payee]
     if(user) {
@@ -52,7 +51,6 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       this.setState({ payee: payee, showAdd: false, showOptions: true })
     }
   }
-
 
   remove = i => e => {
     e.preventDefault()
@@ -75,6 +73,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       }
     }
       this.setState({ showAdd: true })
+      console.log(this.state.payee)
   }
 
   addCoOwner = e => {
