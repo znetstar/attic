@@ -114,7 +114,6 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         await this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any);
 
         this.handleError('NFT created', 'success')
-        this.props.onSubmit();
         this.props.router.push(`/listing/${this.props.originalNftForm._id}/confirm`)
 
       } catch (err: any) {
@@ -141,6 +140,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
 
   render() {
     const { nftForm, onFormChange } = this.props
+    console.log(this.props, 'pricing')
     return (
       <div className={styles.nftForm_wrapper}>
         <form onSubmit={(e) => this.updatePricingForm(e)}>

@@ -18,12 +18,14 @@ import {UserRoles} from "../common/_user";
 import EncodeTools, {BinaryEncoding, IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
 import {initMarketplace, TokenSupplyType, TokenType} from "../common/_token";
 
+import styles from "../../styles/listing.module.css";
 
 export type ListingProps = SessionComponentProps&{
-  nftForm?: INFT&{ supply: number },
-  subpage: string|null
+  nftForm?: INFT&{ supply: number };
+  subpage: string|null;
   canEdit: boolean;
-  userList: []
+  canConfirm: boolean;
+  userList: [];
 };
 
 export enum ListingStep {
@@ -144,19 +146,26 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   render() {
-    console.log(this.props)
     return (<div className={"page createNFT"}>
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
       <div>
         {
+          this.confirmOpen ? (
+            <div className='confirm_wrapper'>
+              <div><NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={false} nftForm={this.state.nftForm} /></div>
+              <div>{this.state.nftForm.description}</div>
+              <div></div>
+
+              <div><Button variant="contained" onClick={this.mintNft} >Create NFT</Button></div>
+            </div>
+          ) : (
           this.editListingOpen ? (
             (
               <div >
                 <div className={"main"}>
-                  <div>
-                    <NFTImg allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
-                  </div>
+                  <NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />                   
+                  <div>{this.state.nftForm.description}</div>
                   <div >
                     {this.state.stepNum === ListingStep.assetForm ?
                       <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
@@ -195,6 +204,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
                 </div>
               </div>
             )
+          )
         }
       </div>
     </div>);
@@ -310,6 +320,7 @@ export async function getServerSideProps(context: any) {
       session,
       subpage: subpage||null,
       canEdit: acl.can('marketplace:patchNFT', "NFT"),
+      canConfirm: acl.can('marketplace:patchNFT', "NFT"),
       nftForm: nftPojo
     }
   }

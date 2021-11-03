@@ -46,6 +46,7 @@ export class NFTImg extends PureComponent<NftImgProps> {
    * @param e
    */
   onNftAdd(e: ChangeEvent<any>): void {
+    console.log(e.target.children)
     e.preventDefault();
     if (!this.props.allowUpload || !this.props.onNftInput) return;
     const file = Array.from(e.currentTarget.files as FileList)[0];
@@ -62,21 +63,32 @@ export class NFTImg extends PureComponent<NftImgProps> {
   }
 
   render() {
+    console.log(this.props, 'img')
     const { nftForm } = this.props
-    let b = (nftForm.name || nftForm.priceStart || nftForm.listOn) ? '18px 18px 0 0' : '18px'
+    // let b = (nftForm.name || nftForm.priceStart || nftForm.listOn) ? '18px 18px 0 0' : '18px'
+    let b = '18px'
     return (
       <div>
         <div className={styles.nftImg_wrapper}>
-          <div className={styles.imgInput}>
-            <input className={styles.fileInput} disabled={!this.props.allowUpload} ref={this.inputRef as any} type={'file'} name={"NFT-input"} onChange={(e) => this.onNftAdd(e)}></input>
-            <Avatar
-              src={this.state.nftUrl}
-              variant="square"
-              sx={{height: 200, width: '100%', borderRadius:b}} />
+        <div className={styles.imgInput}>
+            <MarketplaceAvatar
+              image={this.nftUrl}
+              onChange={(image, buf) => {
+                if (image)
+                  // @ts-ignore
+                  nftForm.image = buf;
+                this.setState({ nftUrl: image });
+                this.props.onChange();
+              }}
+              allowUpload={this.props.allowUpload}
+              imageFormat={makeEncoder().options.imageFormat}
+              userImagesPublicPhotoUrl={this.props.userImagesPublicPhotoUrl}
+              avatarOptions={{variant: "square", sx: {height: '100%', width: '100%', borderRadius:b}}}
+            ></MarketplaceAvatar>
           </div>
-
-        {(nftForm.name || nftForm.priceStart || nftForm.listOn) ? (
-          <div className={styles.footer}>
+{/* 
+          {(nftForm.name || nftForm.priceStart || nftForm.listOn) ? (
+            <div className={styles.footer}>
             <div className={styles.metaTitle}>{nftForm.name}</div>
             <div className={styles.metaData}>
               {nftForm.priceStart ? (
@@ -87,13 +99,13 @@ export class NFTImg extends PureComponent<NftImgProps> {
               ) : ''}
               {nftForm.listOn ? (
                 <div>
-                  <h3 className={styles.metah3}>Ends in</h3>
+                  <h3 className={styles.metah3}>List on</h3>
                   <h2 className={styles.metah2}>{nftForm.listOn}</h2>
                 </div>
               ) : ''}
             </div>
-          </div>
-        ) : ''}
+           </div>
+          ) : ''} */}
         </div>
       </div>
     )
