@@ -32,8 +32,6 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
 
   constructor(props: DiscProps) {
     super(props);
-    // this.nftRef = React.createRef();
-    // this.nftRef.current = []
   }
   
   stringAvatar = (name: string)  => {
@@ -60,6 +58,7 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
   }
 
   render() {
+    console.log(this.props.nfts)
     const displayNft = this.props.nfts ? 
       this.props.nfts.filter(nft =>  
         nft.tags.join(' ').toLowerCase().includes(this.state.searchText) || 

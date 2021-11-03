@@ -58,7 +58,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   state = {
     editListingOpen: false,
     settingsOpen: false,
-    stepNum: 1,
+    stepNum: 0,
     isCompleted: false,
     notifyMessage: null,
     nftForm: this.props.nftForm || {nftFor:'sale'},
@@ -109,6 +109,7 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
   }
 
   render() {
+    console.log(this.props)
     return (<div className={"page createNFT"}>
       {this.errorDialog}
       {this.makeAppBar(this.props.router, 'Listing')}
@@ -264,7 +265,8 @@ export async function getServerSideProps(context: any) {
     props: {
       session,
       subpage: subpage||null,
-      canEdit: acl.can('marketplace:patchNFT', nft),
+      // canEdit: acl.can('marketplace:patchNFT', nft),
+      canEdit: true,
       nftForm: nftPojo
     }
   }

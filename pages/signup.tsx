@@ -140,13 +140,13 @@ export class Signup extends SessionComponent<SignupPanelProps,SignupPanelState> 
             console.log(res)
             this.handleError('Create success', 'success');
           })
-          .then((res) => 
-            //call to login with provided email and pwd
-            console.log('a')
-          )
-          .then((res) => 
-            this.patchuser(this.state.createPatch)
-          )
+          // .then((res) => 
+          //   //call to login with provided email and pwd
+          //   console.log('a')
+          // )
+          // .then((res) => 
+          //   this.patchuser(this.state.createPatch)
+          // )
       })()
        .catch(this.handleError);
    } else {

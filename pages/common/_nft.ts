@@ -23,8 +23,6 @@ export enum SaleTypes {
   auction = 'auction'
 }
 
-
-
 export interface IRoyalty {
   _id: ObjectId;
   owedTo: {

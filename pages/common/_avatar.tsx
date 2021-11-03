@@ -31,9 +31,9 @@ export interface MarketplaceAvatarProps {
    * Dimensions to resize the image to upon upload
    */
   resizeImage?: ImageDims;
-
   avatarOptions?: any;
   variant?: string | null;
+
 }
 
 /**

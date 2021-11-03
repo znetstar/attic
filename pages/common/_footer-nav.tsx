@@ -50,7 +50,7 @@ export class NavBar extends SessionComponent<NavBarProps, NavBarState> {
     return (
       <div className={styles.navbar_wrapper}>
         <div className={styles.nav}>
-          <Link href='/home' passHref>
+          <Link href='/' passHref>
           <div className={styles.tab} 
                onMouseEnter={() => this.setState({ icon: 1 })} 
                onMouseLeave={() => this.setState({ icon: 0 })} 

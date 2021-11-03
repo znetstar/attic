@@ -98,10 +98,10 @@ export class Profile extends SessionComponent<ProfileProps, ProfileState> {
                         */
                       )
                     }
-                    <div className={styles.followWrap}>
+                    {/* <div className={styles.followWrap}>
                       { typeof(this.props.marketplaceUser.following) === 'number' ? <span><small>Followers {this.props.marketplaceUser.following.toLocaleString()}</small></span> : null }
                       { typeof(this.props.marketplaceUser.followers) === 'number' ? <span><small>Following {this.props.marketplaceUser.followers.toLocaleString()}</small></span> : null }
-                    </div>
+                    </div> */}
                     {this.props.marketplaceUser.bio ? <p className={"bio-box"}>{this.props.marketplaceUser.bio}</p> : null }
                   </div>
                 </div>
