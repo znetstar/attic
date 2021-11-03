@@ -1,6 +1,14 @@
-.addRoyalty {
-  display: flex-start;
+.addButton {
+  display: flex;
   flex-direction: row;
   justify-content: start;
   align-items: center;
 }
+
+.inputSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+

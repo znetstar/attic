@@ -29,9 +29,10 @@ import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
 
 import { Token } from './_token';
-import {getWebhookSecret} from "./_stripe";
 import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
-import {IUser} from "./_user";
+import {marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft} from "./_nft";
+import {getWebhookSecret} from "./_stripe";
+import {IUser, marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser} from "./_user";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -172,7 +173,8 @@ const authorizedMethods = [
   'marketplace:getNFT',
   'marketplace:getWallet',
   'marketplace:beginBuyLegalTender',
-  'marketplace:completeBuyLegalTender'
+  'marketplace:completeBuyLegalTender',
+  'marketplace:getAllUsers'
 ]
 
 /**
@@ -285,5 +287,11 @@ export function rpcInit() {
     throw new HTTPError(405);
   });
 }
+(rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
+(rpcServer as any).methodHost.set('marketplace:patchNFT', marketplacePatchNft);
+(rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
+(rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
+(rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
+(rpcServer as any).methodHost.set('marketplace:getAllUsers', marketplaceGetAllUsers);
 
 export default rpcServer;
