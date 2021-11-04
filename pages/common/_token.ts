@@ -77,6 +77,7 @@ export type IToken = {
 
   customFees?: IRoyalty[];
   tokenIdStr?: string;
+  tokenIdHederaFormatStr?: string;
 
   cryptoCreateToken(initalSupply: number, extraFields?: { [name: string]: unknown }): Promise<Buffer>;
   cryptoMintToken(amount?: number, metadatas?: Buffer[]): Promise<void>
@@ -1452,5 +1453,12 @@ export function createTokenWorker() {
 
 
 wrapVirtual(TokenSchema, 'tokenId');
+
+TokenSchema.virtual('tokenIdHederaFormatStr')
+  .get(function () {
+    // @ts-ignore
+    let self: IToken&Documet = this as any;
+    return self.tokenId ? TokenId.fromBytes(self.tokenId).toString() : void(0);
+  })
 
 export const Token = mongoose.models.Token || mongoose.model<IToken>('Token', TokenSchema);

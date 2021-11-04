@@ -164,12 +164,12 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
             (
               <div >
                 <div className={"main"}>
-                  <NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />                   
+                  <NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
                   <div>{this.state.nftForm.description}</div>
                   <div >
                     {this.state.stepNum === ListingStep.assetForm ?
                       <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                      <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
+                      <NFTPricingForm updateAssetForm={this.updateAssetForm} changedImage={this.state.changedImage} originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
                     }
                   </div>
                 </div>

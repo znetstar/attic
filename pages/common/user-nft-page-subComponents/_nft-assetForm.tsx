@@ -33,7 +33,7 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
             this.isLocked ? (
               <div >
                 <FormControl className={'form-control'}>
-                  <TextField disabled={this.isLocked}  onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.tokenIdStr}  required={true} className={'form-input'}  variant={"filled"} name={"tokenIdStr"} label="Token ID" />
+                  <TextField disabled={this.isLocked}  onChange={(e) => { onFormChange(e.target.name, e.target.value) }} value={nftForm.tokenIdHederaFormatStr}  required={true} className={'form-input'}  variant={"filled"} name={"tokenIdStr"} label="Token ID" />
                 </FormControl>
               </div>
             ) :  null
@@ -60,7 +60,7 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.maxSupply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"maxSupply"} label="Supply" />
+                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.supply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
               </FormControl>
             </div>
           <div>

@@ -114,6 +114,7 @@ export type INFT = {
   sellerInfo?: ISellerInfo,
   public?: boolean;
   imageUrl?: string;
+  metadataUrl?: string;
   cryptoMintToken(metadatas?: HIP10Metadata[]): Promise<void>;
   cryptoTransferNonFungible(executingAccountId: ObjectId|string, lines: Map<{ to: Buffer, from?: Buffer }, number>): Promise<void>;
   getHIP10Metadata(): Promise<HIP10Metadata>;
@@ -169,7 +170,8 @@ export const NFTSchema: Schema<INFT> = (new (mongoose.Schema)({
   listOn: { type: Date, required: false },
   priceStart: {type: Number, required: false},
   priceBuyNow: {type: Number, required: false},
-  public: {type: Boolean, required: false}
+  public: {type: Boolean, required: false},
+  metadataUrl: { type: String, required: false },
   // tokenType: {
   //   enum: [ TokenType.nft ],
   //   type: String,
@@ -359,6 +361,7 @@ export const nftPubFields = [
   'tokenId',
   'tokenIdStr',
   'maxSupply',
+  'tokenIdHederaFormatStr',
   'minted',
   'priceStart',
   'priceBuyNow',
@@ -369,6 +372,7 @@ export const nftPubFields = [
   'minted',
   'customFees',
   'supplyType',
+  'metadataUrl',
   'nftFor',
   'symbol',
   'imageUrl'
@@ -644,6 +648,15 @@ export async function marketplaceCreateAndMintNFT(nft: INFT&Document, supply: nu
 
     const entity = await RPCProxy.findEntity({ id: entityId });
     const ipfsUrl = entity.source.href.replace('ipfs://ipfs', 'ipfs://');
+
+    await Token.collection.updateOne({
+      _id: nft._id
+    }, {
+      $set: {
+        metadataUrl: ipfsUrl,
+        updatedAt: new Date()
+      }
+    });
 
     for (let i = 0; i < supply; i++)
       await NFTSchema.methods.cryptoMintToken.call(nft, [Buffer.from( ipfsUrl, 'utf8' )]);

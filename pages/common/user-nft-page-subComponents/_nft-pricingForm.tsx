@@ -54,7 +54,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       if (this.state.isUserSeller === 'No') {
         this.setState({ showSellerInput: true })
       } else {
-        this.setState({ showSellerInput: false }) 
+        this.setState({ showSellerInput: false })
         this.props.onFormChange('sellerId', this.props.currUser._id)
       }
     })
@@ -91,6 +91,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
     if ((this as any).props.originalNftForm && (this as any).props.originalNftForm._id) {
       let patches = diff((this as any).props.originalNftForm, dataNft, jsonPatchPathConverter);
 
+      debugger
       patches = patches
         .filter(f => f.path.substr(0, '/image'.length) !== '/image')
         .map((f) => {
@@ -102,6 +103,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
           return f;
 
         });
+
       if (this.changedImage && dataNft.image) {
         patches.push({
           op: 'add',
