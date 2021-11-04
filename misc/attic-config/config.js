@@ -64,7 +64,7 @@ const dbInit = [
   },
   ...[
     `^${ process.env.ATTIC_URI.replace(/\/\//g, '\\/\\/').replace(/\./g, '\\.') }`,
-    `^${ process.env.USER_IMAGES_PUBLIC_URI.replace(/\/\//g, '\\/\\/').replace(/\./g, '\\.') }`
+    `^(.*?)\\.${ process.env.STATIC_BASE_URI.replace(/\/\//g, '\\/\\/').replace(/\./g, '\\.') }`
   ].map((regex) => ({
     "model": "Resolver",
     "query": {"mountPoint.regex": regex, isRootResolver: true},

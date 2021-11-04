@@ -613,6 +613,8 @@ export async function marketplacePatchNft(id: string, patches: any[]) {
 
 export async function marketplaceCreateAndMintNFT(nft: INFT&Document, supply: number, updateRoyalties?: boolean) {
   try {
+
+    const { RPCProxy } = atticService();
     // nft = NFT.hydrate(nft);
     // debugger
     // Create the token if we haven't already
@@ -626,14 +628,25 @@ export async function marketplaceCreateAndMintNFT(nft: INFT&Document, supply: nu
 
     const meta: Buffer = Buffer.from(JSON.stringify(await NFTSchema.methods.getHIP10Metadata.call(nft)), 'utf8');
 
-    let bytes: Buffer[] = [];
-    let maxSize = 100;
-    for (let i = 0; i < Math.ceil(meta.byteLength/maxSize); i++) {
-      bytes.push(meta.slice( i*maxSize, (i+1)*maxSize ));
-    }
+    const href = `/nft/${nft._id.toString()}.json`;
+    const s3Href = `${process.env.METADATA_S3_URI}${href}`;
+
+    await s3.putObject({
+      ...objectRefs(s3Href),
+      Body: meta,
+      ContentType: 'application/json'
+    }).promise();
+
+    const entityId = await (RPCProxy as any).copyLocationToNewIPFSEntity({
+      href: s3Href,
+      driver: 'S3Driver'
+    }, true);
+
+    const entity = await RPCProxy.findEntity({ id: entityId });
+    const ipfsUrl = entity.source.href.replace('ipfs://ipfs', 'ipfs://');
 
     for (let i = 0; i < supply; i++)
-      await  NFTSchema.methods.cryptoMintToken.call(nft, bytes);
+      await NFTSchema.methods.cryptoMintToken.call(nft, [Buffer.from( ipfsUrl, 'utf8' )]);
   } catch (err: any) {
     debugger
     throw err;

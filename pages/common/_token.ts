@@ -569,7 +569,6 @@ TokenSchema.methods.cryptoMintToken = async function (
         transaction
           .setTokenId(TokenId.fromBytes(tokenDoc.tokenId));
 
-
         if (typeof(amount) !== 'undefined' && tokenDoc.tokenType !== TokenType.nft) {
           transaction = transaction.setAmount(amount);
         }
@@ -590,7 +589,7 @@ TokenSchema.methods.cryptoMintToken = async function (
       const supplyKey = await tokenDoc.supplyKey?.toCryptoValue();
       const treasuryKeyDoc = await KeyPair.findById(tokenDoc.treasury.keyPair as any);
       const treasuryKey = PrivateKey.fromBytes(treasuryKeyDoc.privateKey);
-
+      debugger
       for (let key of [ supplyKey ])
         transaction = await transaction.sign(key) as any;
 
