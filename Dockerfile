@@ -15,8 +15,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /opt/attic/attic-server
 
-RUN cd /opt/libvips && make install && \
-    cd /opt/attic/attic-server && \
+RUN cd /opt/attic/attic-server && \
     npm ci && \
     npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest @znetstar/attic-server-s3 dotenv
 
