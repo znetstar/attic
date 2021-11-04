@@ -14,7 +14,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /opt/attic/attic-server
 
-RUN npm ci && \
+RUN cd /opt/libvips && make install && \
+    cd /opt/attic/attic-server && \
+    npm ci && \
     npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest @znetstar/attic-server-s3 dotenv
 
 ENV PATH "$PATH:/opt/attic/attic-server/bin"
@@ -27,9 +29,7 @@ ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
 
-
-RUN cd /opt/libvips && make install && \
-    cd /opt/attic-marketplace-mods && \
+RUN cd /opt/attic-marketplace-mods && \
     npm ci && \
     npm run build
 
