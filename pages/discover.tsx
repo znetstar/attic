@@ -30,7 +30,6 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
     searchText: ''
   } as DiscState
 
-
   constructor(props: DiscProps) {
     super(props);
   }
@@ -48,7 +47,18 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
     };
   }
 
+  nftSelect = (id) => {
+    console.log(`/purchase/${id}`)
+    this.props.router.push(`/purchase/${id}`)
+  }
+
+  profileSelect = (uid) => {
+    console.log(uid)
+    this.props.router.push(`/profile/${uid}`)
+  }
+
   render() {
+    console.log(this.props.nfts)
     const displayNft = this.props.nfts ? 
       this.props.nfts.filter(nft =>  
         nft.tags.join(' ').toLowerCase().includes(this.state.searchText) || 
@@ -56,7 +66,6 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
         nft.sellerInfo.firstName.toLowerCase().includes(this.state.searchText) || 
         nft.sellerInfo.lastName.toLowerCase().includes(this.state.searchText)) 
       : []
-      console.log(this.props)
     return (
     <div className={styles.discoverWrap}>
       {this.errorDialog}
@@ -72,16 +81,16 @@ export class Discover extends SessionComponent<DiscProps, DiscState> {
       </div>
 
         <div className={styles.nftWrapper}>
-          {displayNft ? displayNft.map(nft => {
+          {displayNft ? displayNft.map((nft, idx) => {
             const sellerImg = nft.sellerInfo.image ? nft.sellerInfo.image : ''
             const sellerFirstName = nft.sellerInfo.firstName ? nft.sellerInfo.firstName : ''
             const sellerLastName = nft.sellerInfo.lastName ? nft.sellerInfo.lastName : ''
             return(
-            <div className={styles.nft} key={nft._id}>
-              <div className={styles.nftImg}>{nft.image}</div>
+            <div className={styles.nft} key={idx}>
+              <div className={styles.nftImg} onClick={() => this.nftSelect(nft._id)}>{nft.image}</div>
               <div className={styles.nftInfo}>
-                <div className={styles.name}>{nft.name}</div>
-                <div className={styles.owner}>
+                <div className={styles.name} onClick={() => this.nftSelect(nft._id)}>{nft.name}</div>
+                <div className={styles.owner} onClick={() => this.profileSelect(nft.sellerId)}>
                   <div className={styles.ownerImg}>
                     {sellerImg ? (
                                   <MarketplaceAvatar

@@ -60,7 +60,7 @@ export class NFTAssetForm extends PureComponent<NftAssetProps> {
             </div>
             <div>
               <FormControl className={'form-control'}>
-                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.supply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"supply"} label="Supply" />
+                <TextField onChange={(e) => { if(parseInt(e.target.value) < 1) {e.target.value = '1'; return}; onFormChange(e.target.name, Math.floor(parseInt(e.target.value))) }} value={nftForm.maxSupply} required={true} type="number" InputProps={{ inputProps: {min: 1} }} className={'form-input'}  variant={"filled"} name={"maxSupply"} label="Supply" />
               </FormControl>
             </div>
           <div>

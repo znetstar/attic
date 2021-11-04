@@ -18,13 +18,14 @@ import {UserRoles} from "../common/_user";
 import EncodeTools, {BinaryEncoding, IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
 import {initMarketplace, TokenSupplyType, TokenType} from "../common/_token";
 
+import styles from "../../styles/listing.module.css";
 
 export type ListingProps = SessionComponentProps&{
-  nftForm?: INFT&{ supply: number },
-  subpage: string|null
+  nftForm?: INFT&{ supply: number };
+  subpage: string|null;
   canEdit: boolean;
   canConfirm: boolean;
-  userList: { email: string }[]
+  userList: [];
 };
 
 export enum ListingStep {
@@ -72,7 +73,6 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
     usersList: [],
     changedImage: false
   } as ListingState
-
 
   constructor(props: ListingProps) {
     super(props);
@@ -160,23 +160,22 @@ export class Listing extends SessionComponent<ListingProps, ListingState> {
               <div><Button variant="contained" onClick={this.mintNft} >Create NFT</Button></div>
             </div>
           ) : (
-            this.editListingOpen ? (
-              (
-                <div >
-                  <div className={"main"}>
-                    <div>
-                      <NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />
-                    </div>
-                    <div >
-                      {this.state.stepNum === ListingStep.assetForm ?
-                        <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
-                        <NFTPricingForm changedImage={this.state.changedImage} updateAssetForm={this.updateAssetForm} originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} onSubmit={() => {  this.setState({ changedImage: false }); } } currUser={this.props.session.user} />
-                      }
-                    </div>
+          this.editListingOpen ? (
+            (
+              <div >
+                <div className={"main"}>
+                  <NFTImg onChange={() => { this.setState({ changedImage: true }); }} allowUpload={true} nftForm={this.state.nftForm} onNftInput={this.onFormChange} />                   
+                  <div>{this.state.nftForm.description}</div>
+                  <div >
+                    {this.state.stepNum === ListingStep.assetForm ?
+                      <NFTAssetForm nftForm={this.state.nftForm} updateAssetForm={this.updateAssetForm} onFormChange={this.onFormChange}/> :
+                      <NFTPricingForm originalNftForm={this.state.originalNftForm} nftForm={this.state.nftForm} onFormChange={this.onFormChange} usersList={this.state.usersList} currUser={this.props.session.user} />
+                    }
                   </div>
                 </div>
-              )
-            ) : (
+              </div>
+            )
+          ) : (
               // <EditProfile
               //   {...this.subcomponentProps() as AuthenticatedSubcomponentProps}
               // ></EditProfile>

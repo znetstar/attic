@@ -72,6 +72,7 @@ export class RoyaltyAdd extends PureComponent<royaltyProps> {
       }
     }
       this.setState({ showAdd: true })
+      console.log(this.state.payee)
   }
 
   addCoOwner = e => {

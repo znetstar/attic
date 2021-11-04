@@ -1,10 +1,8 @@
 import Head from 'next/head';
 import { withRouter } from 'next/router';
+import styles from '../styles/Home.module.css';
+import {NFTHome} from './common/_nftHome';
 import SessionComponent, {SessionComponentProps, SessionComponentState} from './common/_session-component';
-import MarketplaceLogo from './common/_logo';
-
-import styles from './../styles/index.module.css';
-
 
 type IndexState = SessionComponentState&{
 }
@@ -12,32 +10,19 @@ type IndexProps = SessionComponentProps&{
 }
 
 export class Index extends SessionComponent<IndexProps,IndexState> {
-  wait: NodeJS.Timer | undefined;
-
-  componentDidMount() {
-    this.wait = setInterval(
-      () => this.props.router.push('/login'), 500
-    )
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.wait)
-  }
 
   render() {
     return (
       <div className={styles.container}>
         <Head>
-          <title>The Third Act</title>
+          <title>Third Act</title>
           <meta name="description" content="Theater NFT marketplace platform" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
   
-        <div className={styles.wrapper}>
-          <div className={styles.logo}>
-            <MarketplaceLogo />
-          </div>
-        </div>
+        <main className={styles.main}>
+        <NFTHome session={this.props.session} loading={this.props.loading} router={this.props.router}/>
+        </main>
       </div>
     )
   }

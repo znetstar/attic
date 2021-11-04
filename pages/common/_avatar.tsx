@@ -40,6 +40,8 @@ export interface MarketplaceAvatarProps {
   size?: ImageDims;
 
   avatarOptions?: any;
+  variant?: string | null;
+
 }
 
 /**
@@ -149,7 +151,7 @@ export class MarketplaceAvatar extends PureComponent<MarketplaceAvatarProps> {
           className={this.classes.image}
           src={ this.imageUrl }
           { ...(this.props.avatarOptions || {}) }
-        />
+          variant={ this.props.variant ? this.props.variant : null} />
       </div>
     )
   }

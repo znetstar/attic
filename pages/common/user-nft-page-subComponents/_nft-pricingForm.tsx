@@ -3,7 +3,6 @@ import { Button, FormControl, RadioGroup, Radio, FormControlLabel, TextField, In
 
 
 import {NextRouter, withRouter} from "next/router";
-
 import SessionComponent, {SessionComponentProps, SessionComponentState} from "../../common/_session-component";
 import { INFT } from "../_nft";
 import {IPOJOUser, IUser} from "../_user";
@@ -55,9 +54,8 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
       if (this.state.isUserSeller === 'No') {
         this.setState({ showSellerInput: true })
       } else {
-        this.setState({ showSellerInput: false })
-        this.props.onFormChange('sellerInfo', {id: this.props.currUser.marketplaceUser._id})
-        // this.props.onFormChange('sellerInfo', {firstName: this.props.currUser.marketplaceUser.firstName ? this.props.currUser.marketplaceUser.firstName : null, lastName: this.props.currUser.marketplaceUser.lastName ? this.props.currUser.marketplaceUser.lastName : null, image: this.props.currUser.marketplaceUser.image ? this.props.currUser.marketplaceUser.image : null})
+        this.setState({ showSellerInput: false }) 
+        this.props.onFormChange('sellerId', this.props.currUser._id)
       }
     })
   }
@@ -116,7 +114,6 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
         await this.rpc['marketplace:patchNFT']((this as any).props.originalNftForm._id, patches as any);
 
         this.handleError('NFT created', 'success')
-        this.props.onSubmit();
         this.props.router.push(`/listing/${this.props.originalNftForm._id}/confirm`)
 
       } catch (err: any) {
@@ -143,6 +140,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
 
   render() {
     const { nftForm, onFormChange } = this.props
+    console.log(this.props, 'pricing')
     return (
       <div className={styles.nftForm_wrapper}>
         <form onSubmit={(e) => this.updatePricingForm(e)}>
@@ -155,7 +153,7 @@ export class NFTPricingForm extends SessionComponent<NftPricingProps,PricingStat
                 name="listOn"
                 onChange={(e) => {if(e.target.value === 'listOnSubmit') {
                                     this.setState({ showScheduleInputs: false, scheduleDate: '', scheduleTime: '' })}
-                                   else {this.setState({ showScheduleInputs : true })}; this.scheduleDateTime()}
+                                   else {this.setState({ showScheduleInputs : true })}}
                                   }>
                 <FormControlLabel value="listOnSubmit" control={<Radio />} label="List when I submit" />
                 <FormControlLabel value="listOnSchedule" control={<Radio />} label="Schedule listing" />

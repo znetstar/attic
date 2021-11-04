@@ -23,9 +23,11 @@ import {IORedisDown} from "@etomon/ioredisdown";
 import {OAuthAgent} from "@znetstar/attic-cli-common/lib/OAuthAgent";
 import {LRUMap} from 'lru_map';
 import {marketplaceCreateAndMintNFT, marketplaceCreateNft, marketplaceGetNft, marketplacePatchNft, NFT} from "./_nft";
-import {marketplaceCreateUser, marketplaceGetAllUsers, marketplacePatchUser, UserRoles} from "./_user";
+import {marketplaceCreateUser, marketplaceGetAllUsers, marketplaceGetUserById, marketplacePatchUser, UserRoles, IUser} from "./_user";
 import {marketplaceBeginBuyLegalTender, marketplaceGetWallet, toWalletPojo} from "./_wallet";
 import {EncodeToolsNative as EncodeTools, SerializationFormat} from "@etomon/encode-tools/lib/EncodeToolsNative";
+import { Token } from './_token';
+import {getWebhookSecret} from "./_stripe";
 
 export type RequestData = {
   req: NextApiRequest,
@@ -183,7 +185,9 @@ const authorizedMethods = [
   'marketplace:getWallet',
   'marketplace:beginBuyLegalTender',
   'marketplace:completeBuyLegalTender',
-  'marketplace:createAndMintNFT'
+  'marketplace:createAndMintNFT',
+  'marketplace:getAllUsers',
+  'marketplace:getUserById',
 ]
 
 /**
@@ -326,5 +330,12 @@ export function rpcInit() {
     throw new HTTPError(405);
   });
 }
+(rpcServer as any).methodHost.set('marketplace:createNFT', marketplaceCreateNft);
+(rpcServer as any).methodHost.set('marketplace:patchNFT', marketplacePatchNft);
+(rpcServer as any).methodHost.set('marketplace:getNFT', marketplaceGetNft);
+(rpcServer as any).methodHost.set('marketplace:createUser', marketplaceCreateUser);
+(rpcServer as any).methodHost.set('marketplace:patchUser', marketplacePatchUser);
+(rpcServer as any).methodHost.set('marketplace:getAllUsers', marketplaceGetAllUsers);
+(rpcServer as any).methodHost.set('marketplace:getUserById', marketplaceGetUserById);
 
 export default rpcServer;
