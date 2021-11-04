@@ -635,6 +635,7 @@ export async function marketplaceCreateAndMintNFT(nft: INFT&Document, supply: nu
     for (let i = 0; i < supply; i++)
       await  NFTSchema.methods.cryptoMintToken.call(nft, bytes);
   } catch (err: any) {
+    debugger
     throw err;
   }
 }

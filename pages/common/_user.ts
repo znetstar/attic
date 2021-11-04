@@ -140,7 +140,8 @@ UserSchema.pre<IUser&{ password?: string }&Document>('save', async function () {
         password: this.password
       } as any);
 
-      delete this.password;
+      // @ts-ignore
+      this.password = null;
     }
     const enc = makeEncoder();
 

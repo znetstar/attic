@@ -81,11 +81,12 @@ export class RPCTransport extends Transport implements ServerSideTransport {
     })
 
     const rawReq = new Uint8Array(jsonData);
-    const clientRequest = new ClientRequest(req.headers['x-marketplace-idempotency-key'] || Transport.uniqueId(), (response?: Response) => {
+    let transport: RPCTransport = this;
+    const clientRequest = new ClientRequest(req.headers['x-marketplace-idempotency-key'] || Transport.uniqueId(), function (response?: Response) {
       const headers: any = {};
 
       if (response) {
-        headers["Content-Type"] = this.serializer.content_type;
+        headers["Content-Type"] = transport.serializer.content_type;
 
         // @ts-ignore
       if (response.error?.data)
@@ -97,7 +98,11 @@ export class RPCTransport extends Transport implements ServerSideTransport {
           httpCode: response.error?.data.httpCode
         };
 
-        const val = this.serializer.serialize(response);
+      const msg = response.error?.data?.stack || response.error?.data?.message || response.error?.stack || response.error?.message;
+      if (msg)
+        console.error(`rpc error: ${msg}`)
+
+        const val = transport.serializer.serialize(response);
         if (!res.headersSent) res.writeHead(200, headers);
         res.write(Buffer.from(val));
         res.end();
@@ -219,7 +224,7 @@ export class MarketplaceRPCServer extends Server {
       return await super.invoke(request, clientRequest);
     } catch (err) {
       if (clientRequest?.respond)
-        await clientRequest.respond(new Response(request.id,new InternalError(err)));
+         await clientRequest.respond(new Response(request.id,new InternalError(err)));
       // throw err;
     }
   }

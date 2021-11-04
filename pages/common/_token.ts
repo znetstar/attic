@@ -442,6 +442,7 @@ TokenSchema.methods.cryptoCreateToken = async function (
 
       console.debug(`💵 created new token ${tokenDoc.symbol} (${getReceipt.tokenId.toString()}) on ${treasury.networkName}`)
 
+
       await Promise.all<any>([
         Token.collection.updateOne({
           _id: tokenDoc._id
@@ -489,11 +490,16 @@ TokenSchema.methods.cryptoCreateToken = async function (
   const job = await queue.addJob('beforeConfirm', {
     initialSupply,
     extraFields,
-    id: this._id.toString()
+    id: this._id.toString(),
+    noClearReturnValue: true
   }, true);
 
+
+  const rv = await queue.makeReturnValue<string>(job.data.returnValueKey);
+  const tokenIdBuf = await rv.get() as string;
+
   // @ts-ignore
-  const tokenId = makeInternalCryptoEncoder().decodeBuffer(job.returnvalue);
+  const tokenId = makeInternalCryptoEncoder().decodeBuffer(tokenIdBuf);
   return tokenId;
 }
 
@@ -521,8 +527,12 @@ TokenSchema.methods.cryptoMintToken = async function (
 
       let tokenDoc: IToken&Document = await Token.findById(id).populate('supplyKey treasury').exec();
 
+
+
       // @ts-ignore
       metadatas = (metadatas || []).map((metadata) => {
+
+
         return makeInternalCryptoEncoder().decodeBuffer(Buffer.from(metadata));
       })
 
@@ -623,6 +633,7 @@ TokenSchema.methods.cryptoMintToken = async function (
         transactionAmount = (usdRep).toString();
         console.debug(`⛏ minted ${usdRep} ${tokenDoc.symbol.toString()} (${TokenId.fromBytes(Buffer.from(tokenDoc.tokenId)).toString()})`);
       }
+
       let tidRaw = makeInternalCryptoEncoder().decodeBuffer(job.data.transactionId);
 
       await Promise.all<any>([
