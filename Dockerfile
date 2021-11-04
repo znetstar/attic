@@ -1,8 +1,12 @@
 FROM public.ecr.aws/znetstar/attic-server:3.8.0
 
+FROM public.ecr.aws/znetstar/libvips-base:latest
+
 FROM node:12
 
 COPY --from=0 /opt/attic /opt/attic
+
+COPY --from=1 /opt/libvips /opt/libvips
 
 ARG NODE_OPTIONS="--max-old-space-size=2560"
 
@@ -24,7 +28,8 @@ ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
 
 
-RUN cd /opt/attic-marketplace-mods && \
+RUN cd /opt/libvips && make install && \
+    cd /opt/attic-marketplace-mods && \
     npm ci && \
     npm run build
 
