@@ -6,7 +6,8 @@ FROM node:12
 
 COPY --from=0 /opt/attic /opt/attic
 
-COPY --from=1 /opt/libvips /opt/libvips
+COPY --from=1 /usr/local /usr/local
+#COPY --from=1 /opt/libvips /usr/local
 
 ARG NODE_OPTIONS="--max-old-space-size=2560"
 
