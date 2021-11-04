@@ -37,8 +37,7 @@ yarn-error.log*
 .idea
 .vscode
 
-attic-config/config.json
-attic/config/config.json
+config/config.json
 
 *.rdb
 data
