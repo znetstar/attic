@@ -33,11 +33,16 @@ ENV HOST '0.0.0.0'
 
 ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
-ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
+
+ADD ./attic-marketplace-mods/package.json /opt/attic-marketplace-mods/package.json
+ADD ./attic-marketplace-mods/package-lock.json /opt/attic-marketplace-mods/package-lock.json
 
 RUN cd /opt/attic-marketplace-mods && \
-    npm ci && \
-    npm run build && \
+    npm ci
+
+ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
+
+RUN npm run build \
     cd /opt/attic/attic-server && \
     npm ci && \
     npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest @znetstar/attic-server-s3 dotenv
