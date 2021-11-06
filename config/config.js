@@ -1,5 +1,12 @@
 require('dotenv').config();
 
+const profiles = [
+  { name: 'marketplace', uri: process.env.SITE_URI },
+  { name: 'marketplace-production', uri: process.env.PRODUCTION_URI },
+  { name: 'marketplace-development', uri: process.env.DEVELOPMENT_URI },
+  { name: 'marketplace-zb-gy', uri: 'https://thirdact-app.e.zb.gy' }
+];
+
 const clients = {
   'google': {
     "model": "Client",
@@ -86,21 +93,22 @@ const dbInit = [
   // }
 ];
 
-
-for  (const clientId in clients) {
-  const provider = clients[clientId];
-  dbInit.push({
-    "model": "Client",
-    "query": { "clientId": `marketplace-${clientId}` },
-    replace: true,
-    "document": {
-      ...template,
-      clientId: `marketplace-${clientId}`,
-      clientSecret: process.env[`ATTIC_${clientId.toUpperCase()}_CLIENT_SECRET`],
-      name: `marketplace-${clientId}`,
-      redirectUri: process.env.NEXTAUTH_URL + process.env[`ATTIC_${clientId.toUpperCase()}_REDIRECT_URI`]
-    }
-  }, provider)
+for (const { uri, name } of profiles) {
+  for (const clientId in clients) {
+    const provider = clients[clientId];
+    dbInit.push({
+      "model": "Client",
+      "query": { "clientId": `${name}-${clientId}` },
+      replace: true,
+      "document": {
+        ...template,
+        clientId: `${name}-${clientId}`,
+        clientSecret: process.env[`ATTIC_${clientId.toUpperCase()}_CLIENT_SECRET`],
+        name: `${name}-${clientId}`,
+        redirectUri: uri + process.env[`ATTIC_${clientId.toUpperCase()}_REDIRECT_URI`]
+      }
+    }, provider);
+  }
 }
 
 
