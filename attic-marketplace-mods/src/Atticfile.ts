@@ -61,19 +61,6 @@ export class MarketplaceTesting implements IPlugin {
     public async init(): Promise<void> {
       const { applicationContext: ctx } = this;
 
-
-      (ctx.webExpress as any).get('/version', (req: any, res: any) => {
-        res.send({
-          name: (ctx.package as any).name,
-          version: (ctx.package as any).version
-        });
-      });
-
-      (ctx.webExpress as any).get('/', (req: any, res: any) => {
-        res.redirect((ctx as any).config.homeRedirect || process.env.HOME_REDIRECT, 301);
-      });
-
-
       await ctx.triggerHook('MarketplaceTesting.marketplaceMongo.start');
       const dbName = (require('url').parse(this.marketplaceMongoUri).pathname.split('?').shift() as string).substr(1);
       const mongo = ctx.marketplaceMongo = await MongoClient.connect(this.marketplaceMongoUri);
@@ -89,6 +76,20 @@ export class MarketplaceTesting implements IPlugin {
           name: 'CouldNotLocateUserError'
         }
       );
+
+
+      ctx.registerHook('launch.loadWebServer.complete', () => {
+        (ctx.webExpress as any).get('/version', (req: any, res: any) => {
+          res.send({
+            name: (ctx.package as any).name,
+            version: (ctx.package as any).version
+          });
+        });
+
+        (ctx.webExpress as any).get('/', (req: any, res: any) => {
+          res.redirect((ctx as any).config.homeRedirect || process.env.HOME_REDIRECT, 301);
+        });
+      });
 
       const rpcMethods: IRPC = ctx.rpcServer.methods as IRPC;
       rpcMethods.marketplaceRandomProfile = async function() {
