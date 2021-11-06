@@ -62,14 +62,6 @@ export class MarketplaceTesting implements IPlugin {
     public async init(): Promise<void> {
       const { applicationContext: ctx } = this;
 
-      await ctx.triggerHook('MarketplaceTesting.marketplaceMongo.start');
-      const dbName = (require('url').parse(this.marketplaceMongoUri).pathname.split('?').shift() as string).substr(1);
-      const mongo = ctx.marketplaceMongo = await MongoClient.connect(this.marketplaceMongoUri);
-
-      await ctx.triggerHook('MarketplaceTesting.marketplaceMongo.complete', mongo);
-      await ctx.triggerHook('MarketplaceTesting.marketplaceDb.start');
-      const db = ctx.marketplaceDb = mongo.db(dbName);
-      await ctx.triggerHook('MarketplaceTesting.marketplaceDb.complete', db);
 
       (ctx.webExpress as any).get('/version', (req: any, res: any) => {
         res.send({
@@ -81,6 +73,16 @@ export class MarketplaceTesting implements IPlugin {
       (ctx.webExpress as any).get('/', (req: any, res: any) => {
         res.redirect((ctx as any).config.homeRedirect || process.env.HOME_REDIRECT, 301);
       });
+
+
+      await ctx.triggerHook('MarketplaceTesting.marketplaceMongo.start');
+      const dbName = (require('url').parse(this.marketplaceMongoUri).pathname.split('?').shift() as string).substr(1);
+      const mongo = ctx.marketplaceMongo = await MongoClient.connect(this.marketplaceMongoUri);
+
+      await ctx.triggerHook('MarketplaceTesting.marketplaceMongo.complete', mongo);
+      await ctx.triggerHook('MarketplaceTesting.marketplaceDb.start');
+      const db = ctx.marketplaceDb = mongo.db(dbName);
+      await ctx.triggerHook('MarketplaceTesting.marketplaceDb.complete', db);
 
       ctx.errors.setError(
         MarketplaceCouldNotLocateUserError,
