@@ -5,7 +5,8 @@ FROM public.ecr.aws/znetstar/libvips-base:latest
 FROM ubuntu:20.04
 
 RUN apt-get update -y && \
-    bash -c 'curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -' && \
+    apt-get install  -y curl sudo && \
+    bash -c 'curl -fsSL https://deb.nodesource.com/setup_14.x | bash' && \
     apt-get update -y && \
     apt-get install -o Dpkg::Options::="--force-confold"  -y build-essential \
       nodejs \
