@@ -71,6 +71,17 @@ export class MarketplaceTesting implements IPlugin {
       const db = ctx.marketplaceDb = mongo.db(dbName);
       await ctx.triggerHook('MarketplaceTesting.marketplaceDb.complete', db);
 
+      (ctx.webExpress as any).get('/version', (req: any, res: any) => {
+        res.send({
+          name: (ctx.package as any).name,
+          version: (ctx.package as any).version
+        });
+      });
+
+      (ctx.webExpress as any).get('/', (req: any, res: any) => {
+        res.redirect((ctx as any).config.homeRedirect || process.env.HOME_REDIRECT, 301);
+      });
+
       ctx.errors.setError(
         MarketplaceCouldNotLocateUserError,
         {
@@ -148,8 +159,6 @@ export class MarketplaceTesting implements IPlugin {
 
             return account;
           })
-
-
 
         return accounts;
       }

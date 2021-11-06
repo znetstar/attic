@@ -1,46 +1,25 @@
 FROM public.ecr.aws/znetstar/attic-server:3.8.0
 
-FROM ubuntu:20.04
+FROM public.ecr.aws/znetstar/libvips-base:latest
+
+FROM node:14
+
+RUN apt-get update -y && \
+    apt-get install -o Dpkg::Options::="--force-confold"  -y build-essential \
+      python3 && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
 
 COPY --from=0 /opt/attic /opt/attic
+
+COPY --from=1 /opt/vips /opt/vips
 
 ARG NODE_OPTIONS="--max-old-space-size=2560"
 ARG CORES=1
 ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /opt/attic/attic-server
-
-RUN apt-get update -y && apt-get install -y curl && \
-    bash -c 'curl -fsSL https://deb.nodesource.com/setup_14.x | bash -' && \
-    apt-get update -y && \
-    apt-get install -o Dpkg::Options::="--force-confold"  -y imagemagick \
-      libvips-dev \
-      build-essential \
-      libvips-tools \
-      nodejs \
-      python3-gi \
-      gir1.2-vips-8.0 \
-      git  \
-      gobject-introspection  \
-      libjpeg-dev  \
-      libpng-dev \
-      libexif-dev \
-      librsvg2-dev \
-      libpoppler-glib-dev \
-      libpng-dev \
-      libwebp-dev \
-      libopenexr-dev \
-      libheif-dev \
-      libtiff-dev \
-      gtk-doc-tools && \
-    git clone git://github.com/jcupitt/libvips.git /opt/vips && \
-    cd /opt/vips && \
-    ./autogen.sh && \
-    make -j $CORES && \
-    make install  && \
-    ldconfig && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
 
 ENV PATH "$PATH:/opt/attic/attic-server/bin"
 
