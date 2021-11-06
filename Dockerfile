@@ -2,10 +2,13 @@ FROM public.ecr.aws/znetstar/attic-server:3.8.0
 
 FROM public.ecr.aws/znetstar/libvips-base:latest
 
-FROM node:14
+FROM ubuntu:20.04
 
 RUN apt-get update -y && \
+    bash -c 'curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -' && \
+    apt-get update -y && \
     apt-get install -o Dpkg::Options::="--force-confold"  -y build-essential \
+      nodejs \
       python3 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
