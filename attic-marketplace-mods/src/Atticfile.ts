@@ -78,7 +78,8 @@ export class MarketplaceTesting implements IPlugin {
       );
 
 
-      ctx.registerHook('launch.loadWebServer.complete', () => {
+      ctx.registerHook('launch.complete', async(): Promise<void> => {
+        if (!(ctx.webExpress as any)) console.log(ctx);
         (ctx.webExpress as any).get('/version', (req: any, res: any) => {
           res.send({
             name: (ctx.package as any).name,
@@ -89,6 +90,7 @@ export class MarketplaceTesting implements IPlugin {
         (ctx.webExpress as any).get('/', (req: any, res: any) => {
           res.redirect((ctx as any).config.homeRedirect || process.env.HOME_REDIRECT, 301);
         });
+
       });
 
       const rpcMethods: IRPC = ctx.rpcServer.methods as IRPC;
