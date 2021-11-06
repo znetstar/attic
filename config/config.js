@@ -4,7 +4,8 @@ const profiles = [
   { name: 'marketplace', uri: process.env.SITE_URI },
   { name: 'marketplace-production', uri: process.env.PRODUCTION_URI },
   { name: 'marketplace-development', uri: process.env.DEVELOPMENT_URI },
-  { name: 'marketplace-zb-gy', uri: 'https://thirdact-app.e.zb.gy' }
+  { name: 'marketplace-zb-gy', uri: 'https://thirdact-app.e.zb.gy' },
+  { name: 'marketplace-rm', uri: 'https://rm-third-act.ngrok.io' }
 ];
 
 const clients = {
