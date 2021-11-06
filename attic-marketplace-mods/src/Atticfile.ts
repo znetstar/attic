@@ -1,4 +1,3 @@
-import {GenericError} from '@znetstar/attic-common/lib/Error/GenericError'
 import {IApplicationContext as IApplicationContextBase, IConfig, IPlugin} from "@znetstar/attic-common/lib/Server";
 import { default as IRPCBase } from '@znetstar/attic-common/lib/IRPC';
 import {Db, MongoClient, ObjectId} from "mongodb";
