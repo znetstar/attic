@@ -42,7 +42,7 @@ RUN cd /opt/attic-marketplace-mods && \
 
 ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
 
-RUN npm run build \
+RUN npm run build && \
     cd /opt/attic/attic-server && \
     npm ci && \
     npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest @znetstar/attic-server-s3 dotenv
