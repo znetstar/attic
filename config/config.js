@@ -1,11 +1,11 @@
 require('dotenv').config();
 
 const profiles = [
-  { name: 'marketplace', uri: process.env.SITE_URI, clientSecret: '887648ac-57ac-4a43-a219-45845b7b4e2c' },
-  { name: 'marketplace-production', uri: process.env.PRODUCTION_URI, clientSecret: '66e9a727-bb81-4127-9098-f9d909ab4cf2' },
-  { name: 'marketplace-development', uri: process.env.DEVELOPMENT_URI, clientSecret: 'fbf032c8-b0a4-4647-969a-fb63bc21799d'  },
-  { name: 'marketplace-zb-gy', uri: 'https://thirdact-app.e.zb.gy', clientSecret: 'e3bc66d0-6840-492f-b486-b59f5ea39c68' },
-  { name: 'marketplace-rm', uri: 'https://rm-third-act.ngrok.io', clientSecret: 'b46b7c55-fc27-40a4-963f-af7b2ae58325' }
+  { name: 'marketplace', uri: process.env.SITE_URI },
+  { name: 'marketplace-production', uri: process.env.PRODUCTION_URI },
+  { name: 'marketplace-development', uri: process.env.DEVELOPMENT_URI },
+  { name: 'marketplace-zb-gy', uri: 'https://thirdact-app.e.zb.gy' },
+  { name: 'marketplace-rm', uri: 'https://rm-third-act.ngrok.io' }
 ];
 
 const clients = {
@@ -95,11 +95,12 @@ const dbInit = [
 ];
 
 for (const { uri, name } of profiles) {
-  for (const clientId in clients) {
-    const provider = clients[clientId];
+  for (const $clientId in clients) {
+    const provider = clients[$clientId];
+    const clientId = `${name}-${$clientId}`;
     dbInit.push({
       "model": "Client",
-      "query": { "clientId": `${name}-${clientId}` },
+      "query": { "clientId": clientId },
       replace: true,
       "document": {
         ...template,
