@@ -105,9 +105,9 @@ for (const { uri, name } of profiles) {
       "document": {
         ...template,
         clientId: `${name}-${clientId}`,
-        clientSecret: process.env[`ATTIC_${clientId.toUpperCase()}_CLIENT_SECRET`],
+        clientSecret: process.env[`ATTIC_${clientId.toUpperCase().replace(/\-/ig, '_')}_CLIENT_SECRET`],
         name: `${name}-${clientId}`,
-        redirectUri: uri + process.env[`ATTIC_${clientId.toUpperCase()}_REDIRECT_URI`]
+        redirectUri: uri + process.env[`ATTIC_${clientId.toUpperCase().replace(/\-/ig, '_')}_REDIRECT_URI`]
       }
     }, provider);
   }
