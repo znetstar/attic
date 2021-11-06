@@ -113,7 +113,7 @@ module.exports = {
     "@znetstar/attic-server-rest",
     "@znetstar/attic-server-s3",
     [
-      '@thirdact/attic-marketplace-mods', '/opt/attic-marketplace-mods/lib/Atticfile'
+      '@thirdact/attic-marketplace-mods', '/opt/attic-marketplace-mods/lib/Atticfile.js'
     ]
   ],
   siteUri: process.env.ATTIC_URI,
