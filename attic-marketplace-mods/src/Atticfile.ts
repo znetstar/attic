@@ -1,4 +1,3 @@
-import {GenericError} from '@znetstar/attic-common/lib/Error/GenericError'
 import {IApplicationContext as IApplicationContextBase, IConfig, IPlugin} from "@znetstar/attic-common/lib/Server";
 import { default as IRPCBase } from '@znetstar/attic-common/lib/IRPC';
 import {Db, MongoClient, ObjectId} from "mongodb";
@@ -78,6 +77,22 @@ export class MarketplaceTesting implements IPlugin {
         }
       );
 
+
+      ctx.registerHook('launch.complete', async(): Promise<void> => {
+        if (!(ctx.webExpress as any)) console.log(ctx);
+        (ctx.webExpress as any).get('/version', (req: any, res: any) => {
+          res.send({
+            name: (ctx.package as any).name,
+            version: (ctx.package as any).version
+          });
+        });
+
+        (ctx.webExpress as any).get('/', (req: any, res: any) => {
+          res.redirect((ctx as any).config.homeRedirect || process.env.HOME_REDIRECT, 301);
+        });
+
+      });
+
       const rpcMethods: IRPC = ctx.rpcServer.methods as IRPC;
       rpcMethods.marketplaceRandomProfile = async function() {
         const emp = await _.sample(emperors);
@@ -148,8 +163,6 @@ export class MarketplaceTesting implements IPlugin {
 
             return account;
           })
-
-
 
         return accounts;
       }
