@@ -1,4 +1,4 @@
-agent { label 'ta' } {
+node('thirdact') {
     checkout scm
 
     docker.withRegistry('https://981470858920.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:thirdact') {
