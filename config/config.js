@@ -109,8 +109,9 @@ for (const { uri, name } of profiles) {
         name: `${name}-${clientId}`,
         redirectUri: uri + process.env[`ATTIC_${clientId.toUpperCase().replace(/\-/ig, '_')}_REDIRECT_URI`]
       }
-    }, provider);
+    });
   }
+  dbInit.push(provider);
 }
 
 
