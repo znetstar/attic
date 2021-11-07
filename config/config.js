@@ -104,7 +104,7 @@ for (const { uri, name } of profiles) {
       replace: true,
       "document": {
         ...template,
-        clientId: `${name}-${clientId}`,
+        clientId,
         clientSecret: process.env[`ATTIC_${clientId.toUpperCase().replace(/\-/ig, '_')}_CLIENT_SECRET`],
         name: `${name}-${clientId}`,
         redirectUri: uri + process.env[`ATTIC_${clientId.toUpperCase().replace(/\-/ig, '_')}_REDIRECT_URI`]
