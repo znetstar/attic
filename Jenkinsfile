@@ -10,9 +10,9 @@ node('thirdact') {
       ]]) {
          sh "AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}' AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}' aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/znetstar"
          sh 'docker buildx create --use'
-         sh "docker buildx build --platform linux/arm64 --push --build-arg AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}' --build-arg AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}' --build-arg NODE_OPTIONS=--max_old_space_size=78643 -t public.ecr.aws/znetstar/attic-server:\$(bash get-version.sh) ./attic/attic-server"
-         sh "docker build --build-arg AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}' --build-arg AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}' --build-arg NODE_OPTIONS=--max_old_space_size=78643 -t public.ecr.aws/znetstar/attic-server:latest ./attic/attic-server"
-         sh 'docker push public.ecr.aws/znetstar/attic-server:latest'
+         sh "docker build --build-arg AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}' --build-arg AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}' --build-arg NODE_OPTIONS=--max_old_space_size=78643 -t public.ecr.aws/znetstar/attic-server:\$(bash get-version.sh) ./attic/attic-server"
+         sh "docker tag public.ecr.aws/znetstar/attic-server:\$(bash get-version.sh) public.ecr.aws/znetstar/attic-server:latest"
+         sh 'docker push public.ecr.aws/znetstar/attic-server:\$(bash get-version.sh); docker push public.ecr.aws/znetstar/attic-server:latest'
       }
     }
 
