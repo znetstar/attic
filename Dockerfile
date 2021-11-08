@@ -33,8 +33,10 @@ ENV HOST '0.0.0.0'
 
 VOLUME /etc/attic
 
-ADD ./config /etc/attic
+ADD ./config /tmp/attic-config-skel
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
+
+RUN cp -r /tmp/attic-config-skel/* /etc/attic
 
 ADD ./attic-marketplace-mods/package.json /opt/attic-marketplace-mods/package.json
 ADD ./attic-marketplace-mods/package-lock.json /opt/attic-marketplace-mods/package-lock.json
