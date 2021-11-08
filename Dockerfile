@@ -1,4 +1,4 @@
-FROM public.ecr.aws/znetstar/attic-server:3.8.0
+FROM public.ecr.aws/znetstar/attic-server:latest
 
 FROM public.ecr.aws/znetstar/libvips-base:latest
 
