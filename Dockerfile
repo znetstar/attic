@@ -1,4 +1,4 @@
-FROM public.ecr.aws/znetstar/attic-server:3.8.0
+FROM public.ecr.aws/znetstar/attic-server:latest
 
 FROM public.ecr.aws/znetstar/libvips-base:latest
 
@@ -31,7 +31,9 @@ ENV PORT 80
 
 ENV HOST '0.0.0.0'
 
-ADD ./config /etc/attic
+VOLUME /etc/attic
+
+ADD ./config /tmp/attic-config-skel
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 
 ADD ./attic-marketplace-mods/package.json /opt/attic-marketplace-mods/package.json
