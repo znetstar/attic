@@ -110,8 +110,10 @@ for (const { uri, name } of profiles) {
         redirectUri: uri + process.env[`ATTIC_${clientId.toUpperCase().replace(/\-/ig, '_')}_REDIRECT_URI`]
       }
     });
+
+    if (!dbInit.includes(provider))
+      dbInit.push(provider);
   }
-  dbInit.push(provider);
 }
 
 
