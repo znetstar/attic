@@ -36,7 +36,7 @@ VOLUME /etc/attic
 ADD ./config /tmp/attic-config-skel
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN cp -r /tmp/attic-config-skel/* /etc/attic
+RUN cp -r /tmp/attic-config-skel/* /etc/attic && rm -rf /tmp/attic-config-skel
 
 ADD ./attic-marketplace-mods/package.json /opt/attic-marketplace-mods/package.json
 ADD ./attic-marketplace-mods/package-lock.json /opt/attic-marketplace-mods/package-lock.json
