@@ -31,6 +31,8 @@ ENV PORT 80
 
 ENV HOST '0.0.0.0'
 
+VOLUME /etc/attic
+
 ADD ./config /etc/attic
 ADD ./docker-entrypoint.sh /docker-entrypoint.sh
 
