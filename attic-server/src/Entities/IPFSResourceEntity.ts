@@ -136,7 +136,7 @@ export async function copyLocationToNewEntity(inLoc: ILocation&Document, pin?: b
 export async function createEntityFromFile(file: any, pin?: boolean, noLoad?: boolean): Promise<IIPFSResourceEntity&Document> {
   const entity = new IPFSResourceEntity({
     source: {
-      href: `ipfs://ipfs/${file.cid.toString()}${ file.path ? file.path : '' }`
+      href: `ipfs://ipfs/${file.cid.toString()}`
     },
     cid: Buffer.from(file.cid.bytes),
     status: 200,
