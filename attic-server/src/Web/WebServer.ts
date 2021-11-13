@@ -76,6 +76,7 @@ export const DEFAULT_ENCODE_OPTIONS:  EncodingOptions = Object.freeze({
 
 export class AtticExpressTransport extends ExpressTransport {
     protected onRequest(req: any, res: any) {
+      let transport = this;
         const jsonData = (<Buffer>req.body);
         const rawReq = new Uint8Array(jsonData);
 
@@ -107,6 +108,23 @@ export class AtticExpressTransport extends ExpressTransport {
                                 httpMethod: req.method,
                                 httpUrl: req.originalUrl
                             });
+
+                            let error: any = {
+                              message: response.error.message,
+                              stack: response.error.stack,
+                              code: response.error.code,
+                              httpCode: (response.error as any).httpCode,
+                            };
+                            if (response.error.data) {
+                              error.data = {
+                                message: response.error.data.message,
+                                stack: response.error.data.stack,
+                                code: response.error.data.code,
+                                httpCode: response.error.data.httpCode
+                              };
+                            }
+
+                            response.error = error;
                         }
 
                         const respPojo = toPojo(response);
@@ -133,6 +151,8 @@ export class AtticExpressTransport extends ExpressTransport {
                         });
                 }, { req, res }, serializer);
                 clientRequest.serializer = serializer;
+
+               transport.receive(jsonData, clientRequest);
             }
         });
     }
