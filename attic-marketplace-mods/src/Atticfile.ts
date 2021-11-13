@@ -44,6 +44,8 @@ export type IRPC = IRPCBase&{
     image: string
   }>;
   marketplaceCryptoGetCryptoAccount(q: any, hederaFormat?: boolean, pipeline?: any[]): Promise<IMarketplaceCryptoAccount[]>;
+  marketplaceAddRoles(userId: string, roles: string[]): Promise<void>;
+  marketplaceRemoveRoles(userId: string, roles: string[]): Promise<void>;
 };
 
 class MarketplaceCouldNotLocateUserError extends CouldNotLocateUserError {
@@ -94,6 +96,25 @@ export class MarketplaceTesting implements IPlugin {
       });
 
       const rpcMethods: IRPC = ctx.rpcServer.methods as IRPC;
+      rpcMethods.marketplaceAddRoles = async function (q: any, roles: string[]): Promise<void> {
+        if (q._id) q._id = new ObjectId(q._id);
+        await db.collection('users')
+          .updateOne(q, {
+            $addToSet: {
+              roles: { $each: roles }
+            }
+          });
+      }
+      rpcMethods.marketplaceRemoveRoles = async function (q: any, roles: string[]): Promise<void> {
+        if (q._id) q._id = new ObjectId(q._id);
+        await db.collection('users')
+          .updateOne(q, {
+            $pullAll: {
+              roles
+            }
+          });
+      }
+
       rpcMethods.marketplaceRandomProfile = async function() {
         const emp = await _.sample(emperors);
 
