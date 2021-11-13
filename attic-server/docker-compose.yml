@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  attic:
+    build: ./
+    environment:
+      - PORT=80
+      - HOST=0.0.0.0
+      - MONGO_URI=mongodb://mongo:27017/attic
+      - REDIS_URI=redis://redis_cache:6379/0
+      - "LOG_LEVEL=debug"
+      - ROOT_USERNAME=root
+      - ROOT_PASSWORD=root
+      - ROOT_GROUPS=service,root
+      - SERVICE_CLIENT_ID=service
+      - SERVICE_CLIENT_SECRET=service
+      - SERVICE_REDIRECT_URI=http://attic:80
+      - SERVICE_USERNAME=root
+    ports:
+      - "0.0.0.0:7373:80"
+    links:
+      - mongo
+      - redis_cache
+  mongo:
+    image: "mongo:4.4"
+    volumes:
+      - mongo:/data/db
+  redis_cache:
+    image: "redis:6"
+    command: "redis-server --save \"\" --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru"
+volumes:
+  mongo:

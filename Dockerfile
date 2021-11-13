@@ -1,63 +1,65 @@
-FROM public.ecr.aws/znetstar/attic-server:latest
+FROM node:12
 
-FROM public.ecr.aws/znetstar/libvips-base:latest
-
-FROM ubuntu:20.04
-
-RUN apt-get update -y && \
-    apt-get install  -y curl sudo && \
-    bash -c 'curl -fsSL https://deb.nodesource.com/setup_14.x | bash' && \
-    apt-get update -y && \
-    apt-get install -o Dpkg::Options::="--force-confold"  -y build-essential \
-      nodejs \
-      python3 && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
-
-
-COPY --from=0 /opt/attic /opt/attic
-
-COPY --from=1 /opt/vips /opt/vips
-
-ARG NODE_OPTIONS="--max-old-space-size=2560"
-ARG CORES=1
-ENV DEBIAN_FRONTEND noninteractive
-
-WORKDIR /opt/attic/attic-server
-
-ENV PATH "$PATH:/opt/attic/attic-server/bin"
-
-ENV PORT 80
-
-ENV HOST '0.0.0.0'
-
-VOLUME /etc/attic
-
-ADD ./config /tmp/attic-config-skel
-ADD ./docker-entrypoint.sh /docker-entrypoint.sh
-
-ADD ./attic-marketplace-mods/package.json /opt/attic-marketplace-mods/package.json
-ADD ./attic-marketplace-mods/package-lock.json /opt/attic-marketplace-mods/package-lock.json
-
-RUN cd /opt/attic-marketplace-mods && \
-    npm ci
-
-ADD ./attic-marketplace-mods /opt/attic-marketplace-mods
-
-RUN cd /opt/attic-marketplace-mods && \
+ADD ./attic-common /app/attic-common
+WORKDIR /app/attic-common
+RUN npm ci && \
     npm run build && \
-    cd /opt/attic/attic-server && \
-    npm ci && \
-    npm install --no-save @etomon/attic-server-google @znetstar/attic-server-rest @znetstar/attic-server-s3 dotenv
+    npm link && \
+    npm prune --production && \
+    npm cache clean --force
 
-ENV EMAIL_HOSTNAME social
+ADD ./attic-cli-common /app/attic-cli-common
+WORKDIR /app/attic-cli-common
+RUN npm ci && \
+    npm run build && \
+    npm link @znetstar/attic-common && \
+    npm link && \
+    npm prune --production && \
+    npm cache clean --force
 
-ENV LOG_LEVEL "info"
+ADD ./attic-cli-url-shortener /app/attic-cli-url-shortener
+WORKDIR /app/attic-cli-url-shortener
+RUN npm ci && \
+    npm pack && \
+    rm -rf ./znetstar-attic-cli-url-*.tgz && \
+    npm link @znetstar/attic-common && \
+    npm link @znetstar/attic-cli-common && \
+    npm link && \
+    npm prune --production && \
+    npm cache clean --force
 
-EXPOSE 80
+ADD ./attic-cli /app/attic-cli
+WORKDIR /app/attic-cli
+RUN npm ci && \
+    npm pack && \
+    rm -rf ./znetstar-attic-cli-*.tgz && \
+    npm link @znetstar/attic-common && \
+    npm link @znetstar/attic-cli-common && \
+    npm link @znetstar/attic-cli-url-shortener && \
+    ln -sv /app/attic-cli/bin/run /usr/local/bin/attic-cli && \
+    npm prune --production && \
+    npm cache clean --force
 
-VOLUME /root/.jsipfs
+ADD ./attic-server /app/attic-server
+WORKDIR /app/attic-server
+RUN npm ci && \
+    npm run build && \
+    npm link @znetstar/attic-common && \
+    ln -s /app/attic-server/bin/attic-server /usr/local/bin/attic-server && \
+    npm prune --production && \
+    npm cache clean --force
 
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+WORKDIR /app
 
-CMD [ "attic-server",  "-f", "/etc/attic/config.json" ]
+ENV NODE_ENV production
+
+ENV PATH /usr/local/bin:$PATH
+
+ENV WEB_RESOLVER_HOST 0.0.0.0
+
+ENV HOST 0.0.0.0
+
+EXPOSE 7373
+
+EXPOSE 3737
+
