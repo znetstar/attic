@@ -97,6 +97,7 @@ export class AtticExpressTransport extends ExpressTransport {
             else {
                 const jsonData = (<Buffer>req.body);
                 const rawReq = Buffer.from(jsonData);
+                const serializer = new EncodeToolsSerializer({ serializationFormat: inFormat });
                 const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
                     const headers: any = {};
 
@@ -130,7 +131,8 @@ export class AtticExpressTransport extends ExpressTransport {
                                 response ? response : void(0)
                             ]
                         });
-                }, { req, res }, new EncodeToolsSerializer({ serializationFormat: inFormat }));
+                }, { req, res }, serializer);
+                clientRequest.serializer = serializer;
             }
         });
     }
