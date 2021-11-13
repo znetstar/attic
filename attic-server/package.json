@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.8.1",
+    "version": "3.8.2",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -107,8 +107,8 @@
         "mmmagic": "^0.5.3",
         "mongoose": "^5.10.0",
         "multer": "^1.4.3",
-        "multi-rpc": "^1.8.4",
-        "multi-rpc-common": "^2.4.3",
+        "multi-rpc": "^1.9.0",
+        "multi-rpc-common": "^2.5.0",
         "multi-rpc-express-transport": "^1.1.2",
         "multi-rpc-json-serializer": "^1.1.1",
         "nanoid": "^3.1.12",

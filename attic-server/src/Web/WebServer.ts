@@ -75,19 +75,6 @@ export const DEFAULT_ENCODE_OPTIONS:  EncodingOptions = Object.freeze({
 });
 
 export class AtticExpressTransport extends ExpressTransport {
-
-    protected makeInstance(encodingOptions: EncodingOptions): AtticExpressTransport {
-      return new Proxy(this as AtticExpressTransport,  {
-        get(target: AtticExpressTransport, p: PropertyKey, receiver: any): any {
-          if (p !== 'serializer') {
-            return (target as any)[p];
-          } else {
-            return new EncodeToolsSerializer(encodingOptions);
-          }
-        }
-      })
-    }
-
     protected onRequest(req: any, res: any) {
         const jsonData = (<Buffer>req.body);
         const rawReq = new Uint8Array(jsonData);
@@ -143,9 +130,7 @@ export class AtticExpressTransport extends ExpressTransport {
                                 response ? response : void(0)
                             ]
                         });
-                }, { req, res });
-
-                this.makeInstance({ serializationFormat: inFormat }).receive(rawReq, clientRequest);
+                }, { req, res }, new EncodeToolsSerializer({ serializationFormat: inFormat }));
             }
         });
     }
