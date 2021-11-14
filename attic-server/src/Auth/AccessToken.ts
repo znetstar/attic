@@ -17,6 +17,7 @@ import {
 } from "@znetstar/attic-common/lib/Error/AccessToken";
 import RPCServer from "../RPC";
 import ApplicationContext from "../ApplicationContext";
+import {BasicFindOptions} from "@znetstar/attic-common/lib/IRPC";
 
 export {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 
@@ -155,7 +156,7 @@ export function getValidInvalidScopes(scopes: string[], client: IClient, user: I
 }
 
 AccessTokenSchema.post('save', async function (doc: IAccessToken&Document){
-    if (doc.tokenType === TokenTypes.Bearer && doc.linkedToken) {
+    if (doc.tokenType === TokenTypes.Bearer && doc.linkedToken && ApplicationContext.config.deleteExistingAccessTokensUponTokenRefresh) {
         await AccessToken.deleteMany({ tokenType: TokenTypes.Bearer, linkedToken: doc.linkedToken, _id: { $ne: doc._id } });
     }
 });
@@ -291,6 +292,59 @@ RPCServer.methods.selfAccessTokenFromRefresh = async function (id: string) {
     if (!token) throw new ((global as any).ApplicationContext.errors.getErrorByName('AccessTokenNotFoundError') as any)();
 
     return accessTokenFromRefresh(token);
+}
+export async function findAccessTokens(query: BasicFindOptions) {
+  let tokensQuery = (AccessToken.find(query.query));
+  if (query.count) {
+    const count = await tokensQuery.count().exec();
+    return count;
+  }
+  if (query.sort) tokensQuery.sort(query.sort);
+  if (!Number.isNaN(Number(query.skip))) tokensQuery.skip(query.skip);
+  if (!Number.isNaN(Number(query.limit))) tokensQuery.limit(query.limit);
+  if (query.populate) tokensQuery.populate(query.populate);
+  let tokens = await tokensQuery.exec();
+  return tokens;
+}
+
+RPCServer.methods.findAccessTokens = async function (query: BasicFindOptions) {
+  const tokens = await findAccessTokens(query);
+  return query.count ? tokens : (tokens as (IAccessToken&Document)[]).map((t) => t.toJSON({ virtuals: true }));
+}
+
+RPCServer.methods.findSelfAccessTokens = async function (query: BasicFindOptions) {
+  let { user } = userFromRpcContext(this);
+  query.query = query.query || {};
+  query.query.user = user._id;
+  const tokens = await findAccessTokens(query);
+  return query.count ? tokens : (tokens as (IAccessToken&Document)[]).map((t) => t.toJSON({ virtuals: true }));
+}
+
+RPCServer.methods.selfAccessTokenToFormal = async function (id: string) {
+  let { user } = userFromRpcContext(this);
+  const token = await AccessToken.findOne({ _id: new ObjectId(id), user: user._id }).exec();
+
+  if (!token) return null;
+
+  return toFormalToken(token);
+}
+
+RPCServer.methods.accessTokenToFormal = async function (id: string) {
+  const token = await AccessToken.findById(id).exec();
+
+  if (!token) return null;
+
+  return toFormalToken(token);
+}
+
+
+RPCServer.methods.getRPCContext = async function (): Promise<{ accessToken: IAccessToken, user: IUser, formalAccessToken: IFormalAccessToken }> {
+  let { context, user } = userFromRpcContext(this);
+  return {
+    formalAccessToken: await toFormalToken(context.accessToken),
+    accessToken: context.accessToken,
+    user: user.toJSON({ virtuals: true })
+  }
 }
 
 export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|IUser|null, client: IClient, role: IClientRole): { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document } {

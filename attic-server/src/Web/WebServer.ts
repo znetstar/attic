@@ -75,20 +75,8 @@ export const DEFAULT_ENCODE_OPTIONS:  EncodingOptions = Object.freeze({
 });
 
 export class AtticExpressTransport extends ExpressTransport {
-
-    protected makeInstance(encodingOptions: EncodingOptions): AtticExpressTransport {
-      return new Proxy(this as AtticExpressTransport,  {
-        get(target: AtticExpressTransport, p: PropertyKey, receiver: any): any {
-          if (p !== 'serializer') {
-            return (target as any)[p];
-          } else {
-            return new EncodeToolsSerializer(encodingOptions);
-          }
-        }
-      })
-    }
-
     protected onRequest(req: any, res: any) {
+      let transport = this;
         const jsonData = (<Buffer>req.body);
         const rawReq = new Uint8Array(jsonData);
 
@@ -110,6 +98,7 @@ export class AtticExpressTransport extends ExpressTransport {
             else {
                 const jsonData = (<Buffer>req.body);
                 const rawReq = Buffer.from(jsonData);
+                const serializer = new EncodeToolsSerializer({ serializationFormat: inFormat });
                 const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
                     const headers: any = {};
 
@@ -119,6 +108,23 @@ export class AtticExpressTransport extends ExpressTransport {
                                 httpMethod: req.method,
                                 httpUrl: req.originalUrl
                             });
+
+                            let error: any = {
+                              message: response.error.message,
+                              stack: response.error.stack,
+                              code: response.error.code,
+                              httpCode: (response.error as any).httpCode,
+                            };
+                            if (response.error.data) {
+                              error.data = {
+                                message: response.error.data.message,
+                                stack: response.error.data.stack,
+                                code: response.error.data.code,
+                                httpCode: response.error.data.httpCode
+                              };
+                            }
+
+                            response.error = error;
                         }
 
                         const respPojo = toPojo(response);
@@ -143,9 +149,10 @@ export class AtticExpressTransport extends ExpressTransport {
                                 response ? response : void(0)
                             ]
                         });
-                }, { req, res });
+                }, { req, res }, serializer);
+                clientRequest.serializer = serializer;
 
-                this.makeInstance({ serializationFormat: inFormat }).receive(rawReq, clientRequest);
+               transport.receive(jsonData, clientRequest);
             }
         });
     }

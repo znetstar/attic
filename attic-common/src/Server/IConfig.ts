@@ -157,6 +157,7 @@ export interface IConfig {
     logListening?: boolean;
     cacheNon200HTTPResponses?: boolean;
     allowClientOverride?: boolean;
+    deleteExistingAccessTokensUponTokenRefresh?: boolean;
     allowRootUserOverride?: boolean;
     allowUnauthorizedUserOverride?: boolean;
 
