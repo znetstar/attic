@@ -36,6 +36,7 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     hostname: os.hostname(),
     authorizeGracePeriod: 5*60e3,
     defaultScopeJoin: ' ',
+    deleteExistingAccessTokensUponTokenRefresh: true,
     unauthorizedUserName: 'guest',
     unauthorizedUserGroups: [ 'guest' ],
     npmOptions: {},

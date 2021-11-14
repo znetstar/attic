@@ -156,7 +156,7 @@ export function getValidInvalidScopes(scopes: string[], client: IClient, user: I
 }
 
 AccessTokenSchema.post('save', async function (doc: IAccessToken&Document){
-    if (doc.tokenType === TokenTypes.Bearer && doc.linkedToken) {
+    if (doc.tokenType === TokenTypes.Bearer && doc.linkedToken && ApplicationContext.config.deleteExistingAccessTokensUponTokenRefresh) {
         await AccessToken.deleteMany({ tokenType: TokenTypes.Bearer, linkedToken: doc.linkedToken, _id: { $ne: doc._id } });
     }
 });
