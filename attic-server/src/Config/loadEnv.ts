@@ -32,6 +32,7 @@
         'UNIX_SOCKET',
         'EMAIL_HOSTNAME',
         'ENABLE_CACHE',
+        'ENABLE_IPFS',
         'CACHE_SIZE',
         'CACHE_MAX',
         'CACHE_EXPIRE_IN',
