@@ -99,12 +99,20 @@ IPFSResourceEntitySchema.methods.getCid = function (): typeof CID {
 IPFSResourceEntitySchema.methods.pin = async function (){
   const cid = this.getCid();
 
+  // if (this.$locals.pinned) {
+  //   ApplicationContext.logs.silly(`skipping pinning IPFS file ${(this as IIPFSResourceEntity).source.href} because already pinned`);
+  // } else {
+  //   this.$locals.pinned = true;
+    ApplicationContext.logs.silly(`pinnned IPFS file ${(this as IIPFSResourceEntity).source.href}`);
+  //
+  // }
   await ApplicationContext.ipfsClient.pin.add(cid);
 }
 
 IPFSResourceEntitySchema.methods.unpin = async function (){
   const cid = this.getCid();
 
+  ApplicationContext.logs.silly(`unpinned IPFS file ${(this as IIPFSResourceEntity).source.href}`);
   await ApplicationContext.ipfsClient.pin.rm(cid);
 }
 
@@ -118,7 +126,8 @@ IPFSResourceEntitySchema.pre<IIPFSResourceEntity&Document>('save', async functio
 IPFSResourceEntitySchema.index({ cid: 1 }, {});
 IPFSResourceEntitySchema.index({ cid: 1, path: 1 }, { unique: true });
 
-export async function copyLocationToNewEntity(inLoc: ILocation&Document, pin?: boolean): Promise<IIPFSResourceEntity&Document> {
+export async function copyLocationToNewEntity(inLoc: ILocation&Document, pin?: boolean, opts?: unknown): Promise<IIPFSResourceEntity&Document> {
+  opts = opts || ApplicationContext.config.defaultIpfsAddOpts;
   if (!inLoc.driver || !ApplicationContext.config.drivers.includes(inLoc.driver)) {
     throw new HTTPMirroredLocationMustHaveDriverError();
   }
@@ -129,11 +138,20 @@ export async function copyLocationToNewEntity(inLoc: ILocation&Document, pin?: b
   const driver = new Driver();
 
   const buf = await driver.get(inLoc);
-  const file = await ApplicationContext.ipfsClient.add(buf.body, { pin });
+
+  const file = await ApplicationContext.ipfsClient.add(buf.body, { pin, ...((opts as any)||{}) });
+
+  await ApplicationContext.triggerHook(`IPFSResourceEntity.copyLocationToNewEntity.complete`, {
+    ipfsFile: file
+  });
+
   return createEntityFromFile(file, pin, true);
 }
 
 export async function createEntityFromFile(file: any, pin?: boolean, noLoad?: boolean): Promise<IIPFSResourceEntity&Document> {
+  await ApplicationContext.triggerHook(`IPFSResourceEntity.createEntityFromFile.start`, {
+    ipfsFile: file
+  });
   const entity = new IPFSResourceEntity({
     source: {
       href: `ipfs://ipfs/${file.cid.toString()}`
@@ -146,6 +164,12 @@ export async function createEntityFromFile(file: any, pin?: boolean, noLoad?: bo
   }) as IIPFSResourceEntity&Document;
 
   if (!noLoad) await entity.load();
+
+  await ApplicationContext.triggerHook(`IPFSResourceEntity.createEntityFromFile.complete`, {
+    ipfsFile: file,
+    entity
+  });
+
 
   return entity;
 }
@@ -189,11 +213,12 @@ RPCServer.methods.unpinIPFSEntity = async function (id: string): Promise<void> {
   await ipfsEntity.unpin();
 }
 
-RPCServer.methods.copyLocationToNewIPFSEntity = async function (location: any, pin?: boolean): Promise<string|null> {
+RPCServer.methods.copyLocationToNewIPFSEntity = async function (location: any, pin?: boolean, opts?: unknown): Promise<string|null> {
+  opts = opts || ApplicationContext.config.defaultIpfsAddOpts;
   const inLoc = await Location.hydrate(location).populate('entity').execPopulate();
 
   if (!inLoc) return null;
-  let entity = await copyLocationToNewEntity(inLoc, pin);
+  let entity = await copyLocationToNewEntity(inLoc, pin, opts);
   let existingEntity: IIPFSResourceEntity&Document|undefined = await IPFSResourceEntity.findOne({
     cid: entity.cid
   }).exec() as IIPFSResourceEntity&Document|undefined ;
@@ -207,3 +232,36 @@ RPCServer.methods.copyLocationToNewIPFSEntity = async function (location: any, p
 
 const IPFSResourceEntity = Entity.discriminator('IPFSResourceEntity', IPFSResourceEntitySchema)
 export default IPFSResourceEntity;
+
+
+if (ApplicationContext.config.enableIpfs) {
+  ApplicationContext.on('IPFSResourceEntity.loadAutoPinnedIpfsFiles', async function () {
+    ApplicationContext.logs.debug(`pinning all autopinned IPFS files`);
+    await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.start');
+    const alreadyPinnedCids: Buffer[] = [];
+    for await (let cid of ApplicationContext.ipfsClient.pin.ls()) {
+      alreadyPinnedCids.push(Buffer.from(cid.cid.bytes));
+    }
+    const autopinnedFiles = IPFSResourceEntity.find({ autopin: true, cid: { $nin: alreadyPinnedCids } }).cursor();
+    let autopinnedFile: IIPFSResourceEntity&Document;
+    let  promises: any =  [];
+    while (autopinnedFile = await autopinnedFiles.next()) {
+      promises.push((async (autopinnedFile: any) => {
+        try {
+          await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.loadAutoPinnedFile.start', autopinnedFile);
+          await autopinnedFile.pin();
+          await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.loadAutoPinnedFile.complete', autopinnedFile);
+        } catch (err) {
+          ApplicationContext.logs.warn(`error autopinning file: `+err.stack);
+        }
+      }).bind(null, autopinnedFile));
+    }
+
+    await Promise.all(promises.map((fn: any) => fn()));
+    await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.complete');
+  });
+  if (ApplicationContext.config.loadAutoPinnedIpfsFilesOnStart)
+    ApplicationContext.on('launch.complete', async () =>  {
+      await  ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles')
+    });
+}

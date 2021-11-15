@@ -36,6 +36,7 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     hostname: os.hostname(),
     authorizeGracePeriod: 5*60e3,
     defaultScopeJoin: ' ',
+  loadAutoPinnedIpfsFilesOnStart: false,
     deleteExistingAccessTokensUponTokenRefresh: true,
     unauthorizedUserName: 'guest',
     unauthorizedUserGroups: [ 'guest' ],
@@ -73,6 +74,7 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     ],
     logLevel: LogLevels.info,
     autoLogEvents: true,
+
     logErrors: true,
     logListening: true,
 

@@ -33,6 +33,7 @@
         'EMAIL_HOSTNAME',
         'ENABLE_CACHE',
         'ENABLE_IPFS',
+        'LOAD_AUTO_PINNED_IPFS_FILES_ON_START',
         'CACHE_SIZE',
         'CACHE_MAX',
         'CACHE_EXPIRE_IN',
