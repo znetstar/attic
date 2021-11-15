@@ -14,7 +14,12 @@ import * as ws from 'ws';
 import * as _ from 'lodash';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
 import * as cors from 'cors';
-import {EncodingOptions, SerializationFormat, SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {
+  EncodingOptions,
+  MimeTypesSerializationFormat,
+  SerializationFormat,
+  SerializationFormatMimeTypes
+} from "@etomon/encode-tools/lib/EncodeTools";
 import {
   EncodeToolsAuto as EncodeTools
 } from "@etomon/encode-tools/lib/EncodeToolsAuto";
@@ -80,8 +85,29 @@ export class AtticExpressTransport extends ExpressTransport {
         const jsonData = (<Buffer>req.body);
         const rawReq = new Uint8Array(jsonData);
 
-        const { inFormat, outFormat  } = getFormatsFromContext({ req, res }, (DEFAULT_ENCODE_OPTIONS));
-        const enc = new EncodeTools();
+      const enc = new EncodeTools(DEFAULT_ENCODE_OPTIONS);
+      let inFormat: SerializationFormat = enc.options.serializationFormat as SerializationFormat;
+      let outFormat: SerializationFormat = inFormat;
+
+      if (req.headers['content-type'])  {
+        const mime =  (req.headers['content-type'] as string).split(';').shift() as string;
+        const format = MimeTypesSerializationFormat.get(mime);
+        if (format)
+          inFormat = format as SerializationFormat;
+      }
+      if (req.headers['accept'])  {
+        const mime =  (req.headers['accept'] as string).split(';').shift() as string;
+        const format = MimeTypesSerializationFormat.get(mime);
+        if (format)
+          outFormat = format as SerializationFormat;
+      }
+
+      const inSerializer = new EncodeToolsSerializer({
+        serializationFormat: inFormat
+      });
+      const outSerializer = new EncodeToolsSerializer({
+        serializationFormat: outFormat
+      })
         const body = inFormat === 'json' ? JSON.parse(Buffer.from(rawReq).toString('utf8')) : enc.deserializeObject<any>(rawReq, inFormat);
 
         ApplicationContext.logs.silly({
@@ -101,6 +127,7 @@ export class AtticExpressTransport extends ExpressTransport {
                 const serializer = new EncodeToolsSerializer({ serializationFormat: inFormat });
                 const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
                     const headers: any = {};
+
 
                     if (response) {
                         if (response.error) {
@@ -126,11 +153,8 @@ export class AtticExpressTransport extends ExpressTransport {
 
                             response.error = error;
                         }
-
-                        const respPojo = toPojo(response);
-
-                        const outBuf = enc.serializeObject(respPojo, outFormat);
-                        headers["Content-Type"] = SerializationFormatMimeTypes.get(outFormat);
+                        const outBuf = outSerializer.serialize(response);
+                        headers["Content-Type"] = outSerializer.content_type;
                         headers['Content-Length'] = Buffer.from(outBuf).byteLength;
 
                         // response.error.message
@@ -150,7 +174,8 @@ export class AtticExpressTransport extends ExpressTransport {
                             ]
                         });
                 }, { req, res }, serializer);
-                clientRequest.serializer = serializer;
+                clientRequest.serializer = inSerializer
+                ;
 
                transport.receive(jsonData, clientRequest);
             }
