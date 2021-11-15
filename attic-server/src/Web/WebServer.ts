@@ -20,7 +20,7 @@ import {
   SerializationFormat,
   SerializationFormatMimeTypes
 } from "@etomon/encode-tools/lib/EncodeTools";
-import {
+import EncodeToolsAuto, {
   EncodeToolsAuto as EncodeTools
 } from "@etomon/encode-tools/lib/EncodeToolsAuto";
 import { toPojo } from '@thirdact/to-pojo'
@@ -138,7 +138,6 @@ export class AtticExpressTransport extends ExpressTransport {
 
                             let error: any = {
                               message: response.error.message,
-                              stack: response.error.stack,
                               code: response.error.code,
                               httpCode: (response.error as any).httpCode,
                             };
@@ -153,7 +152,7 @@ export class AtticExpressTransport extends ExpressTransport {
 
                             response.error = error;
                         }
-                        const outBuf = outSerializer.serialize(response);
+                        const outBuf = (new EncodeToolsAuto({ serializationFormat: outFormat })).serializeObject(response);
                         headers["Content-Type"] = outSerializer.content_type;
                         headers['Content-Length'] = Buffer.from(outBuf).byteLength;
 
