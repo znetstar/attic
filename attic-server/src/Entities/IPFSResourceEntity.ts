@@ -235,20 +235,21 @@ export default IPFSResourceEntity;
 
 
 if (ApplicationContext.config.enableIpfs) {
+  const alreadyPinnedCids = new Set<Buffer>();
   ApplicationContext.on('IPFSResourceEntity.loadAutoPinnedIpfsFiles', async function () {
     ApplicationContext.logs.debug(`pinning all autopinned IPFS files`);
     await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.start');
-    const alreadyPinnedCids: Buffer[] = [];
     for await (let cid of ApplicationContext.ipfsClient.pin.ls()) {
-      alreadyPinnedCids.push(Buffer.from(cid.cid.bytes));
+      alreadyPinnedCids.add(Buffer.from(cid.cid.bytes));
     }
-    const autopinnedFiles = IPFSResourceEntity.find({ autopin: true, cid: { $nin: alreadyPinnedCids } }).cursor();
+    const autopinnedFiles = IPFSResourceEntity.find({ autopin: true, cid: { $nin: Array.from(alreadyPinnedCids.values()) } }).cursor();
     let autopinnedFile: IIPFSResourceEntity&Document;
     let  promises: any =  [];
     while (autopinnedFile = await autopinnedFiles.next()) {
       promises.push((async (autopinnedFile: any) => {
         try {
           await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.loadAutoPinnedFile.start', autopinnedFile);
+          alreadyPinnedCids.add(autopinnedFile.cid);
           await autopinnedFile.pin();
           await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.loadAutoPinnedFile.complete', autopinnedFile);
         } catch (err) {
