@@ -168,6 +168,9 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.authorizatio
         grantType,
         code
     } = getAccessTokenForm(req);
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.grantTypes.authorization_code.start`, {
+    request: req
+  });
 
     if (!code) {
         throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
@@ -222,13 +225,19 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.authorizatio
     }
 
     accessToken.linkedToken = refreshToken._id;
-    return {
-        accessToken,
-        refreshToken
-    }
+    const resp = {
+      accessToken,
+      refreshToken
+    };
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.grantTypes.authorization_code.complete`, {
+    request: req,
+    response: resp
+  });
+    return resp;
 });
 
 async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessToken> {
+  const informalForm = getAccessTokenForm(form);
     let {
         password,
         username,
@@ -239,7 +248,11 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
         clientSecret,
         grantType,
         code
-    } = getAccessTokenForm(form);
+    } = informalForm;
+
+    ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.start`, {
+       request: form
+    });
 
     const enforceRedirectUri = !config.allowGetTokenWithNoRedirectUri || !config.allowGetTokenWithNoRedirectUri.includes(grantType);
     let grantEvent = `Web.AuthMiddleware.getAccessToken.grantTypes.${grantType || ''}`;
@@ -279,7 +292,14 @@ async function getAccessToken (form: OAuthTokenRequest): Promise<IFormalAccessTo
     if (refreshToken)
         await refreshToken.save();
 
-    return toFormalToken(accessToken);
+    const formalAccessToken = await toFormalToken(accessToken);
+
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.complete`, {
+    request: form,
+    response: formalAccessToken
+  });
+
+    return formalAccessToken;
 }
 
 RPCServer.methods.getAccessToken = getAccessToken;
@@ -336,6 +356,9 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
         username,
         scope
     } = getAccessTokenForm(req);
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.grantTypes.password.start`, {
+    request: req
+  });
 
     if (!user) {
         if (!password || !username) {
@@ -389,10 +412,16 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.password', a
     }
 
     accessToken.linkedToken = refreshToken._id;
-    return {
-        accessToken,
-        refreshToken
-    }
+
+    const resp = {
+      accessToken,
+      refreshToken
+    };
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.grantTypes.password.complete`, {
+    request: req,
+    response: resp
+  });
+    return resp;
 });
 
 ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_credentials', async function (client: IClient&Document, req: OAuthTokenRequest) {
@@ -404,6 +433,10 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_crede
         scope,
         username
     } = getAccessTokenForm(req);
+
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.grantTypes.client_credentials.start`, {
+    request: req
+  });
 
     if (!clientSecret || !clientId || !scope || !scope.length) {
         throw new ((global as any).ApplicationContext.errors.getErrorByName('MalformattedTokenRequestError') as any)();
@@ -461,10 +494,16 @@ ApplicationContext.on('Web.AuthMiddleware.getAccessToken.grantTypes.client_crede
     }
 
     accessToken.linkedToken = refreshToken._id;
-    return {
-        accessToken,
-        refreshToken
-    }
+
+    const resp = {
+      accessToken,
+      refreshToken
+    };
+  ApplicationContext.logs.silly(`AuthMiddleware.getAccessToken.grantTypes.client_credentials.complete`, {
+    request: req,
+    response: resp
+  });
+    return resp;
 });
 
 

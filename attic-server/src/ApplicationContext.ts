@@ -84,7 +84,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     makeRandomToken(): string {
       return EncodeToolsNative.WithDefaults.encodeBuffer(
         Buffer.from(EncodeToolsNative.WithDefaults.uniqueId(IDFormat.uuidv4)),
-        BinaryEncoding.base64
+        BinaryEncoding.base64url
       ).toString();
     }
 
