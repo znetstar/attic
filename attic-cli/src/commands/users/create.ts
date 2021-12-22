@@ -74,6 +74,6 @@ export default class UserCreate extends Create {
 
     let outObject = { id: userId, username: user.username };
 
-    console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'username' ]));
+    /* console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'username' ]); */);
   }
 }

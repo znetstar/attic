@@ -90,6 +90,6 @@ export default class LocationUpdate extends Create {
     }
     const outObject = await RPCProxy.updateLocation(flags.id, location);
 
-    console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'href' ]));
+    /* console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'href' ]); */);
   }
 }

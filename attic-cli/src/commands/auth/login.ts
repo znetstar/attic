@@ -75,6 +75,6 @@ export default class Login extends Command {
 
     let output: string = <string>formatOutputFromFlags(token, flags, [ 'access_token', 'refresh_token', 'scope' ]);
 
-    console.log(output);
+    /* console.log(output); */
   }
 }

@@ -32,6 +32,6 @@ export default class ResolveEntity extends Resolve {
     }
     let outString = formatOutputFromFlags(outEntity, flags, [   'id', 'type', 'source.href' ])
 
-    console.log(outString);
+    /* console.log(outString); */
   }
 }

@@ -19,6 +19,6 @@ export default class ResolverList extends List {
 
     let outObj = [].concat((resolverTypes as any) || []).map(c => ({ resolverType: c }));
     output = <string>formatOutputFromFlags(outObj, flags);
-    console.log(output);
+    /* console.log(output); */
   }
 }

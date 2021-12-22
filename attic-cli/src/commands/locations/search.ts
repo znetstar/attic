@@ -19,6 +19,6 @@ export default class LocationSearch extends Search {
 
     let output: string = <string>formatOutputFromFlags(locs, flags, [ 'id', 'href', 'driver', 'expiresAt' ]);
 
-    console.log(output);
+    /* console.log(output); */
   }
 }

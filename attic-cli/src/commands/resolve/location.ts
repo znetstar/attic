@@ -27,6 +27,6 @@ export default class ResolveLocation extends Resolve {
     let outLocation = await RPCProxy.resolve(location, { id:  flags.id, noCache: flags.noCache});
     let outString = formatOutputFromFlags(outLocation, flags, [ 'id', 'href' ])
 
-    console.log(outString);
+    /* console.log(outString); */
   }
 }

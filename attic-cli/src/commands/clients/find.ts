@@ -95,6 +95,6 @@ export default class LocationFind extends Find {
     let locs = await RPCProxy.findLocations(findOptions);
 
 
-    console.log(formatOutputFromFlags(locs, flags, [ 'id', 'href', 'driver', 'expiresAt' ]));
+    /* console.log(formatOutputFromFlags(locs, flags, [ 'id', 'href', 'driver', 'expiresAt' ]); */);
   }
 }
