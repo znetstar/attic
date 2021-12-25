@@ -54,6 +54,7 @@ export interface IConfig {
     redisUri?: string;
     authorizeGracePeriod?: number;
     expireTokenIn?: number;
+    loadAutoPinnedIpfsFilesOnStart?: boolean;
     defaultScopeJoin?: string;
     expireRefreshTokenIn?: number;
     updateIdentityUponTokenRefresh?: boolean;
@@ -157,6 +158,7 @@ export interface IConfig {
     logListening?: boolean;
     cacheNon200HTTPResponses?: boolean;
     allowClientOverride?: boolean;
+    deleteExistingAccessTokensUponTokenRefresh?: boolean;
     allowRootUserOverride?: boolean;
     allowUnauthorizedUserOverride?: boolean;
 
@@ -165,6 +167,7 @@ export interface IConfig {
 
     enableIpfs?: boolean;
     ipfsOptions?: { [name: string]: unknown; }
+    defaultIpfsAddOpts?: unknown;
 
     // accessTokenFormat?: unknown;
     // accessTokenEncoding?: unknown;

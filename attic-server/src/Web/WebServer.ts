@@ -14,10 +14,23 @@ import * as ws from 'ws';
 import * as _ from 'lodash';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
 import * as cors from 'cors';
+<<<<<<< HEAD
 import {EncodingOptions, SerializationFormat, SerializationFormatMimeTypes} from "@znetstar/encode-tools/lib/EncodeTools";
 import {
   EncodeTools as EncodeTools
 } from "@znetstar/encode-tools/lib/EncodeTools";
+=======
+import {
+  EncodingOptions,
+  MimeTypesSerializationFormat,
+  SerializationFormat,
+  SerializationFormatMimeTypes
+} from "@etomon/encode-tools/lib/EncodeTools";
+import EncodeToolsAuto, {
+  EncodeToolsAuto as EncodeTools
+} from "@etomon/encode-tools/lib/EncodeToolsAuto";
+import { toPojo } from '@thirdact/to-pojo'
+>>>>>>> origin/master
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
 const multer  = require('multer')
 
@@ -74,25 +87,34 @@ export const DEFAULT_ENCODE_OPTIONS:  EncodingOptions = Object.freeze({
 });
 
 export class AtticExpressTransport extends ExpressTransport {
-
-    protected makeInstance(encodingOptions: EncodingOptions): AtticExpressTransport {
-      return new Proxy(this as AtticExpressTransport,  {
-        get(target: AtticExpressTransport, p: PropertyKey, receiver: any): any {
-          if (p !== 'serializer') {
-            return (target as any)[p];
-          } else {
-            return new EncodeToolsSerializer(encodingOptions);
-          }
-        }
-      })
-    }
-
     protected onRequest(req: any, res: any) {
+      let transport = this;
         const jsonData = (<Buffer>req.body);
         const rawReq = new Uint8Array(jsonData);
 
-        const { inFormat, outFormat  } = getFormatsFromContext({ req, res }, (DEFAULT_ENCODE_OPTIONS));
-        const enc = new EncodeTools();
+      const enc = new EncodeTools(DEFAULT_ENCODE_OPTIONS);
+      let inFormat: SerializationFormat = enc.options.serializationFormat as SerializationFormat;
+      let outFormat: SerializationFormat = inFormat;
+
+      if (req.headers['content-type'])  {
+        const mime =  (req.headers['content-type'] as string).split(';').shift() as string;
+        const format = MimeTypesSerializationFormat.get(mime);
+        if (format)
+          inFormat = format as SerializationFormat;
+      }
+      if (req.headers['accept'])  {
+        const mime =  (req.headers['accept'] as string).split(';').shift() as string;
+        const format = MimeTypesSerializationFormat.get(mime);
+        if (format)
+          outFormat = format as SerializationFormat;
+      }
+
+      const inSerializer = new EncodeToolsSerializer({
+        serializationFormat: inFormat
+      });
+      const outSerializer = new EncodeToolsSerializer({
+        serializationFormat: outFormat
+      })
         const body = inFormat === 'json' ? JSON.parse(Buffer.from(rawReq).toString('utf8')) : enc.deserializeObject<any>(rawReq, inFormat);
 
         ApplicationContext.logs.silly({
@@ -109,8 +131,10 @@ export class AtticExpressTransport extends ExpressTransport {
             else {
                 const jsonData = (<Buffer>req.body);
                 const rawReq = Buffer.from(jsonData);
+                const serializer = new EncodeToolsSerializer({ serializationFormat: inFormat });
                 const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
                     const headers: any = {};
+
 
                     if (response) {
                         if (response.error) {
@@ -118,10 +142,31 @@ export class AtticExpressTransport extends ExpressTransport {
                                 httpMethod: req.method,
                                 httpUrl: req.originalUrl
                             });
+
+                            let error: any = {
+                              message: response.error.message,
+                              code: response.error.code,
+                              httpCode: (response.error as any).httpCode,
+                            };
+                            if (response.error.data) {
+                              error.data = {
+                                message: response.error.data.message,
+                                stack: response.error.data.stack,
+                                code: response.error.data.code,
+                                httpCode: response.error.data.httpCode
+                              };
+                            }
+
+                            response.error = error;
                         }
+<<<<<<< HEAD
 
                         const outBuf = enc.serializeObject(response, outFormat, true);
                         headers["Content-Type"] = SerializationFormatMimeTypes.get(outFormat);
+=======
+                        const outBuf = (new EncodeToolsAuto({ serializationFormat: outFormat })).serializeObject(response);
+                        headers["Content-Type"] = outSerializer.content_type;
+>>>>>>> origin/master
                         headers['Content-Length'] = Buffer.from(outBuf).byteLength;
 
                         // response.error.message
@@ -140,9 +185,11 @@ export class AtticExpressTransport extends ExpressTransport {
                                 response ? response : void(0)
                             ]
                         });
-                }, { req, res });
+                }, { req, res }, serializer);
+                clientRequest.serializer = inSerializer
+                ;
 
-                this.makeInstance({ serializationFormat: inFormat }).receive(rawReq, clientRequest);
+               transport.receive(jsonData, clientRequest);
             }
         });
     }

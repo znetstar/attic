@@ -121,7 +121,7 @@ export function getFormatsFromContext(httpContext: IHttpContext, defaultEncodeOp
 
 
 export type FindEntitiesResult = IEntity[]|number;
-
+export type RPCContext = { accessToken: IAccessToken, user: IUser, formalAccessToken: IFormalAccessToken };
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
     generateId(size?: number): Promise<string>;
@@ -145,6 +145,7 @@ export default interface IRPC {
     deleteResolver(query: any): Promise<void>;
     listResolverTypes(): Promise<string[]>;
 
+    findEntities(query: BasicFindOptions): Promise<FindEntitiesResult>;
     searchEntities(query: BasicTextSearchOptions): Promise<FindEntitiesResult>;
     createEntity(Entity: IEntity): Promise<string>;
     updateEntity(id: string, fields: any): Promise<void>
@@ -191,6 +192,12 @@ export default interface IRPC {
     getFormalAccessTokensForScope(userId: string, scope: string[]|string): Promise<FormalAccessTokenSet>;
     accessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
     selfAccessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
+
+    findAccessTokens(query: BasicFindOptions): Promise<IAccessToken[]|number>;
+    findSelfAccessTokens(query: BasicFindOptions): Promise<IAccessToken[]|number>;
+    getRPCContext(): Promise<RPCContext>;
+    accessTokenToFormal(id: string): Promise<IFormalAccessToken|null>;
+    selfAccessTokenToFormal(id: string): Promise<IFormalAccessToken|null>;
 
     redisFlushAll(): Promise<void>;
 

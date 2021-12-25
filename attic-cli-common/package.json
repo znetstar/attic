@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli-common",
-    "version": "3.5.0",
+    "version": "3.10.0",
     "description": "",
     "main": "lib/index.js",
     "contributors": [
@@ -50,7 +50,7 @@
         "@types/lodash": "^4.14.160",
         "@types/nconf": "^0.10.0",
         "@types/yargs": "^15.0.5",
-        "@znetstar/attic-common": "^3.13.0",
+        "@znetstar/attic-common": "^3.17.1",
         "@znetstar/encode-tools": "^1.1.0",
         "cliff": "^0.1.10",
         "cross-fetch": "^3.1.4",
