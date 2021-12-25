@@ -121,11 +121,11 @@ export async function findIdentityEntity  (query: any): Promise<IIdentityEntity&
 
 export const IdentityEntity = Entity.discriminator('IdentityEntity', IdentityEntitySchema)
 export default IdentityEntity;
-
-IdentityEntity.collection.createIndex({
-  externalId: 1,
-  type: 1
-}, { unique: true, name: 'externalUnique' }).catch((err) => {
-  console.error(err.stack);
-  process.exit(1);
-});
+//
+// IdentityEntity.collection.createIndex({
+//   externalId: 1,
+//   type: 1
+// }, { unique: true, name: 'externalUnique' }).catch((err) => {
+//   console.error(err.stack);
+//   process.exit(1);
+// });

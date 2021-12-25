@@ -233,13 +233,13 @@ RPCServer.methods.copyLocationToNewIPFSEntity = async function (location: any, p
 
 const IPFSResourceEntity = Entity.discriminator('IPFSResourceEntity', IPFSResourceEntitySchema)
 export default IPFSResourceEntity;
-IPFSResourceEntity.collection.createIndex({
-  cid: 1,
-  path: 1
-}, { unique: true }).catch((err) => {
-  console.error(err.stack);
-  process.exit(1);
-});
+// IPFSResourceEntity.collection.createIndex({
+//   cid: 1,
+//   path: 1
+// }, { unique: true }).catch((err) => {
+//   console.error(err.stack);
+//   process.exit(1);
+// });
 
 if (ApplicationContext.config.enableIpfs) {
   const alreadyPinnedCids = new Set<Buffer>();
