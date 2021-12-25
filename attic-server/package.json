@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.20.6",
+    "version": "3.20.9",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -82,7 +82,7 @@
     "dependencies": {
         "@teamwork/websocket-json-stream": "^2.0.0",
         "@thirdact/to-pojo": "^1.0.1",
-        "@znetstar/attic-cli-common": "^3.10.0",
+        "@znetstar/attic-cli-common": "^3.10.1",
         "@znetstar/attic-common": "^3.17.4",
         "@znetstar/encode-tools": "^1.2.1",
         "body-parser": "^1.19.0",
@@ -105,8 +105,8 @@
         "mmmagic": "^0.5.3",
         "mongoose": "^5.10.0",
         "multer": "^1.4.3",
-        "multi-rpc": "^2.2.0",
-        "multi-rpc-common": "^3.2.0",
+        "multi-rpc": "^2.2.1",
+        "multi-rpc-common": "^3.2.1",
         "multi-rpc-express-transport": "^2.0.0",
         "nanoid": "^3.1.12",
         "nconf": "^0.10.0",

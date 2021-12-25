@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli-common",
-    "version": "3.10.0",
+    "version": "3.10.1",
     "description": "",
     "main": "lib/index.js",
     "contributors": [
@@ -60,7 +60,8 @@
         "lodash": "^4.17.20",
         "memdown": "^6.0.0",
         "mongo-dot-notation": "^2.0.0",
-        "multi-rpc": "^2.2.0",
+        "multi-rpc": "^2.2.1",
+        "multi-rpc-common": "^3.2.1",
         "nconf": "^0.10.0",
         "tslib": "^2.0.1",
         "yargs": "^15.4.1"
