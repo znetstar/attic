@@ -1,4 +1,4 @@
-import {EncodingOptions, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {EncodingOptions, SerializationFormat} from "@znetstar/encode-tools/lib/EncodeTools";
 
 export enum LogLevels {
     silly = 'silly',
@@ -168,6 +168,8 @@ export interface IConfig {
 
     // accessTokenFormat?: unknown;
     // accessTokenEncoding?: unknown;
+    deleteEventsAfter?: number;
+    eventsCollectionSize?: number;
 }
 
 export default IConfig;

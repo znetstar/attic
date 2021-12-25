@@ -84,8 +84,9 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     allowGetTokenWithNoRedirectUri: [
       'client_credentials',
       'password'
-    ]
+    ],
     // accessTokenFormat: 'uuidv4',
-    // accessTokenEncoding: 'base64'
+    // accessTokenEncoding: 'base64',
+    eventsCollectionSize: 10e6
 };
 

@@ -5,6 +5,7 @@ import IConfig, {LogLevels} from "./IConfig";
 import IRPC from "../IRPC";
 import {Middleware, middlewareCreator, restrictScopeMiddleware,asyncMiddleware} from "./Middleware";
 import {IErrorBroker} from "./IErrorBroker";
+import IEvent from "../IEvent";
 
 export type LogFunction = (entry: any, options?: unknown) => void;
 
@@ -42,6 +43,7 @@ export type IApplicationContext = IApplicationHookEmitter&{
     webSocketPaths: Map<string, unknown>;
     errors: IErrorBroker;
     ipfsClient?: unknown;
+    createEvent<T>(type: string, event: Partial<IEvent<T>>): Promise<IEvent<T>>;
     middleware: {
        [name: string]: middlewareCreator;
        restrictScopeMiddleware: restrictScopeMiddleware;

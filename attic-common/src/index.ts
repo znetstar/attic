@@ -9,3 +9,4 @@ export { default as ICacheItem } from './ICacheItem';
 export { default as IUser } from './IUser';
 export { default as IIdentity } from './IIdentity';
 export * as Server from './Server';
+export { default as IEvent } from './IEvent';

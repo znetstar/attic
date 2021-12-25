@@ -15,8 +15,8 @@ import {
   UserDoesNotHavePermissionToAccessResourceError
 } from "@znetstar/attic-common/lib/Error/Auth";
 import {ScopeAccessTokenPair} from "@znetstar/attic-common/lib/IAccessToken";
-import {EncodeTools} from "@etomon/encode-tools";
-import {SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {EncodeTools} from "@znetstar/encode-tools";
+import {SerializationFormat} from "@znetstar/encode-tools/lib/EncodeTools";
 
 export interface SerializedHTTPResponseExt {
     headers: [string, string][]

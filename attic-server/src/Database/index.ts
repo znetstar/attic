@@ -26,6 +26,7 @@ RPCServer.methods.redisFlushAll = async () => { await redis.flushall(); }
 
 export async function loadModels() {
     await ApplicationContext.emitAsync('launch.loadModels.start');
+    require('../Event');
     require('../User');
     require('../Auth/Client');
     require('../Auth/AccessToken');

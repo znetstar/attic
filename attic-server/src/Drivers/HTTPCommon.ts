@@ -1,8 +1,8 @@
 import {Request, Response} from "express";
 import {IScopeContext} from "../Auth/AccessToken";
 import { IHTTPResponse as IHTTPResponseBase, IHttpContext as IHttpContextBase } from '@znetstar/attic-common/lib/IRPC';
-import {MimeTypesSerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
-import {EncodingOptions} from "@etomon/encode-tools/lib/IEncodeTools";
+import {MimeTypesSerializationFormat} from "@znetstar/encode-tools/lib/EncodeTools";
+import {EncodingOptions} from "@znetstar/encode-tools/lib/IEncodeTools";
 
 export type IHTTPResponse = IHTTPResponseBase&{ body?: Buffer };
 

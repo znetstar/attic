@@ -14,11 +14,10 @@ import * as ws from 'ws';
 import * as _ from 'lodash';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
 import * as cors from 'cors';
-import {EncodingOptions, SerializationFormat, SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {EncodingOptions, SerializationFormat, SerializationFormatMimeTypes} from "@znetstar/encode-tools/lib/EncodeTools";
 import {
-  EncodeToolsAuto as EncodeTools
-} from "@etomon/encode-tools/lib/EncodeToolsAuto";
-import { toPojo } from '@thirdact/to-pojo'
+  EncodeTools as EncodeTools
+} from "@znetstar/encode-tools/lib/EncodeTools";
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
 const multer  = require('multer')
 
@@ -121,9 +120,7 @@ export class AtticExpressTransport extends ExpressTransport {
                             });
                         }
 
-                        const respPojo = toPojo(response);
-
-                        const outBuf = enc.serializeObject(respPojo, outFormat);
+                        const outBuf = enc.serializeObject(response, outFormat, true);
                         headers["Content-Type"] = SerializationFormatMimeTypes.get(outFormat);
                         headers['Content-Length'] = Buffer.from(outBuf).byteLength;
 

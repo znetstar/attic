@@ -37,8 +37,10 @@ import {asyncMiddleware} from "./Web/Common";
 import {ObjectId} from "mongodb";
 import {ErrorBroker} from "./ErrorBroker";
 import {create as createIPFS, IPFS, Options as IPFSOptions} from 'ipfs-core';
-import {EncodeToolsNative} from "@etomon/encode-tools";
-import {BinaryEncoding, IDFormat} from "@etomon/encode-tools/lib/EncodeTools";
+import {EncodeTools} from "@znetstar/encode-tools";
+import {BinaryEncoding, IDFormat} from "@znetstar/encode-tools/lib/EncodeTools";
+import {IEvent} from "@znetstar/attic-common";
+import { toPojo } from '@thirdact/to-pojo';
 
 export interface ListenStatus {
     urls: string[];
@@ -65,9 +67,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
 
         this.logger = createLogger(this);
 
-        if (this.config.autoLogEvents) {
-            this.onAny(this.onAutoLog);
-        }
+        this.onAny(this.onAutoLog);
 
         this.logs.on('data', this.onLog);
 
@@ -82,9 +82,9 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     }
 
     makeRandomToken(): string {
-      return EncodeToolsNative.WithDefaults.encodeBuffer(
-        Buffer.from(EncodeToolsNative.WithDefaults.uniqueId(IDFormat.uuidv4)),
-        BinaryEncoding.base64
+      return EncodeTools.WithDefaults.encodeBuffer(
+        Buffer.from(EncodeTools.WithDefaults.uniqueId(IDFormat.uuidv4)),
+        BinaryEncoding.base64url
       ).toString();
     }
 
@@ -161,6 +161,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
       }
     }
 
+
     onLaunchCompleteLog = () => {
       this.logs.verbose({
         method: 'launch.complete',
@@ -182,11 +183,21 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     }
 
     onAutoLog = (...args: any[]) => {
-        if (!args.length || (args[0] && args[0].indexOf('log.') !== -1))
-            return;
+        if (!args.length || (args[0] && (
+          args[0].indexOf('events.') !== -1
+        ))) {
+          let delta = {method: args[0], params: args.slice(1)};
+          this.logger.verbose(delta);
+        }
+       else if (this.config.autoLogEvents) {
+         if (!args.length || (args[0] && (
+           args[0].indexOf('log.') !== -1
+         )))
+           return;
 
-        let delta = { method: args[0], params: args.slice(1) };
-        this.logger.silly(delta);
+         let delta = {method: args[0], params: args.slice(1)};
+         this.logger.silly(delta);
+       }
     }
 
     onLog = (log: any) => {
@@ -293,6 +304,17 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
         asyncMiddleware: asyncMiddleware,
         handleErrorMiddleware: handleErrorMiddleware
       }
+    }
+
+    async createEvent<T>(type: string, event: Partial<IEvent<T>>): Promise<IEvent<T>&Document> {
+      const subject: T|undefined = event.subject ? toPojo<T, T>(event.subject) : void(0);
+      const ev = await this.mongoose.models.Event.create({
+        ...event,
+        type,
+        subject
+      });
+
+      return ev;
     }
 }
 

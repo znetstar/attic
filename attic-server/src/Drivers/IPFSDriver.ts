@@ -12,8 +12,8 @@ import IPFSResourceEntity, {
 
 
 import { IIPFSResourceEntity as IIPFSResourceEntityBase } from "@znetstar/attic-common/lib/IEntity";
-import {SerializationFormat, SerializationFormatMimeTypes} from '@etomon/encode-tools/lib/EncodeTools';
-import {EncodeToolsNative as EncodeTools} from '@etomon/encode-tools/lib/EncodeToolsNative';
+import {SerializationFormat, SerializationFormatMimeTypes} from '@znetstar/encode-tools/lib/EncodeTools';
+import {EncodeTools as EncodeTools} from '@znetstar/encode-tools/lib/EncodeTools';
 import {GenericError} from "@znetstar/attic-common/lib/Error";
 import {IPutEnvelope, unwrapPut} from "@znetstar/attic-common/lib/IRPC";
 

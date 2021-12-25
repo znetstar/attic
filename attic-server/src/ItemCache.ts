@@ -3,17 +3,16 @@ import {Mongoose, Schema, Document, Model} from 'mongoose';
 import mongoose, {redis} from './Database';
 import config from "./Config";
 import ApplicationContext from "./ApplicationContext";
-import { EncodeToolsAuto as EncodeTools } from '@etomon/encode-tools/lib/EncodeToolsAuto';
-import * as ObjectHash  from 'object-hash';
-import * as msgpack from '@msgpack/msgpack';
-import {BinaryEncoding, HashAlgorithm, IDFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
-import {EncodingOptions} from "@etomon/encode-tools/lib/EncodeTools";
+import { EncodeTools as EncodeTools } from '@znetstar/encode-tools/lib/EncodeTools';
+import {BinaryEncoding, HashAlgorithm, IDFormat, SerializationFormat} from "@znetstar/encode-tools/lib/EncodeTools";
+import {EncodingOptions} from "@znetstar/encode-tools/lib/EncodeTools";
 
 const ItemCacheEncoderOptions: EncodingOptions = {
   binaryEncoding: BinaryEncoding.base64,
   hashAlgorithm: HashAlgorithm.xxhash64,
   serializationFormat: SerializationFormat.msgpack,
-  uniqueIdFormat: IDFormat.uuidv4String
+  uniqueIdFormat: IDFormat.uuidv4String,
+  useToPojoBeforeSerializing: true
 };
 
 export class ItemCache<I, T> {

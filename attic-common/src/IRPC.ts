@@ -5,9 +5,10 @@ import IClient from "./IClient";
 import {AccessTokenSet, FormalAccessTokenSet, IAccessToken, IFormalAccessToken} from "./IAccessToken";
 import IUser from "./IUser";
 import {IIdentityEntity} from "./IIdentity";
-import {EncodingOptions, MimeTypesSerializationFormat, SerializationFormat} from "@etomon/encode-tools/lib/EncodeTools";
-import {default as EncodeTools} from "@etomon/encode-tools/lib/EncodeToolsAuto";
-
+import {EncodingOptions, MimeTypesSerializationFormat, SerializationFormat} from "@znetstar/encode-tools/lib/EncodeTools";
+import {default as EncodeTools} from "@znetstar/encode-tools/lib/EncodeTools";
+import { Buffer } from 'buffer';
+import IEvent from "./IEvent";
 export interface BasicTextSearchQueryOptions {
     skip?: number;
     limit?: number;
@@ -101,7 +102,7 @@ export function unwrapPut(body: Uint8Array, context: IHttpContext) {
 
 export function wrapPut(envelope: IPutEnvelope, context: IHttpContext) {
   const { outFormat } = getFormatsFromContext(context);
-  const body: Uint8Array = EncodeTools.WithDefaults.serializeObject(envelope, outFormat);
+  const body: Uint8Array = EncodeTools.WithDefaults.serializeObject(envelope, outFormat) as Uint8Array;
 
   return body;
 }
@@ -144,10 +145,6 @@ export default interface IRPC {
     deleteResolver(query: any): Promise<void>;
     listResolverTypes(): Promise<string[]>;
 
-    // zoom.meeting:read
-
-    findEntities(query: BasicFindOptions): Promise<FindEntitiesResult>;
-    findEntity(query: any): Promise<IEntity>;
     searchEntities(query: BasicTextSearchOptions): Promise<FindEntitiesResult>;
     createEntity(Entity: IEntity): Promise<string>;
     updateEntity(id: string, fields: any): Promise<void>
@@ -202,4 +199,7 @@ export default interface IRPC {
     unpinIPFSEntity(id: string): Promise<void>;
     copyLocationToNewIPFSEntity(inLoc: string, pin?: boolean): Promise<string>;
 
+    findEvents<T>(query: BasicFindOptions): Promise<IEvent<T>[]|number>;
+    findEvent<T>(query: any): Promise<IEvent<T>>;
+    createEvent<T>(event: IEvent<T>): Promise<string>;
 }

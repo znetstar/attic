@@ -125,9 +125,16 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
                 this.scope.push('group.'+group);
         }
     }
+
+    if (this.isNew) {
+      await ApplicationContext.createEvent<IUser>('createUser', {
+        subject: this,
+        description: 'A user was created'
+      });
+    }
 });
 
-UserSchema.pre<IUser&Document>([ 'deleteOne', 'remove' ] as any, async function ()  {
+UserSchema.pre<IUser&Document>('remove', async function ()  {
   await Promise.all([
     IdentityEntity.deleteMany({ user: this._id }),
     AccessToken.deleteMany({ user: this._id })
