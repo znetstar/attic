@@ -186,6 +186,9 @@ LocationSchema.methods.setHref = function (val: string|url.UrlWithStringQuery): 
             continue;
         if (['href', 'toString', 'id', '_id', 'auth'].includes((k)))
             continue;
+
+
+      // @ts-ignore
         this[<any>k] = (<any>val)[<any>k];
     }
 
@@ -256,6 +259,7 @@ LocationSchema.methods.copy = async function (...dest: ILocation[])  {
     const destDriver: IDriverPut<unknown, unknown, unknown>  = new (destLoc.getDriver())() as IDriverOfFull<unknown,unknown,unknown>&IDriverPut<unknown, unknown,unknown>;
     await destLoc.populate('entity').execPopulate();
 
+    // @ts-ignore
     const body = wrapPut({ data: b.body }, destLoc.$locals.httpContext);
 
     await destDriver.put(

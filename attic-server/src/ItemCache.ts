@@ -126,7 +126,7 @@ export class DocumentItemCache<I, T, M extends Model<T&Document>> extends  ItemC
         if (!this.cacheEnabled)
             return;
 
-        return super.setObject(ref, item.toJSON(), expireIn);
+        return super.setObject(ref, item.toJSON() as T, expireIn);
     }
 }
 

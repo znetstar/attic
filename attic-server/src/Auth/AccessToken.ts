@@ -343,7 +343,7 @@ RPCServer.methods.getRPCContext = async function (): Promise<{ accessToken: IAcc
   return {
     formalAccessToken: await toFormalToken(context.accessToken),
     accessToken: context.accessToken,
-    user: user.toJSON({ virtuals: true })
+    user: user.toJSON({ virtuals: true }) as IUser
   }
 }
 

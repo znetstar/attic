@@ -10,6 +10,7 @@ import RPCServer from "../RPC";
 const CID = require('cids');
 
 import {ProtocolMustBeIPFSError} from "@znetstar/attic-common/lib/Error/Entity";
+import IdentityEntity from "./IdentityEntity";
 
 export interface IIPFSResourceEntityModel {
   cid: Buffer;
@@ -85,7 +86,8 @@ IPFSResourceEntitySchema.methods.load = async function () {
       mtime: file.mtime ? new Date(file.mtime.secs*1e3) : void(0),
     };
     for (let k in delta) {
-      this[k] = (delta as any)[k];
+      // @ts-ignore
+      (this)[k] = (delta as any)[k];
     }
 
     break;
@@ -124,7 +126,6 @@ IPFSResourceEntitySchema.pre<IIPFSResourceEntity&Document>('save', async functio
 });
 
 IPFSResourceEntitySchema.index({ cid: 1 }, {});
-IPFSResourceEntitySchema.index({ cid: 1, path: 1 }, { unique: true });
 
 export async function copyLocationToNewEntity(inLoc: ILocation&Document, pin?: boolean, opts?: unknown): Promise<IIPFSResourceEntity&Document> {
   opts = opts || ApplicationContext.config.defaultIpfsAddOpts;
@@ -232,7 +233,13 @@ RPCServer.methods.copyLocationToNewIPFSEntity = async function (location: any, p
 
 const IPFSResourceEntity = Entity.discriminator('IPFSResourceEntity', IPFSResourceEntitySchema)
 export default IPFSResourceEntity;
-
+IPFSResourceEntity.collection.createIndex({
+  cid: 1,
+  path: 1
+}, { unique: true }).catch((err) => {
+  console.error(err.stack);
+  process.exit(1);
+});
 
 if (ApplicationContext.config.enableIpfs) {
   const alreadyPinnedCids = new Set<Buffer>();
@@ -240,12 +247,13 @@ if (ApplicationContext.config.enableIpfs) {
     ApplicationContext.logs.debug(`pinning all autopinned IPFS files`);
     await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.start');
     for await (let cid of ApplicationContext.ipfsClient.pin.ls()) {
+      // @ts-ignore
       alreadyPinnedCids.add(Buffer.from(cid.cid.bytes));
     }
     const autopinnedFiles = IPFSResourceEntity.find({ autopin: true, cid: { $nin: Array.from(alreadyPinnedCids.values()) } }).cursor();
     let autopinnedFile: IIPFSResourceEntity&Document;
     let  promises: any =  [];
-    while (autopinnedFile = await autopinnedFiles.next()) {
+    while (autopinnedFile = await autopinnedFiles.next() as IIPFSResourceEntity&Document) {
       promises.push((async (autopinnedFile: any) => {
         try {
           await ApplicationContext.triggerHook('IPFSResourceEntity.loadAutoPinnedIpfsFiles.loadAutoPinnedFile.start', autopinnedFile);

@@ -36,7 +36,7 @@ export const EventSchema = <Schema<IEvent>>new (mongoose.Schema)({
   },
   description: {
     type: String,
-    required: true
+    required: false
   },
   meta: {
     type: Schema.Types.Mixed,
@@ -45,7 +45,6 @@ export const EventSchema = <Schema<IEvent>>new (mongoose.Schema)({
 }, {
   discriminatorKey: 'type',
   timestamps: false,
-  autoIndex: true,
   capped: {
     autoIndexId: true,
     size: config.eventsCollectionSize

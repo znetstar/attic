@@ -73,12 +73,6 @@ export const IdentityEntitySchema = <Schema<IIdentityEntity>>(new (mongoose.Sche
 
 }))
 
-IdentityEntitySchema.index({
-    externalId: 1,
-    type: 1
-}, {
-    unique: true
-});
 
 async function getIdentityEntity(id: ObjectId|string): Promise<IIdentityEntity&Document> {
     let entity: IIdentityEntity&Document = await IdentityEntity.findById(id).populate('client user').exec() as IIdentityEntity&Document;
@@ -96,10 +90,12 @@ RPCServer.methods.getIdentityEntity = async function getIdentityEntityRpc(id: st
     const entity = await getIdentityEntity(id);
     let result =  entity ? entity.toJSON({ virtuals: true }) : void(0);
     if (!result) throw new ((global as any).ApplicationContext.errors.getErrorByName('NotFoundError') as any)();
+    // @ts-ignore
     result.user = result.user._id;
+  // @ts-ignore
     result.client = result.client._id;
 
-    return result;
+    return result as IIdentityEntity;
 }
 
 RPCServer.methods.findIdentityEntity = async function findIdentityEntityRpc(query: any): Promise<IIdentityEntity> {
@@ -107,9 +103,13 @@ RPCServer.methods.findIdentityEntity = async function findIdentityEntityRpc(quer
     if (!entity) throw new ((global as any).ApplicationContext.errors.getErrorByName('NotFoundError') as any)();
     let result =  entity ? entity.toJSON({ virtuals: true }) : void(0);
     if (!result) throw new ((global as any).ApplicationContext.errors.getErrorByName('NotFoundError') as any)();
+
+    // @ts-ignore
     result.user = result.user._id;
+    // @ts-ignore
     result.client = result.client._id;
-    return result;
+
+    return result as IIdentityEntity;
 }
 
 export async function findIdentityEntity  (query: any): Promise<IIdentityEntity&Document> {
@@ -121,3 +121,11 @@ export async function findIdentityEntity  (query: any): Promise<IIdentityEntity&
 
 export const IdentityEntity = Entity.discriminator('IdentityEntity', IdentityEntitySchema)
 export default IdentityEntity;
+
+IdentityEntity.collection.createIndex({
+  externalId: 1,
+  type: 1
+}, { unique: true, name: 'externalUnique' }).catch((err) => {
+  console.error(err.stack);
+  process.exit(1);
+});

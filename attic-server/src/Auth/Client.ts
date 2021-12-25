@@ -84,7 +84,7 @@ ClientSchema.methods.applyUriSubstitutions = function (qs: any): any  {
 
 RPCServer.methods.findClient = async (query: any) => {
     let clients = await Client.findOne(query).exec();
-    return clients ? clients.toJSON({ virtuals: true }) : void(0);
+    return clients ? clients.toJSON({ virtuals: true }) as IClient : void(0);
 }
 
 export async function findClientInner(query: BasicFindOptions) {
@@ -104,14 +104,15 @@ if (query.populate) clientsQuery.populate(query.populate);
 RPCServer.methods.findClients = async (query: BasicFindOptions) =>  {
     let clients = await findClientInner(query);
     return Array.isArray(clients) ?
-        clients.map(l => l.toJSON({ virtuals: true })) :
-        clients;
+        clients.map(l => l.toJSON({ virtuals: true })) as IClient[] :
+        clients as number;
 }
 
 RPCServer.methods.createClient = async (fields: any) => {
-    let clients = await Client.create(fields);
+  // @ts-ignore
+    let clients: IClient&Document = await Client.create(fields);
 
-    return clients.id;
+    return clients._id;
 }
 
 RPCServer.methods.deleteClients = async (query: BasicFindQueryOptions) => {

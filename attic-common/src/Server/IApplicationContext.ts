@@ -43,7 +43,7 @@ export type IApplicationContext = IApplicationHookEmitter&{
     webSocketPaths: Map<string, unknown>;
     errors: IErrorBroker;
     ipfsClient?: unknown;
-    createEvent<T>(type: string, event: Partial<IEvent<T>>): Promise<IEvent<T>>;
+    createEvent<T>(type: string, event?: Partial<IEvent<T>>): Promise<IEvent<T>>;
     middleware: {
        [name: string]: middlewareCreator;
        restrictScopeMiddleware: restrictScopeMiddleware;

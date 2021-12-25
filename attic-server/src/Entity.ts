@@ -159,7 +159,9 @@ RPCServer.methods.searchEntities = async (query:  BasicTextSearchOptions) => {
     if (!Number.isNaN(Number(query.limit))) entityQuery.limit(query.limit);
 if (query.populate) entityQuery.populate(query.populate);
     let ents = await entityQuery.exec();
-    return ents.map(e => e.toJSON({ virtuals: true }));
+
+  // @ts-ignore
+    return ents.map(e => e.toJSON({ virtuals: true })) as IEntity[];
 }
 
 

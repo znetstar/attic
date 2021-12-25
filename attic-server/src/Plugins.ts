@@ -3,7 +3,7 @@ import Config from "./Config";
 import * as path from 'path';
 import {IPlugin} from "@znetstar/attic-common/lib/Server/IPlugin";
 import { Constructible } from "@znetstar/attic-common";
-import * as npm from 'npm';
+const npm = require('npm');
 import {promisify} from "util";
 import {PluginPath} from "@znetstar/attic-common/lib/Server";
 import * as _ from 'lodash';
