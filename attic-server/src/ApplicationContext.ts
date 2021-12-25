@@ -307,7 +307,7 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     }
 
     async createEvent<T>(type: string, event: Partial<IEvent<T>>): Promise<IEvent<T>&Document> {
-      const subject: T|undefined = event.subject ? toPojo<T, T>(event.subject) : void(0);
+      const subject: T|undefined = event.subject ? event.subject : void(0);
       const ev = await this.mongoose.models.Event.create({
         ...event,
         type,
