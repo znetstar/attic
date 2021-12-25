@@ -1,4 +1,4 @@
-import EncodeTools,{SerializationFormat, SerializationFormatMimeTypes, MimeTypesSerializationFormat,EncodingOptions} from '@etomon/encode-tools/lib/EncodeTools';
+import EncodeTools,{SerializationFormat, SerializationFormatMimeTypes, MimeTypesSerializationFormat,EncodingOptions} from '@znetstar/encode-tools/lib/EncodeTools';
 
 import {AtticS3ApplicationContext as ApplicationContext} from "./Atticfile";
 import {IHTTPResponse as IHTTPResponseBase, unwrapPut,getFormatsFromContext} from '@znetstar/attic-common/lib/IRPC';

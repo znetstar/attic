@@ -1,6 +1,6 @@
 import {GenericError} from '@znetstar/attic-common/lib/Error/GenericError'
 import {IApplicationContext, IConfig, IPlugin} from "@znetstar/attic-common/lib/Server";
-import {EncodeToolsAuto, IEncodeTools, EncodeTools} from '@etomon/encode-tools';
+import {EncodeTools, IEncodeTools} from '@znetstar/encode-tools';
 import {EncodingOptions, SerializationFormat,SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
 import * as BodyParser  from 'body-parser';
 import {Options} from "body-parser";
@@ -89,7 +89,7 @@ export class AtticServerREST implements IPlugin {
       if (this.config.rest?.bodyEncodeOptions) {
         encodeOptions = this.config.rest?.bodyEncodeOptions;
       }
-      this.bodyEncoder = new EncodeToolsAuto(encodeOptions);
+      this.bodyEncoder = new EncodeTools(encodeOptions);
       if (this.config.rest?.urlBase) {
         this.urlBase = this.config.rest?.urlBase;
       }
