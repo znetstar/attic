@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli",
-    "version": "3.7.1",
+    "version": "3.8.0",
     "contributors": [
         {
             "name": "Zachary R.T. Boyd",
@@ -31,16 +31,22 @@
         "@oclif/config": "^1.17.0",
         "@oclif/plugin-help": "^3.2.0",
         "@oclif/plugin-plugins": "^1.10.0",
-        "@znetstar/attic-cli-common": "^3.10.1",
-        "@znetstar/attic-cli-url-shortener": "^3.1.1",
+        "@znetstar/attic-cli-common": "^3.11.1",
+        "@znetstar/attic-cli-url-shortener": "^3.2.0",
         "@znetstar/attic-common": "^3.17.4",
-        "multi-rpc": "^2.2.0",
+        "at-least-node": "^1.0.0",
+        "multi-rpc": "^2.3.0",
         "tslib": "^1.13.0"
     },
     "devDependencies": {
         "@oclif/dev-cli": "^1.22.2",
+        "@types/abstract-leveldown": "^5.0.2",
+        "@types/events": "^3.0.0",
+        "@types/level-errors": "^3.0.0",
         "@types/levelup": "^4.3.1",
+        "@types/minimatch": "^3.0.5",
         "@types/node": "^14.6.2",
+        "@types/yargs-parser": "^20.2.1",
         "globby": "^10.0.2",
         "ts-node": "^8.10.2",
         "typescript": "^3.9.7"

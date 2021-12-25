@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli-common",
-    "version": "3.10.1",
+    "version": "3.11.2",
     "description": "",
     "main": "lib/index.js",
     "contributors": [
@@ -25,6 +25,7 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "devDependencies": {
+        "@types/fs-extra": "^9.0.13",
         "@types/levelup": "^4.3.1",
         "@types/memdown": "^3.0.0",
         "docdash": "^1.2.0",
@@ -46,21 +47,21 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@types/cliff": "^0.1.5",
-        "@types/fs-extra": "^9.0.1",
         "@types/lodash": "^4.14.160",
         "@types/nconf": "^0.10.0",
         "@types/yargs": "^15.0.5",
         "@znetstar/attic-common": "^3.17.1",
         "@znetstar/encode-tools": "^1.1.0",
+        "at-least-node": "^1.0.0",
         "cliff": "^0.1.10",
         "cross-fetch": "^3.1.4",
         "dotenv": "^8.2.0",
-        "fs-extra": "^9.0.1",
+        "fs-extra": "^9.1.0",
         "levelup": "^5.0.0",
         "lodash": "^4.17.20",
         "memdown": "^6.0.0",
         "mongo-dot-notation": "^2.0.0",
-        "multi-rpc": "^2.2.1",
+        "multi-rpc": "^2.3.0",
         "multi-rpc-common": "^3.2.1",
         "nconf": "^0.10.0",
         "tslib": "^2.0.1",
