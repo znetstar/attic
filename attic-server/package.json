@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.20.5",
+    "version": "3.20.6",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -83,7 +83,7 @@
         "@teamwork/websocket-json-stream": "^2.0.0",
         "@thirdact/to-pojo": "^1.0.1",
         "@znetstar/attic-cli-common": "^3.10.0",
-        "@znetstar/attic-common": "^3.17.3",
+        "@znetstar/attic-common": "^3.17.4",
         "@znetstar/encode-tools": "^1.2.1",
         "body-parser": "^1.19.0",
         "chance": "^1.1.7",

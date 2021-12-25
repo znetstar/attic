@@ -33,7 +33,7 @@
         "@oclif/plugin-plugins": "^1.10.0",
         "@znetstar/attic-cli-common": "^3.10.0",
         "@znetstar/attic-cli-url-shortener": "^3.1.1",
-        "@znetstar/attic-common": "^3.17.1",
+        "@znetstar/attic-common": "^3.17.4",
         "multi-rpc": "^2.2.0",
         "tslib": "^1.13.0"
     },

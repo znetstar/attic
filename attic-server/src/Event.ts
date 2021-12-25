@@ -89,10 +89,9 @@ RPCServer.methods.findEvents = async (query: BasicFindOptions) => {
     events;
 }
 
-RPCServer.methods.createEvent = async (fields: any) => {
-  let event = await Event.create(fields);
-
-  return event.id;
+RPCServer.methods.createEvent = async (type: string, event: Partial<IEventBase<unknown>>): Promise<string> => {
+  const ev = await ApplicationContext.createEvent(type, event);
+  return ev._id.toString();
 }
 
 

@@ -208,5 +208,5 @@ export default interface IRPC {
 
     findEvents<T>(query: BasicFindOptions): Promise<IEvent<T>[]|number>;
     findEvent<T>(query: any): Promise<IEvent<T>>;
-    createEvent<T>(event: IEvent<T>): Promise<string>;
+    createEvent<T>(type: string, event?: Partial<IEvent<T>>): Promise<string>;
 }
