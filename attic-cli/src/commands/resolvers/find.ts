@@ -87,6 +87,6 @@ export default class ResolverFind extends Find {
       output = <string>formatOutputFromFlags(resolvers, flags, [ 'id', 'mountPoint.expression', 'type', 'priority' ]);
     }
 
-    console.log(output);
+    /* console.log(output); */
   }
 }

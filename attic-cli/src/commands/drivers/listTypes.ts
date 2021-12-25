@@ -18,6 +18,6 @@ export default class DriversList extends List {
     let output: string;
 
     let outObj = [].concat((drivers as any) || []).map(c => ({ driver: c }));
-    console.log(formatOutputFromFlags(outObj, flags));
+    /* console.log(formatOutputFromFlags(outObj, flags); */);
   }
 }

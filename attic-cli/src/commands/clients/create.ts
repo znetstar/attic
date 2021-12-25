@@ -92,6 +92,6 @@ export default class LocationCreate extends Create {
     let output: string;
     let outObject = await RPCProxy.createLocation(location);
 
-    console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'href' ]));
+    /* console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'href' ]); */);
   }
 }

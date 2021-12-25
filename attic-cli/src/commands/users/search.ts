@@ -19,6 +19,6 @@ export default class UserSearch extends Search {
 
     let output: string = <string>formatOutputFromFlags(users, flags, [ 'id', 'username', 'disabled' ]);
 
-    console.log(output);
+    /* console.log(output); */
   }
 }

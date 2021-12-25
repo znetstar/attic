@@ -111,7 +111,7 @@ export default class ShortUrl extends Command {
 
     let outString = formatOutputFromFlags(outLocation, flags, [ 'id', 'href', 'entity' ])
 
-    if (!flags.quiet) console.log(outString);
+    if (!flags.quiet) /* console.log(outString); */
     return outString;
   }
 }

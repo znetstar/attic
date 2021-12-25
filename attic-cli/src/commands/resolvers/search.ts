@@ -25,6 +25,6 @@ export default class ResolverSearch extends Search {
       output = <string>formatOutput(resolvers, flags.format, [ 'id', 'mountPoint.expression', 'type', 'priority' ]);
     }
 
-    console.log(output);
+    /* console.log(output); */
   }
 }

@@ -60,6 +60,6 @@ export default class EntityCreate extends Create {
     let outObject = { id: entityId, source };
 
 
-    console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'source.href' ]));
+    /* console.log(formatOutputFromFlags(outObject, flags, [ 'id', 'source.href' ]); */);
   }
 }

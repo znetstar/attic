@@ -68,6 +68,6 @@ required: false
       output = <string>formatOutputFromFlags(ents, flags, [ 'id', 'type', 'source.href' ]);
     }
 
-    console.log(output);
+    /* console.log(output); */
   }
 }

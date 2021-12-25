@@ -69,6 +69,6 @@ export default class UserFind extends Find {
 
     let users = await RPCProxy.findUsers(findOptions);
 
-    console.log(formatOutputFromFlags(users, flags, [ 'id', 'username', 'disabled' ]));
+    /* console.log(formatOutputFromFlags(users, flags, [ 'id', 'username', 'disabled' ]); */);
   }
 }

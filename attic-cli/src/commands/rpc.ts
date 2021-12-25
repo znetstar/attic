@@ -38,7 +38,7 @@ export default class RPCInvoke extends Command {
 
     let result = await (RPCProxy as any)[flags.method](...cmdArgs);
 
-    console.log(result);
+    /* console.log(result); */
   }
 
 }

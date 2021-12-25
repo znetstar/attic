@@ -23,6 +23,6 @@ export default class EntityList extends List {
     } else {
       output = JSON.stringify(outObj, null, 4);
     }
-    console.log(output);
+    /* console.log(output); */
   }
 }

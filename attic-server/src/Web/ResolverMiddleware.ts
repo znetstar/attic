@@ -116,6 +116,12 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
 
     let response: IHTTPResponse|null;
 
+    ApplicationContext.logs.silly({
+      method: `ResolverMiddleware.getHttpResponse.driver.start`,
+      params: [
+        location
+      ]
+    });
 
     if (req.method === 'GET' && allowedMethods.includes(req.method.toLowerCase()))
         response = await driver.get(location);
@@ -137,10 +143,19 @@ export async function getHttpResponse<O extends IHTTPResponse, I>(req: any, res:
         };
     }
 
+    const headers = Array.from(response.headers.entries());
     let outResp: SerializedHTTPResponse = {
         ...(response as any),
-        headers: Array.from(response.headers.entries())
+        headers
     };
+
+    ApplicationContext.logs.silly({
+      method: `ResolverMiddleware.getHttpResponse.driver.complete`,
+      params: [
+        location,
+        headers
+      ]
+    });
 
     if (outResp.status === 200 || (outResp.status !== 200 && Config.cacheNon200HTTPResponses))
         await HTTPResponseCache.setObject(inLoc, outResp);

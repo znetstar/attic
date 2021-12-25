@@ -68,6 +68,6 @@ required: true
       ['id', 'mountPoint.expression', 'priority']
     );
 
-    console.log((output));
+    /* console.log((output); */);
   }
 }

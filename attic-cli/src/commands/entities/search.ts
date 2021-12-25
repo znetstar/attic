@@ -24,6 +24,6 @@ export default class LocationSearch extends Search {
       output = <string>formatOutputFromFlags(ents, flags, [ 'id', 'source.href', 'type' ]);
     }
 
-    console.log(output);
+    /* console.log(output); */
   }
 }
