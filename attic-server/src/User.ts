@@ -143,7 +143,8 @@ UserSchema.pre<IUser&Document>('remove', async function ()  {
 
 
 export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|string, scope: string[]|string): AsyncGenerator<ScopeAccessTokenPair> {
-    if (user instanceof ObjectId || typeof(user) === 'string')
+    // @ts-ignore
+    if (user instanceof ObjectId || typeof(user) === 'string' || user._bsontype === 'ObjectID' || user._bsontype === 'ObjectId')
         user = await User.findById(user).exec();
 
     if (!user) throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateUserError') as any)();
