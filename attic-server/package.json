@@ -82,7 +82,7 @@
     "dependencies": {
         "@teamwork/websocket-json-stream": "^2.0.0",
         "@thirdact/to-pojo": "^1.0.1",
-        "@znetstar/attic-cli-common": "^3.11.2",
+        "@znetstar/attic-cli-common": "^3.11.3",
         "@znetstar/attic-common": "^3.17.4",
         "@znetstar/encode-tools": "^1.2.1",
         "body-parser": "^1.19.0",

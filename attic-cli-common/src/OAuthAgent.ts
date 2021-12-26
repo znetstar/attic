@@ -222,6 +222,7 @@ export class OAuthAgent {
    * Returns the default cache that will be used, which is `memdown` (memory only)
    */
   public static createDefaultCache(): LevelUp {
+    // @ts-ignore
     return require('levelup')(require('memdown')());
   }
 

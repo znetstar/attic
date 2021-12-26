@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli",
-    "version": "3.8.0",
+    "version": "3.8.1",
     "contributors": [
         {
             "name": "Zachary R.T. Boyd",
@@ -31,7 +31,7 @@
         "@oclif/config": "^1.17.0",
         "@oclif/plugin-help": "^3.2.0",
         "@oclif/plugin-plugins": "^1.10.0",
-        "@znetstar/attic-cli-common": "^3.11.1",
+        "@znetstar/attic-cli-common": "^3.11.3",
         "@znetstar/attic-cli-url-shortener": "^3.2.0",
         "@znetstar/attic-common": "^3.17.4",
         "at-least-node": "^1.0.0",
