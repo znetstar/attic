@@ -1,7 +1,7 @@
 import {GenericError} from '@znetstar/attic-common/lib/Error/GenericError'
 import {IApplicationContext, IConfig, IPlugin} from "@znetstar/attic-common/lib/Server";
 import {EncodeTools, IEncodeTools} from '@znetstar/encode-tools';
-import {EncodingOptions, SerializationFormat,SerializationFormatMimeTypes} from "@etomon/encode-tools/lib/EncodeTools";
+import {EncodingOptions, SerializationFormat,SerializationFormatMimeTypes} from "@znetstar/encode-tools/lib/EncodeTools";
 import * as BodyParser  from 'body-parser';
 import {Options} from "body-parser";
 import {IUser} from "@znetstar/attic-common";
