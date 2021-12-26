@@ -310,11 +310,13 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
     async createEvent(type: string): Promise<IEvent<void>&Document>;
     async createEvent<T>(type: string, event?: Partial<IEvent<T>>): Promise<IEvent<T>&Document> {
       const subject: T|undefined = event?.subject ? event.subject : void(0);
-      const ev = await this.mongoose.models.Event.create({
+      const ev = new (this.mongoose.models.Event)({
         type,
         subject,
         ...(event || {})
       });
+
+      await ev.save();
 
       return ev;
     }
