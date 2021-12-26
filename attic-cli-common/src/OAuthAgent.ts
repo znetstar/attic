@@ -19,7 +19,7 @@ import {
   HashAlgorithm,
   IDFormat,
   SerializationFormat, SerializationFormatMimeTypes
-} from '@etomon/encode-tools/lib/EncodeTools';
+} from '@znetstar/encode-tools/lib/EncodeTools';
 
 /**
  * Client infomation from OAuth
