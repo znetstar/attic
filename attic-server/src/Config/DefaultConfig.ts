@@ -24,7 +24,8 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
       serializationFormat: 'json'
     },
     puppeteerOptions: { headless: true },
-    plugins: [],
+    plugins: [
+    ],
     drivers: [],
     siteUri: 'http://localhost:7373',
     mongoUri: 'mongodb://localhost:27017/attic',

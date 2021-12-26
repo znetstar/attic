@@ -9,16 +9,20 @@ import SessionMiddleware, {CookieMiddleware} from "./SessionMiddleware";
 import AuthMiddlewares, {AuthMiddleware, restrictScopeMiddleware} from "./AuthMiddleware";
 import ApplicationContext, {ListenStatus} from "../ApplicationContext";
 import {IError} from "@znetstar/attic-common/lib/Error/IError";
-import {getFormatsFromContext} from "@znetstar/attic-common/lib/IRPC";
 import * as ws from 'ws';
 import * as _ from 'lodash';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
 import * as cors from 'cors';
-import {EncodingOptions, SerializationFormat, SerializationFormatMimeTypes} from "@znetstar/encode-tools/lib/EncodeTools";
+import {makeBinaryEncoders, ToPojo} from '@thirdact/to-pojo/lib/toPojo';
 import {
+  BinaryEncoding,
   EncodeTools as EncodeTools,
-  MimeTypesSerializationFormat
+  EncodingOptions,
+  MimeTypesSerializationFormat,
+  SerializationFormat,
+  SerializationFormatMimeTypes
 } from "@znetstar/encode-tools/lib/EncodeTools";
+
 interface HTTPErrorOpts { httpUrl?: string, httpMethod?: string; };
 const multer  = require('multer')
 
@@ -98,11 +102,15 @@ export class AtticExpressTransport extends ExpressTransport {
       }
 
       const inSerializer = new EncodeToolsSerializer({
-        serializationFormat: inFormat
+        serializationFormat: inFormat,
+        useToPojoBeforeSerializing: inFormat === SerializationFormat.json,
+        encodeBuffersWhenUsingToPojo: inFormat === SerializationFormat.json
       });
       const outSerializer = new EncodeToolsSerializer({
-        serializationFormat: outFormat
-      })
+        serializationFormat: outFormat,
+        useToPojoBeforeSerializing: outFormat === SerializationFormat.json,
+        encodeBuffersWhenUsingToPojo: outFormat === SerializationFormat.json
+      });
         const body = inFormat === 'json' ? JSON.parse(Buffer.from(rawReq).toString('utf8')) : enc.deserializeObject<any>(rawReq, inFormat);
 
         ApplicationContext.logs.silly({
@@ -119,7 +127,11 @@ export class AtticExpressTransport extends ExpressTransport {
             else {
                 const jsonData = (<Buffer>req.body);
                 const rawReq = Buffer.from(jsonData);
-                const serializer = new EncodeToolsSerializer({ serializationFormat: inFormat });
+                const serializer = new EncodeToolsSerializer({
+                  serializationFormat: inFormat,
+                  useToPojoBeforeSerializing: inFormat === SerializationFormat.json,
+                  encodeBuffersWhenUsingToPojo: inFormat === SerializationFormat.json
+                });
                 const clientRequest = new ClientRequest(Transport.uniqueId(), (response?: Response) => {
                     const headers: any = {};
 
@@ -148,7 +160,7 @@ export class AtticExpressTransport extends ExpressTransport {
                             response.error = error;
                         }
 
-                        const outBuf = enc.serializeObject(response, outFormat, true);
+                        const outBuf = enc.serializeObject(response, outFormat, outFormat === SerializationFormat.json, outFormat === SerializationFormat.json);
                         headers["Content-Type"] = SerializationFormatMimeTypes.get(outFormat);
                         headers['Content-Length'] = Buffer.from(outBuf).byteLength;
 
