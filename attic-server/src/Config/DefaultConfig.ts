@@ -33,6 +33,7 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     port: 7373,
     host: '127.0.0.1',
     promptUnauthenticatedToLogin: true,
+    expandHookNames: true,
     hostname: os.hostname(),
     authorizeGracePeriod: 5*60e3,
     defaultScopeJoin: ' ',

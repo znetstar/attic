@@ -286,8 +286,20 @@ export class ApplicationContextBase extends EventEmitter implements IApplication
         return (await this.triggerHook<T>(method, ...params))[0];
     }
 
-    registerHook<T>(method: string, fn: (...params: any[]) => Promise<T>): void {
-        this.on(method, fn);
+    registerHook<T>(baseMethod: string, fn: (...params: any[]) => Promise<T>): void {
+        let methods: string[] = [];
+
+        if (this.config.expandHookNames && baseMethod.indexOf('.*') !== -1) {
+            let splitStr = baseMethod.split('.*');
+            for (let i = 1; i <= splitStr.length; i++) {
+                methods.push(splitStr.slice(0, i).join('.*'));
+            }
+        }  else  {
+            methods = [ baseMethod ];
+        }
+
+        for (const method of methods)
+            this.on(method, fn);
     }
 
     async loadDriver(driver: Constructible<IDriver>, name?: string): Promise<void> {
