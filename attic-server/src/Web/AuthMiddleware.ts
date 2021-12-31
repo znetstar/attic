@@ -701,7 +701,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
         let provider = await Client.findOne({
             name: req.params.provider,
-            role: 'provider'
+            role: { $in: [ 'provider'] }
         }).exec();
 
         if (!provider) {
@@ -711,7 +711,7 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         let client = await Client.findOne({
             clientId: req.query.client_id,
             redirectUri: req.query.redirect_uri,
-            role: 'consumer'
+            role: { $in: [ 'consumer' ] }
         }).exec();
 
         if (!client) {
