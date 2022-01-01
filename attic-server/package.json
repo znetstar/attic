@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.21.1",
+    "version": "3.21.2",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -102,6 +102,7 @@
         "ioredis": "^4.24.2",
         "ipfs-core": "^0.11.1",
         "mmmagic": "^0.5.3",
+        "mongo-sanitize": "^1.1.0",
         "mongoose": "^5.10.0",
         "multer": "^1.4.3",
         "multi-rpc": "^2.3.2",
