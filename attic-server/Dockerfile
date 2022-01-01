@@ -16,10 +16,6 @@ ADD . /opt/attic/attic-server
 
 RUN npm run build
 
-FROM node:12
-
-COPY --from=0 /opt/attic /opt/attic
-
 RUN ln -s /opt/attic/attic-server/bin/attic-server /usr/local/bin/attic-server
 
 ENV PATH "/usr/local/bin:/opt/attic/attic-server/bin:$PATH"
