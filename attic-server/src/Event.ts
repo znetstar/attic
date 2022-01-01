@@ -55,6 +55,9 @@ EventSchema.pre<IEvent&Document>('save',async function () {
   if (typeof(this.subject) === 'object' && this.subject !== null) {
     this.subject = require('mongo-sanitize')(this.subject);
   }
+  if (typeof(this.meta) === 'object' && this.meta !== null) {
+    this.meta = require('mongo-sanitize')(this.meta);
+  }
   if (this.isNew) {
    await ApplicationContext.triggerHook(`events.${this.type}`, this);
   }
