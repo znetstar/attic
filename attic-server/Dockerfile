@@ -16,7 +16,7 @@ ADD . /opt/attic/attic-server
 
 RUN npm run build
 
-FROM node:12-slim
+FROM node:12
 
 COPY --from=0 /opt/attic /opt/attic
 
