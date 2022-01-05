@@ -126,12 +126,12 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
         }
     }
 
-    if (this.isNew) {
-      await ApplicationContext.createEvent<IUser>('createUser', {
-        subject: this,
-        description: 'A user was created'
-      });
-    }
+    // if (this.isNew) {
+    //   await ApplicationContext.createEvent<IUser>('createUser', {
+    //     subject: this,
+    //     description: 'A user was created'
+    //   });
+    // }
 });
 
 UserSchema.pre<IUser&Document>('remove', async function ()  {
