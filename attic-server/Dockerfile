@@ -16,6 +16,7 @@ ADD . /opt/attic/attic-server
 
 RUN npm run build
 
+
 RUN ln -s /opt/attic/attic-server/bin/attic-server /usr/local/bin/attic-server
 
 ENV PATH "/usr/local/bin:/opt/attic/attic-server/bin:$PATH"
