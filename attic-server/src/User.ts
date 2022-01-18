@@ -1,3 +1,4 @@
+
 import {Document, Schema} from 'mongoose';
 import mongoose from './Database';
 import {ObjectId} from 'mongodb';
@@ -42,6 +43,7 @@ export interface IUserModel {
     password?: string;
     checkPassword(password: string): Promise<boolean>;
     groups: string[];
+    photo?: Buffer;
 }
 
 export type IUser = IUserBase&IUserModel;
@@ -71,6 +73,10 @@ export const UserSchema = <Schema<IUser>>(new (mongoose.Schema)({
         type: [String],
         required: false,
         default: []
+    },
+    photo: {
+      type: Buffer,
+      required: false
     }
 }, {
     collection: 'users',
@@ -126,12 +132,12 @@ UserSchema.pre<IUser&Document>('save', async function ()  {
         }
     }
 
-    if (this.isNew) {
-      await ApplicationContext.createEvent<IUser>('createUser', {
-        subject: this,
-        description: 'A user was created'
-      });
-    }
+    // if (this.isNew) {
+    //   await ApplicationContext.createEvent<IUser>('createUser', {
+    //     subject: this,
+    //     description: 'A user was created'
+    //   });
+    // }
 });
 
 UserSchema.pre<IUser&Document>('remove', async function ()  {
@@ -143,7 +149,8 @@ UserSchema.pre<IUser&Document>('remove', async function ()  {
 
 
 export async function* getAccessTokensForScope (user: IUser&Document|ObjectId|string, scope: string[]|string): AsyncGenerator<ScopeAccessTokenPair> {
-    if (user instanceof ObjectId || typeof(user) === 'string')
+    // @ts-ignore
+    if (user instanceof ObjectId || typeof(user) === 'string' || user._bsontype === 'ObjectID' || user._bsontype === 'ObjectId')
         user = await User.findById(user).exec();
 
     if (!user) throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateUserError') as any)();

@@ -1,7 +1,7 @@
 node_modules/
 .tscache
 attic-server/data
-*/lib
+src
 .idea
 idea
 .DS_STORE
