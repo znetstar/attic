@@ -1,3 +1,4 @@
+
 import {Document, Schema} from 'mongoose';
 import mongoose from './Database';
 import {ObjectId} from 'mongodb';
@@ -42,6 +43,7 @@ export interface IUserModel {
     password?: string;
     checkPassword(password: string): Promise<boolean>;
     groups: string[];
+    photo?: Buffer;
 }
 
 export type IUser = IUserBase&IUserModel;
@@ -71,6 +73,10 @@ export const UserSchema = <Schema<IUser>>(new (mongoose.Schema)({
         type: [String],
         required: false,
         default: []
+    },
+    photo: {
+      type: Buffer,
+      required: false
     }
 }, {
     collection: 'users',

@@ -22,6 +22,7 @@ export interface IIdentityEntityModel {
     externalId: any;
     otherFields: any;
     clientName: string;
+    photo?: Buffer;
 }
 
 export type IIdentityEntity = IIdentityEntityBase&IHTTPResourceEntity&IEntity;
@@ -69,8 +70,11 @@ export const IdentityEntitySchema = <Schema<IIdentityEntity>>(new (mongoose.Sche
     otherFields:  {
         type: Schema.Types.Mixed,
         required: false
+    },
+    photo: {
+      type: Buffer,
+      required: false
     }
-
 }))
 
 
