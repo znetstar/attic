@@ -9,7 +9,7 @@ export interface IUser {
    disabled?: boolean;
    password?: string;
    groups?: string[];
+   photo?: Uint8Array
 }
-
 
 export default IUser;
