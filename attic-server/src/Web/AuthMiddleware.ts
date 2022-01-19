@@ -6,7 +6,7 @@ import mongoose, {redis} from "../Database";
 import RPCServer from "../RPC";
 import Client, {getIdentityEntityByAccessToken, IClient} from "../Auth/Client";
 import {nanoid} from 'nanoid';
-import fetch from 'node-fetch';
+import fetch, {RequestInit} from 'node-fetch';
 import * as URL from 'url';
 import {
     AccessToken,
@@ -585,17 +585,26 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             q = provider.applyUriSubstitutions(q);
 
             let tokenUri: any = URL.parse(provider.tokenUri, true);
-            tokenUri.query = q;
+            // tokenUri.query = q;
             tokenUri = URL.format(tokenUri);
 
             const params = new URL.URLSearchParams();
 
             for (let k in q) params.append(k, (q as any)[k]);
 
-            let tokenResp = await fetch(tokenUri, {
-                method: 'POST',
-                body: params
+            const fetchOpts: RequestInit = {
+              method: 'POST'
+            };
+            let tokenUriCloned: any = await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.token`, {
+              params,
+              req,
+              provider,
+              fetchOpts
             });
+
+            fetchOpts.body =  params.toString();
+
+            let tokenResp = await fetch(tokenUriCloned || tokenUri, fetchOpts);
 
             if (tokenResp.status !== 200) {
                 throw new ErrorGettingTokenFromProviderError(await tokenResp.json());
@@ -760,7 +769,14 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         let redirectUri = URL.parse(provider.redirectUri || config.siteUri, true);
         redirectUri.path = `/auth/${provider.name}/authorize`;
         if (provider.sendStateWithRedirectUri) redirectUri.query.state = state;
+
         newState.redirectUri =  URL.format(redirectUri);
+
+        await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.clientId}.authorize.newState`, {
+          req,
+          provider,
+          newState
+        });
 
         for (let k in newState) {
             pipeline.hset(stateKey, k, (newState as any)[k]);
@@ -789,8 +805,9 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             context: req.context
         });
 
-        let finalUri = URL.parse(authorizeUri||provider.authorizeUri, true);
-        if (!authorizeUri) {
+        let finalFormatted: any = authorizeUri;
+        if (!finalFormatted) {
+            let finalUri: any = URL.parse(provider.authorizeUri, true);
             let outboundScope: string[] = [];
 
             finalUri.query = {
@@ -806,9 +823,10 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             finalUri.query = provider.applyUriSubstitutions(finalUri.query);
             delete finalUri.search;
             finalUri.path = finalUri.path.split('?').shift();
+
+            finalFormatted = URL.format(finalUri);
         }
 
-        let finalFormatted = URL.format(finalUri);
 
         ApplicationContext.logs.silly({
             method: `AuthMiddleware.auth.${req.params.provider}.authorize.redirect`,
