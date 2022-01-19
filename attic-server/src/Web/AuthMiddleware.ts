@@ -599,7 +599,8 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
               params,
               req,
               provider,
-              fetchOpts
+              fetchOpts,
+              state
             });
 
             fetchOpts.body =  params.toString();
@@ -772,9 +773,10 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
         newState.redirectUri =  URL.format(redirectUri);
 
-        await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.clientId}.authorize.newState`, {
+        await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.newState`, {
           req,
           provider,
+          state,
           newState
         });
 
@@ -792,18 +794,22 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             ]
         });
 
+        const delta = {
+          stateKey,
+          newState,
+          provider,
+          client,
+          req,
+          res,
+          scopes,
+          state,
+          context: req.context
+        };
 
         let authorizeEvent = `Web.AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`;
-        let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, {
-            stateKey,
-            newState,
-            provider,
-            client,
-            req,
-            res,
-            scopes,
-            context: req.context
-        });
+        let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(`AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`, delta);
+        if (!authorizeUri)
+          authorizeUri = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, delta);
 
         let finalFormatted: any = authorizeUri;
         if (!finalFormatted) {
