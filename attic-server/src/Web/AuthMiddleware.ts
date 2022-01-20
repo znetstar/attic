@@ -592,23 +592,43 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
             for (let k in q) params.append(k, (q as any)[k]);
 
-            const fetchOpts: RequestInit = {
-              method: 'POST'
+            let fetchOpts: any = {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-urlencoded' }
             };
-            let tokenUriCloned: any = await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.token`, {
+            let hookResp: any = await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.token`, {
               params,
               req,
               provider,
               fetchOpts,
-              state
+              state,
+              tokenUri
             });
 
-            fetchOpts.body =  params.toString();
+            const tokenUriCloned = typeof(hookResp) === 'string' ? hookResp : hookResp?.tokenUri;
+            const newOpts = hookResp?.fetchOpts;
+
+            if (newOpts)
+              fetchOpts = newOpts;
+            else
+              fetchOpts.body = params;
+
+            // let qq: any = {};
+            // for (let [k,v] of params.entries()) qq[k] = v;
+            //
+            // fetchOpts.body =  require('qs').stringify(qq);
 
             let tokenResp = await fetch(tokenUriCloned || tokenUri, fetchOpts);
 
             if (tokenResp.status !== 200) {
-                throw new ErrorGettingTokenFromProviderError(await tokenResp.json());
+              const resp = await tokenResp.json();
+              ApplicationContext.logs.error({
+                method: `AuthMiddleware.auth.${req.params.provider}.authorize.token`,
+                params: [
+                  { resp }
+                ]
+              });
+                throw new ErrorGettingTokenFromProviderError(resp);
             }
 
             let formalToken: IFormalAccessToken = await tokenResp.json();
