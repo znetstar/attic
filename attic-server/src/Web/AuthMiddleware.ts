@@ -6,7 +6,7 @@ import mongoose, {redis} from "../Database";
 import RPCServer from "../RPC";
 import Client, {getIdentityEntityByAccessToken, IClient} from "../Auth/Client";
 import {nanoid} from 'nanoid';
-import fetch from 'node-fetch';
+import fetch, {RequestInit} from 'node-fetch';
 import * as URL from 'url';
 import {
     AccessToken,
@@ -585,20 +585,50 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             q = provider.applyUriSubstitutions(q);
 
             let tokenUri: any = URL.parse(provider.tokenUri, true);
-            tokenUri.query = q;
+            // tokenUri.query = q;
             tokenUri = URL.format(tokenUri);
 
             const params = new URL.URLSearchParams();
 
             for (let k in q) params.append(k, (q as any)[k]);
 
-            let tokenResp = await fetch(tokenUri, {
-                method: 'POST',
-                body: params
+            let fetchOpts: any = {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-urlencoded' }
+            };
+            let hookResp: any = await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.token`, {
+              params,
+              req,
+              provider,
+              fetchOpts,
+              state,
+              tokenUri
             });
 
+            const tokenUriCloned = typeof(hookResp) === 'string' ? hookResp : hookResp?.tokenUri;
+            const newOpts = hookResp?.fetchOpts;
+
+            if (newOpts)
+              fetchOpts = newOpts;
+            else
+              fetchOpts.body = params;
+
+            // let qq: any = {};
+            // for (let [k,v] of params.entries()) qq[k] = v;
+            //
+            // fetchOpts.body =  require('qs').stringify(qq);
+
+            let tokenResp = await fetch(tokenUriCloned || tokenUri, fetchOpts);
+
             if (tokenResp.status !== 200) {
-                throw new ErrorGettingTokenFromProviderError(await tokenResp.json());
+              const resp = await tokenResp.json();
+              ApplicationContext.logs.error({
+                method: `AuthMiddleware.auth.${req.params.provider}.authorize.token`,
+                params: [
+                  { resp }
+                ]
+              });
+                throw new ErrorGettingTokenFromProviderError(resp);
             }
 
             let formalToken: IFormalAccessToken = await tokenResp.json();
@@ -760,7 +790,15 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         let redirectUri = URL.parse(provider.redirectUri || config.siteUri, true);
         redirectUri.path = `/auth/${provider.name}/authorize`;
         if (provider.sendStateWithRedirectUri) redirectUri.query.state = state;
+
         newState.redirectUri =  URL.format(redirectUri);
+
+        await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.newState`, {
+          req,
+          provider,
+          state,
+          newState
+        });
 
         for (let k in newState) {
             pipeline.hset(stateKey, k, (newState as any)[k]);
@@ -776,21 +814,26 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             ]
         });
 
+        const delta = {
+          stateKey,
+          newState,
+          provider,
+          client,
+          req,
+          res,
+          scopes,
+          state,
+          context: req.context
+        };
 
         let authorizeEvent = `Web.AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`;
-        let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, {
-            stateKey,
-            newState,
-            provider,
-            client,
-            req,
-            res,
-            scopes,
-            context: req.context
-        });
+        let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(`AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`, delta);
+        if (!authorizeUri)
+          authorizeUri = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, delta);
 
-        let finalUri = URL.parse(authorizeUri||provider.authorizeUri, true);
-        if (!authorizeUri) {
+        let finalFormatted: any = authorizeUri;
+        if (!finalFormatted) {
+            let finalUri: any = URL.parse(provider.authorizeUri, true);
             let outboundScope: string[] = [];
 
             finalUri.query = {
@@ -806,9 +849,10 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
             finalUri.query = provider.applyUriSubstitutions(finalUri.query);
             delete finalUri.search;
             finalUri.path = finalUri.path.split('?').shift();
+
+            finalFormatted = URL.format(finalUri);
         }
 
-        let finalFormatted = URL.format(finalUri);
 
         ApplicationContext.logs.silly({
             method: `AuthMiddleware.auth.${req.params.provider}.authorize.redirect`,

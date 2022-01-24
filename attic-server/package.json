@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server",
-    "version": "3.23.0",
+    "version": "3.26.0",
     "description": "",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -19,7 +19,7 @@
     },
     "scripts": {
         "test": "true",
-        "start": "tsnode src/launch",
+        "start": "ts-node bin/attic-server",
         "preapre": "npm run build",
         "build": "grunt",
         "prepack": "npm run build"
@@ -113,6 +113,7 @@
         "node-fetch": "^2.6.1",
         "npm": "^7.7.5",
         "passport": "^0.4.1",
+        "qs": "^6.10.3",
         "reconnecting-websocket": "^4.4.0",
         "redis": "^3.0.2",
         "sentencer": "^0.2.1",

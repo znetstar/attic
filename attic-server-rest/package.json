@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server-rest",
-    "version": "3.2.3",
+    "version": "3.2.4",
     "description": "Access objects in Attic Server via a REST interface",
     "main": "lib/Atticfile.js",
     "scripts": {

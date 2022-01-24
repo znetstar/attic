@@ -5,6 +5,6 @@ attic-server/data
 .idea
 idea
 .DS_STORE
-.env
+../.env
 tscommand*
 .vscode

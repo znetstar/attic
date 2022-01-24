@@ -8,4 +8,4 @@ lib
 **/*/.env
 tscommand*
 .git
-.env
+../../.env
