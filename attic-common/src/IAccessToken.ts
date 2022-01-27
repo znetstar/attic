@@ -25,6 +25,7 @@ export interface IFormalAccessToken {
     scope?: string;
 }
 
+export type AuthorizedScopePair = [ string, string[] ];
 export type ScopeAccessTokenPair = [ string, IAccessToken ];
 export type ScopeFormalAccessTokenPair = [ string, IFormalAccessToken ];
 export type FormalAccessTokenSet = ScopeFormalAccessTokenPair[];

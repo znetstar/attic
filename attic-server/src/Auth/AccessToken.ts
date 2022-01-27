@@ -1,8 +1,8 @@
-import {Document, Schema} from 'mongoose';
+import {Document, Schema, _FilterQuery} from 'mongoose';
 import mongoose from '../Database';
 import {ObjectId} from 'mongodb';
-import IAccessTokenBase, {IFormalAccessToken, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
-import User, {isAuthorizedToDo, IUser, userFromRpcContext} from "../User";
+import IAccessTokenBase, {IFormalAccessToken, TokenTypes, AuthorizedScopePair } from "@znetstar/attic-common/lib/IAccessToken";
+import User, {authorizedScopes, isAuthorizedToDo, IUser, userFromRpcContext} from "../User";
 import Client, {getIdentityEntityByAccessToken, IClient} from "./Client";
 import * as _ from 'lodash';
 import {IClientRole} from "@znetstar/attic-common/lib/IClient";
@@ -17,7 +17,7 @@ import {
 } from "@znetstar/attic-common/lib/Error/AccessToken";
 import RPCServer from "../RPC";
 import ApplicationContext from "../ApplicationContext";
-import {BasicFindOptions} from "@znetstar/attic-common/lib/IRPC";
+import {BasicFindOptions, RPCContext} from "@znetstar/attic-common/lib/IRPC";
 
 export {IFormalAccessToken} from "@znetstar/attic-common/lib/IAccessToken";
 
@@ -240,7 +240,7 @@ export async function accessTokenFromRefresh(self: IAccessToken&Document): Promi
 
         let formalToken: IFormalAccessToken = await tokenResp.json();
         let { accessToken, refreshToken: newRefreshToken } = await fromFormalToken(formalToken, user, client, IClientRole.provider);
-        accessToken.save();
+        await accessToken.save();
 
         if (newRefreshToken) {
             self.remove && await self.remove();
@@ -338,14 +338,181 @@ RPCServer.methods.accessTokenToFormal = async function (id: string) {
 }
 
 
-RPCServer.methods.getRPCContext = async function (): Promise<{ accessToken: IAccessToken, user: IUser, formalAccessToken: IFormalAccessToken }> {
+RPCServer.methods.getRPCContext = async function (): Promise<RPCContext> {
   let { context, user } = userFromRpcContext(this);
   return {
     formalAccessToken: await toFormalToken(context.accessToken),
     accessToken: context.accessToken,
-    user: user.toJSON({ virtuals: true }) as IUser
+    user: user.toJSON({ virtuals: true }) as IUser,
+    availableScopes: _.uniq(
+      [
+        ...(context.accessToken.scope || []),
+        ...(user.scope || [])
+      ]
+    )
   }
 }
+
+async function* accessTokenAuthorizedScopes(accessToken: IAccessToken&Document, scope: string[]|string) {
+  const user: IUser&Document = accessToken.user as IUser&Document;
+  const scopes = (user.scope || []).concat(accessToken.scope || []);
+
+  for (const pair of authorizedScopes(scopes, scope)) {
+    yield pair;
+  }
+}
+
+export async function* accessTokensAuthorizedScopes(q: _FilterQuery<IAccessToken&Document>, scope: string[]|string) {
+  const accessTokenCur = AccessToken.find(q).populate('user').cursor();
+
+  let accessToken:  IAccessToken&Document;
+  while (accessToken = await accessTokenCur.next()) {
+    for await (const result of accessTokenAuthorizedScopes(accessToken, scope))
+      yield result;
+  }
+}
+
+export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise<string[]> {
+  const { scopes }: { scopes: string[], _id: null } = await User.collection.aggregate([
+    {
+      $match: { _id: new ObjectId(userId.toString()) }
+    },
+    {
+      $project: { '_id': 1, scope: 1 }
+    },
+    {
+      $lookup: {
+        as: 'tokens',
+        from: 'access_tokens',
+        let: { user: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: [ '$$user', '$user' ] } } }
+        ]
+      }
+    },
+    {
+      $unwind: { path: '$tokens', preserveNullAndEmptyArrays: true }
+    },
+    {
+      $unwind: { path: '$tokens.scope', preserveNullAndEmptyArrays: true }
+    },
+    {
+      $group: {
+        _id: null,
+        scope: { $addToSet: '$tokens.scope' },
+        userScope: { $max: '$scope' }
+      }
+    },
+    {
+      $project: {
+        scope: {
+          $setUnion: [
+            '$scope',
+            '$userScope'
+          ]
+        }
+      }
+    }
+  ]).next();
+
+  return scopes;
+}
+
+
+export async function* userAuthorizedScopes(userId: string|ObjectId, scope: string[]|string) {
+  const scopes = await listUserAuthorizedScopes(userId);
+  for (const result of authorizedScopes(scopes, scope))
+    yield result;
+}
+
+export async function isAccessTokenAuthorizedToDo(q: _FilterQuery<IAccessToken&Document>, scope: string[]|string) {
+  for await (const pair of accessTokensAuthorizedScopes(q, scope)) {
+    if (pair[1].length) return true;
+  }
+  return false;
+}
+
+export async function isUserAuthorizedToDo(id: ObjectId|string, scope: string[]|string) {
+  for await (const pair of userAuthorizedScopes(id, scope)) {
+    if (pair[1].length) return true;
+  }
+  return false;
+}
+
+
+RPCServer.methods.accessTokenAuthorizedScopes = async function (q: any, scope: string[]|string): Promise<AuthorizedScopePair[]> {
+  const results: AuthorizedScopePair[] = [];
+
+  for await (const result of accessTokensAuthorizedScopes(q, scope)) {
+    results.push(result);
+  }
+
+  return results;
+}
+
+RPCServer.methods.isAccessTokenAuthorizedToDo = async function (q: any, scope: string[]|string): Promise<boolean> {
+  return await isAccessTokenAuthorizedToDo(q, scope);
+}
+
+
+RPCServer.methods.selfAccessTokenAuthorizedScopes = async function (scope: string[]|string): Promise<AuthorizedScopePair[]> {
+  let { context } = userFromRpcContext(this);
+  return RPCServer.methods.accessTokenAuthorizedScopes(context.accessToken._id.toString(), scope);
+}
+
+RPCServer.methods.isSelfAccessTokenAuthorizedToDo = async function (scope: string[]|string): Promise<boolean> {
+  let { context } = userFromRpcContext(this);
+  return RPCServer.methods.isAccessTokenAuthorizedToDo(context.accessToken._id.toString(), scope);
+}
+
+RPCServer.methods.userAuthorizedScopes = async function (userId: string, scope: string[]|string): Promise<AuthorizedScopePair[]> {
+  const results: AuthorizedScopePair[] = [];
+
+  for await (const result of userAuthorizedScopes(userId, scope)) {
+    results.push(result);
+  }
+
+  return results;
+}
+
+RPCServer.methods.isUserAuthorizedToDo = async function (userId: string, scope: string[]|string): Promise<boolean> {
+  return await isUserAuthorizedToDo(userId, scope);
+}
+
+RPCServer.methods.selfUserAuthorizedScopes = async function (scope: string[]|string): Promise<AuthorizedScopePair[]> {
+  let { user } = userFromRpcContext(this);
+  return RPCServer.methods.userAuthorizedScopes(user._id.toString(), scope);
+}
+
+RPCServer.methods.isSelfUserAuthorizedToDo = async function (scope: string[]|string): Promise<boolean> {
+  let { user } = userFromRpcContext(this);
+  return RPCServer.methods.isUserAuthorizedToDo(user._id.toString(), scope);
+}
+
+RPCServer.methods.listSelfUserAuthorizedScopes = async function (): Promise<string[]> {
+  let { user } = userFromRpcContext(this);
+  return listUserAuthorizedScopes(user._id.toString());
+}
+
+RPCServer.methods.listUserAuthorizedScopes = async function (userId: string): Promise<string[]> {
+  return listUserAuthorizedScopes(userId);
+}
+
+RPCServer.methods.updateAccessToken = async (id: string, fields: any) => {
+  let doc = await AccessToken.findOne({ _id: new ObjectId(id) });
+
+  _.extend(doc, fields);
+  await doc.save();
+}
+
+RPCServer.methods.updateAccessTokenByToken = async (token: string, fields: any) => {
+  let doc = await AccessToken.findOne({ token });
+
+  _.extend(doc, fields);
+  await doc.save();
+}
+
+
 
 export function fromFormalToken(formalToken: IFormalAccessToken, user: ObjectId|IUser|null, client: IClient, role: IClientRole): { accessToken: IAccessToken&Document, refreshToken?: IAccessToken&Document } {
     let otherFields: any = {};
