@@ -373,7 +373,7 @@ export async function* accessTokensAuthorizedScopes(q: _FilterQuery<IAccessToken
 }
 
 export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise<string[]> {
-  const { scopes }: { scopes: string[], _id: null } = await User.collection.aggregate([
+  const { scope }: { scope: string[], _id: null } = await User.collection.aggregate([
     {
       $match: { _id: new ObjectId(userId.toString()) }
     },
@@ -386,7 +386,8 @@ export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise
         from: 'access_tokens',
         let: { user: '$_id' },
         pipeline: [
-          { $match: { $expr: { $eq: [ '$$user', '$user' ] } } }
+          { $match: { $expr: { $eq: [ '$$user', '$user' ] } } },
+          { $project: { scope: 1 } }
         ]
       }
     },
@@ -412,10 +413,15 @@ export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise
           ]
         }
       }
+    },
+    {
+      $project: {
+        userScope: 0
+      }
     }
   ]).next();
 
-  return scopes;
+  return scope;
 }
 
 
