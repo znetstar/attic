@@ -373,12 +373,12 @@ export async function* accessTokensAuthorizedScopes(q: _FilterQuery<IAccessToken
 }
 
 export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise<string[]> {
-  const { scope }: { scope: string[], _id: null } = await User.collection.aggregate([
+  const { scope, groups }: { scope: string[], _id: null, groups: string[] } = await User.collection.aggregate([
     {
       $match: { _id: new ObjectId(userId.toString()) }
     },
     {
-      $project: { '_id': 1, scope: 1 }
+      $project: { '_id': 1, scope: 1, groups: 1 }
     },
     {
       $lookup: {
@@ -401,11 +401,13 @@ export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise
       $group: {
         _id: null,
         scope: { $addToSet: '$tokens.scope' },
-        userScope: { $max: '$scope' }
+        userScope: { $max: '$scope' },
+        groups: { $max: '$groups' }
       }
     },
     {
       $project: {
+        groups: '$groups',
         scope: {
           $setUnion: [
             '$scope',
@@ -421,7 +423,16 @@ export async function listUserAuthorizedScopes(userId: string|ObjectId): Promise
     }
   ]).next();
 
-  return scope;
+  const groupScopes = groups.map(g => `group.${g}`);
+
+  let newScope = scope.slice(0);
+  for (const groupScope of groupScopes) {
+    if (!isAuthorizedToDo(scope, groupScope) && !newScope.includes(groupScope)) {
+      newScope.push(groupScope);
+    }
+  }
+
+  return _.uniq(newScope);
 }
 
 
