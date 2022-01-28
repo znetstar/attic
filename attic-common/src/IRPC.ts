@@ -2,7 +2,13 @@ import ILocation from "./ILocation";
 import IResolver, {IMountPoint} from "./IResolver";
 import IEntity from "./IEntity";
 import IClient from "./IClient";
-import {AccessTokenSet, FormalAccessTokenSet, IAccessToken, IFormalAccessToken} from "./IAccessToken";
+import {
+  AccessTokenSet,
+  AuthorizedScopePair,
+  FormalAccessTokenSet,
+  IAccessToken,
+  IFormalAccessToken
+} from "./IAccessToken";
 import IUser from "./IUser";
 import {IIdentityEntity} from "./IIdentity";
 import {EncodingOptions, MimeTypesSerializationFormat, SerializationFormat} from "@znetstar/encode-tools/lib/EncodeTools";
@@ -121,7 +127,14 @@ export function getFormatsFromContext(httpContext: IHttpContext, defaultEncodeOp
 
 
 export type FindEntitiesResult = IEntity[]|number;
-export type RPCContext = { accessToken: IAccessToken, user: IUser, formalAccessToken: IFormalAccessToken };
+export type RPCContext = {
+  accessToken: IAccessToken,
+  user: IUser,
+  formalAccessToken: IFormalAccessToken,
+  availableScopes: string[]
+};
+
+
 export default interface IRPC {
     listDrivers(): Promise<string[]>;
     generateId(size?: number): Promise<string>;
@@ -176,6 +189,21 @@ export default interface IRPC {
     deleteAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
     deleteSelfAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
 
+    accessTokenAuthorizedScopes(q: any, scope: string[]|string): Promise<AuthorizedScopePair[]>
+    isAccessTokenAuthorizedToDo(q: any, scope: string[]|string): Promise<boolean>
+
+    selfAccessTokenAuthorizedScopes(scope: string[]|string): Promise<AuthorizedScopePair[]>
+    isSelfAccessTokenAuthorizedToDo(scope: string[]|string): Promise<boolean>;
+
+    userAuthorizedScopes(id: string, scope: string[]|string): Promise<AuthorizedScopePair[]>
+    isUserAuthorizedToDo(id: string, scope: string[]|string): Promise<boolean>
+
+    selfUserAuthorizedScopes(scope: string[]|string): Promise<AuthorizedScopePair[]>;
+    isSelfUserAuthorizedToDo(scope: string[]|string): Promise<boolean>;
+
+    listUserAuthorizedScopes(id: string): Promise<string[]>
+    listSelfUserAuthorizedScopes(): Promise<string[]>;
+
     findClients(query: BasicFindOptions): Promise<IClient[]|number>;
     findClient(query: any): Promise<IClient>;
     createClient(Cliengt: IClient): Promise<string>;
@@ -192,10 +220,13 @@ export default interface IRPC {
     getFormalAccessTokensForScope(userId: string, scope: string[]|string): Promise<FormalAccessTokenSet>;
     accessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
     selfAccessTokenFromRefresh(id: string): Promise<IAccessToken|null>;
+    updateAccessToken(id: string, fields: any): Promise<void>;
+    updateAccessTokenByToken(token: string, fields: any): Promise<void>;
 
     findAccessTokens(query: BasicFindOptions): Promise<IAccessToken[]|number>;
     findSelfAccessTokens(query: BasicFindOptions): Promise<IAccessToken[]|number>;
     getRPCContext(): Promise<RPCContext>;
+
     accessTokenToFormal(id: string): Promise<IFormalAccessToken|null>;
     selfAccessTokenToFormal(id: string): Promise<IFormalAccessToken|null>;
 

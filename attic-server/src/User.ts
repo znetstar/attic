@@ -11,7 +11,12 @@ import * as _ from 'lodash';
 import IdentityEntity, {IIdentityEntityModel} from "./Entities/IdentityEntity";
 import ApplicationContext from "./ApplicationContext";
 import AccessToken, {AccessTokenSchema, IAccessToken, IScopeContext, toFormalToken} from "./Auth/AccessToken";
-import {AccessTokenSet, FormalAccessTokenSet, TokenTypes} from "@znetstar/attic-common/lib/IAccessToken";
+import {
+  AccessTokenSet,
+  AuthorizedScopePair,
+  FormalAccessTokenSet,
+  TokenTypes
+} from "@znetstar/attic-common/lib/IAccessToken";
 import {nanoid} from 'nanoid';
 import Client, {SERVICE_CLIENT_ID} from "./Auth/Client";
 import {
@@ -358,13 +363,21 @@ UserSchema.methods.getFormalAccessTokensForScope = function (scope: string[]|str
     return getFormalAccessTokensForScope(this, scope);
 }
 
-export function isAuthorizedToDo(scopes: string[], scope: string|string[]) {
-    let regexes = scopes.map((x: string) => {
-        return new RegExp(x);
-    })
 
-    for (let regex of regexes) {
-        if ([].concat(scope).map(x => regex.test(x)).includes(true)) return true;
+export function* authorizedScopes(scopes: string[], scope: string|string[]): Generator<AuthorizedScopePair> {
+  const regexes: [ string, RegExp ][] = _.uniq(scopes).map((x: string) => {
+    return [ x, new RegExp(x) ];
+  });
+
+  for (const [source, regex] of regexes) {
+    const outputScopes: string[] = _.uniq([].concat(scope)).filter(testScope => regex.test(testScope));
+    yield [ source, outputScopes ];
+  }
+}
+
+export function isAuthorizedToDo(scopes: string[], scope: string|string[]) {
+    for (const pair of authorizedScopes(scopes, scope)) {
+      if (pair[1].length) return true;
     }
 
     return false;

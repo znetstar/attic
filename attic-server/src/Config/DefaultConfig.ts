@@ -47,7 +47,15 @@ export default <Config&{ puppeteerOptions: { headless: boolean } }>{
     enableCache: true,
     cacheExpireIn: ( 24 * 60 * 60 * 1000 ),
 
-    unauthorizedScopes: [ 'auth\.authorize', 'auth\.token', 'rpc\.getAccessToken', 'resolve\.no-group.*' ],
+    unauthorizedScopes: [
+      'auth\.authorize',
+      'auth\.token',
+      'rpc\.getAccessToken',
+      'resolve\.no-group.*',
+      'rpc\.listSelfUserAuthorizedScopes',
+      'rpc\.selfUserAuthorizedScopes',
+      'rpc\.isSelfUserAuthorizedToDo'
+    ],
 
     enableWebResolver: true,
 
