@@ -643,13 +643,27 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
             let user: IUser&Document;
 
-            const ignoreIdentityUser = (client.preferExistingUser && existingState.user);
+            let ignoreIdentityUser = (client.preferExistingUser && existingState.user);
 
-            if (!ignoreIdentityUser && identity.user)
+            if (ignoreIdentityUser) {
+              let tmpValue = await ApplicationContext.triggerHookSingle<boolean>(`AuthMiddleware.auth.${provider.name}.authorize.ignoreIdentityUser`, {
+                identity,
+                provider,
+                client,
+                user,
+                accessToken,
+                refreshToken,
+                existingState
+              });
+              if (typeof(tmpValue) !== 'undefined')
+                ignoreIdentityUser = tmpValue;
+            }
+            if (!ignoreIdentityUser) {
+              if (identity.user)
                 await identity.populate('user').execPopulate();
-
-            if (!ignoreIdentityUser && identity.user && (identity.user as IUser&Document).username !== UNAUTHROIZED_USERNAME) {
-                user = identity.user as IUser&Document;
+            }
+            if (!ignoreIdentityUser && identity.user && (identity.user as IUser & Document).username !== UNAUTHROIZED_USERNAME) {
+              user = identity.user as IUser & Document;
             }
             else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
                   if (provider.role.includes(IClientRole.registration)) {
