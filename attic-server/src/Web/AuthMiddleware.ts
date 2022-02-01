@@ -643,10 +643,12 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
 
             let user: IUser&Document;
 
-            if (identity.user)
+            const ignoreIdentityUser = (client.preferExistingUser && existingState.user);
+
+            if (!ignoreIdentityUser && identity.user)
                 await identity.populate('user').execPopulate();
 
-            if (identity.user && (identity.user as IUser&Document).username !== UNAUTHROIZED_USERNAME) {
+            if (!ignoreIdentityUser && identity.user && (identity.user as IUser&Document).username !== UNAUTHROIZED_USERNAME) {
                 user = identity.user as IUser&Document;
             }
             else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
@@ -801,7 +803,10 @@ AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.au
         });
 
         for (let k in newState) {
-            pipeline.hset(stateKey, k, (newState as any)[k]);
+            const v = (newState as any)[k];
+            if (typeof(v) === 'undefined')
+              continue;
+            pipeline.hset(stateKey, k, v);
         }
 
         pipeline.pexpire(stateKey, config.authorizeGracePeriod);

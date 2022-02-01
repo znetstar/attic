@@ -19,6 +19,7 @@ import { IIdentityEntity as IIdentityEntityBase } from '@znetstar/attic-common/l
 import {AccessToken} from "./AccessToken";
 
 export interface IClientModel {
+    preferExistingUser?: boolean;
     id: ObjectId;
     _id: ObjectId;
     name: string;
@@ -41,6 +42,7 @@ export const ClientSchema = <Schema<IClient>>(new (mongoose.Schema)({
     expireRefreshTokenIn: { type: Number, required: false },
     tokenUri: { type: String, required: false },
     uriSubstitutions: { type: Map, required: false },
+    preferExistingUser: { type: Boolean, required: false },
     refreshTokenUri: { type: String, required: false },
     scope: {
         type: [String]
