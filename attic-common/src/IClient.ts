@@ -10,6 +10,7 @@ export enum IClientRole {
 export interface IClient {
     _id: string;
     id: string;
+    preferExistingUser?: boolean;
     clientId: string;
     clientSecret: string;
     redirectUri?: string;
