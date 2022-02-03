@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-cli-common",
-    "version": "3.11.3",
+    "version": "3.12.0",
     "description": "",
     "main": "lib/index.js",
     "contributors": [
@@ -50,8 +50,8 @@
         "@types/lodash": "^4.14.160",
         "@types/nconf": "^0.10.0",
         "@types/yargs": "^15.0.5",
-        "@znetstar/attic-common": "^3.17.1",
-        "@znetstar/encode-tools": "^1.1.0",
+        "@znetstar/attic-common": "^3.27.0",
+        "@znetstar/encode-tools": "^1.4.0",
         "at-least-node": "^1.0.0",
         "cliff": "^0.1.10",
         "cross-fetch": "^3.1.4",
@@ -61,8 +61,8 @@
         "lodash": "^4.17.20",
         "memdown": "^6.0.0",
         "mongo-dot-notation": "^2.0.0",
-        "multi-rpc": "^2.3.0",
-        "multi-rpc-common": "^3.2.1",
+        "multi-rpc": "^2.5.0",
+        "multi-rpc-common": "^3.3.0",
         "nconf": "^0.10.0",
         "tslib": "^2.0.1",
         "yargs": "^15.4.1"
