@@ -188,6 +188,11 @@ export default interface IRPC {
     generateUsername(): Promise<string>;
     deleteAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
     deleteSelfAccessTokens(query: any, deleteLinked?: boolean): Promise<void>;
+    addUserToGroup(userId: string, group: string[]): Promise<void>;
+    removeUserFromGroup(userId: string, group: string[]): Promise<void>;
+
+    addSelfToGroup(group: string[]): Promise<void>;
+    removeSelfFromGroup(group: string[]): Promise<void>;
 
     accessTokenAuthorizedScopes(q: any, scope: string[]|string): Promise<AuthorizedScopePair[]>
     isAccessTokenAuthorizedToDo(q: any, scope: string[]|string): Promise<boolean>

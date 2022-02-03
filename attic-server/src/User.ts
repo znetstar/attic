@@ -301,7 +301,17 @@ export async function* getFormalAccessTokensForScope (user: IUser&Document|Objec
     }
 }
 
-RPCServer.methods.getSelfAccessTokensForScope = async function getSelfAccessTokensForScope(scope: string[]|string) {
+RPCServer.methods.addUserToGroup = async function addUserToGroup(userId: string, group: string[]) {
+  await User.updateOne({
+    _id: new ObjectId(userId)
+  }, {
+    $addToSet: {
+      'groups': { $each: [].concat(group)  }
+    }
+  });
+}
+
+RPCServer.methods.removeUserFromGroup = async function removeUserFromGroup(scope: string[]|string) {
     let { user } = userFromRpcContext(this);
     return RPCServer.methods.getAccessTokensForScope(user.id, scope);
 }

@@ -160,7 +160,7 @@ export class AtticExpressTransport extends ExpressTransport {
                             response.error = error;
                         }
 
-                        const outBuf = enc.serializeObject(response, outFormat, outFormat === SerializationFormat.json, outFormat === SerializationFormat.json);
+                        const outBuf = enc.serializeObject(response, outFormat);
                         headers["Content-Type"] = SerializationFormatMimeTypes.get(outFormat);
                         headers['Content-Length'] = Buffer.from(outBuf).byteLength;
 
