@@ -1,6 +1,6 @@
 {
     "name": "@znetstar/attic-server-s3",
-    "version": "3.1.1",
+    "version": "3.2.0",
     "description": "",
     "main": "lib/Atticfile.js",
     "scripts": {
@@ -35,10 +35,12 @@
     },
     "dependencies": {
         "@znetstar/encode-tools": "^1.2.1",
-        "aws-sdk": "^2.1009.0"
+        "aws-sdk": "^2.1009.0",
+        "minio": "^7.0.26"
     },
     "devDependencies": {
         "@types/lodash": "^4.14.172",
+        "@types/minio": "^7.0.12",
         "@znetstar/attic-common": "^3.17.1",
         "docdash": "^1.2.0",
         "grunt": "^1.4.1",
