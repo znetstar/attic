@@ -3,18 +3,26 @@ import { S3, config as awsConfig } from 'aws-sdk';
 import {ILocation, IRPC} from "@znetstar/attic-common";
 import {createEntityFromLocation, S3ResourceEntitySchema} from "./S3ResourceEntity";
 import S3Driver from "./S3Driver";
+import MinioDriver from "./MinioDriver";
+import * as Minio from "minio";
+import {ClientOptions} from "minio";
 
 export type AtticS3Config = IConfig&{
   awsConfig?: unknown;
   s3Config?: unknown;
+  minioConfig?: unknown;
+  minioUri?: string;
+  minioRootUser?: string;
+  minioRootPassword?: string;
 };
-
 
 export type IAtticS3ApplicationContext = IApplicationContext&{
   s3: S3;
+  minio: Minio.Client;
+
   rpcServer: unknown& {
     methods: IRPC & {
-      createS3EntityFromLocation: (loc: ILocation) => Promise<string | null>
+      createS3EntityFromLocation: (loc: ILocation) => Promise<string | null>;
     }
   }
 }
@@ -23,6 +31,7 @@ export const AtticS3ApplicationContext = (global as any).ApplicationContext as I
 
 export class AtticServerS3 implements IPlugin {
     public s3: S3;
+    public minio?: Minio.Client;
     constructor(
       public applicationContext: IAtticS3ApplicationContext
     ) {
@@ -40,6 +49,25 @@ export class AtticServerS3 implements IPlugin {
       if (cfg)
         awsConfig.update(cfg);
       this.s3 = this.applicationContext.s3 = new S3(this.config.s3Config as any);
+
+      const minioUri: string|undefined = process.env.MINIO_URI || this.config.minioUri;
+      if (this.config.minioConfig || minioUri) {
+        const opts: ClientOptions = (this.config.minioConfig || {})  as ClientOptions;
+        let minioUsername: string|undefined = process.env.MINIO_ROOT_USER || this.config.minioRootUser;
+        let minioPassword: string|undefined = process.env.MINIO_ROOT_PASSWORD || this.config.minioRootPassword;
+        if (minioUri) {
+          const uri = require('url').parse(minioUri);
+          const [ u, p ] = (uri.auth || '').split(':');
+
+          opts.accessKey = minioUsername || u;
+          opts.secretKey = minioPassword || p;
+          opts.useSSL = uri.proto === 'https:';
+          opts.endPoint = uri.hostname;
+          opts.port = Number(uri.port);
+        }
+
+        this.minio = this.applicationContext.minio = new Minio.Client(opts);
+      }
     }
 
     public get config(): AtticS3Config { return this.applicationContext.config as AtticS3Config; }
@@ -49,6 +77,7 @@ export class AtticServerS3 implements IPlugin {
 
       ctx.registerHook('launch.loadDrivers.start', async function () {
         await ctx.loadDriver(S3Driver, 'S3Driver');
+        await ctx.loadDriver(MinioDriver, 'MinioDriver');
       });
 
       this.applicationContext.registerHook('launch.loadModels.complete', async () => {
