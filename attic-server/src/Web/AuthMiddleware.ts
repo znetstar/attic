@@ -518,376 +518,383 @@ AuthMiddleware.post('/auth/token', require('body-parser').urlencoded({ extended:
 }));
 
 AuthMiddleware.get('/auth/:provider/authorize', restrictScopeMiddleware('auth.authorize'), asyncMiddleware(async function (req: any, res: any, next: any) {
+  try {
     ApplicationContext.logs.silly({
-        method: `AuthMiddleware.auth.${req.params.provider}.authorize.start`,
-        params: [
-            req.query
-        ]
+      method: `AuthMiddleware.auth.${req.params.provider}.authorize.start`,
+      params: [
+        req.query
+      ]
     });
 
     let state: string;
     let originalState: string;
     if (req.query.code && req.query.state)
-        state = [].concat(req.query.state)[0];
+      state = [].concat(req.query.state)[0];
     else if (req.query.state) {
-        originalState = req.query.state;
-        req.query.state = void(0);
+      originalState = req.query.state;
+      req.query.state = void (0);
     }
 
     if (!req.query.state) {
-        state = nanoid();
+      state = nanoid();
     }
 
     let stateKeyBase = `auth.${req.params.provider}.authorize.`;
-    let stateKey = stateKeyBase+state;
+    let stateKey = stateKeyBase + state;
 
     if (
-        req.query.code
+      req.query.code
     ) {
-        let existingState: any = req.query.state && await redis.hgetall(stateKey);
+      let existingState: any = req.query.state && await redis.hgetall(stateKey);
 
-        ApplicationContext.logs.silly({
-            method: `AuthMiddleware.auth.${req.params.provider}.authorize.existingState`,
-            params: [
-                { stateKey, existingState }
-            ]
-        });
+      ApplicationContext.logs.silly({
+        method: `AuthMiddleware.auth.${req.params.provider}.authorize.existingState`,
+        params: [
+          {stateKey, existingState}
+        ]
+      });
 
-        if (typeof(existingState) === 'object' && existingState !== null && !Object.keys(existingState).length)
-            existingState = void(0);
+      if (typeof (existingState) === 'object' && existingState !== null && !Object.keys(existingState).length)
+        existingState = void (0);
 
-        if (!existingState) {
-            if (req.query.response_type !== 'code') {
-                throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidResponseTypeError') as any)();
-            } else {
-                throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateStateError') as any)();
-            }
-        } else {
-            await redis.del(stateKey);
-            let [ client, provider ]: [ IClient&Document, IClient&Document ] = await Promise.all([
-                Client.findById(existingState.client).exec(),
-                Client.findById(existingState.provider).exec()
-            ]);
-
-            if (!client || !provider) {
-                throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
-                return;
-            }
-
-            let q = {
-                grant_type: 'authorization_code',
-                code: req.query.code,
-                redirect_uri: existingState.redirectUri,
-                client_id: provider.clientId,
-                client_secret: provider.clientSecret
-            }
-
-            q = provider.applyUriSubstitutions(q);
-
-            let tokenUri: any = URL.parse(provider.tokenUri, true);
-            // tokenUri.query = q;
-            tokenUri = URL.format(tokenUri);
-
-            const params = new URL.URLSearchParams();
-
-            for (let k in q) params.append(k, (q as any)[k]);
-
-            let fetchOpts: any = {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-urlencoded' }
-            };
-            let hookResp: any = await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.token`, {
-              params,
-              req,
-              provider,
-              fetchOpts,
-              state,
-              tokenUri
-            });
-
-            const tokenUriCloned = typeof(hookResp) === 'string' ? hookResp : hookResp?.tokenUri;
-            const newOpts = hookResp?.fetchOpts;
-
-            if (newOpts)
-              fetchOpts = newOpts;
-            else
-              fetchOpts.body = params;
-
-            // let qq: any = {};
-            // for (let [k,v] of params.entries()) qq[k] = v;
-            //
-            // fetchOpts.body =  require('qs').stringify(qq);
-
-            let tokenResp = await fetch(tokenUriCloned || tokenUri, fetchOpts);
-
-            if (tokenResp.status !== 200) {
-              const resp = await tokenResp.json();
-              ApplicationContext.logs.error({
-                method: `AuthMiddleware.auth.${req.params.provider}.authorize.token`,
-                params: [
-                  { resp }
-                ]
-              });
-                throw new ErrorGettingTokenFromProviderError(resp);
-            }
-
-            let formalToken: IFormalAccessToken = await tokenResp.json();
-            let {accessToken, refreshToken} = await fromFormalToken(formalToken, null, provider, IClientRole.provider);
-            let identity = await getIdentityEntityByAccessToken(accessToken);
-
-            if (!identity) {
-                throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateIdentityError') as any)();
-            } else if (identity.user) {
-                await identity.populate('user').execPopulate();
-            }
-
-            let user: IUser&Document;
-
-            let ignoreIdentityUser = (client.preferExistingUser && existingState.user);
-
-            if (ignoreIdentityUser) {
-              let tmpValue = await ApplicationContext.triggerHookSingle<boolean>(`AuthMiddleware.auth.${provider.name}.authorize.ignoreIdentityUser`, {
-                identity,
-                provider,
-                client,
-                user,
-                accessToken,
-                refreshToken,
-                existingState
-              });
-              if (typeof(tmpValue) !== 'undefined')
-                ignoreIdentityUser = tmpValue;
-            }
-            if (!ignoreIdentityUser) {
-              if (identity.user)
-                await identity.populate('user').execPopulate();
-            }
-            if (!ignoreIdentityUser && identity.user && (identity.user as IUser & Document).username !== UNAUTHROIZED_USERNAME) {
-              user = identity.user as IUser & Document;
-            }
-            else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
-                  if (provider.role.includes(IClientRole.registration)) {
-                      user = new User({
-                          username: identity.email || generateUsername(),
-                          scope: [
-                              ...config.get('unauthorizedScopes').slice(0)
-                          ],
-                      });
-                } else {
-                    throw new ((global as any).ApplicationContext.errors.getErrorByName('ProviderDoesNotAllowRegistrationError') as any)();
-                }
-            } else {
-                user = await User.findById(existingState.user).exec();
-            }
-
-            user.identities = user.identities || [];
-            if (!user.identities.map(x => x.toString()).includes(identity._id))
-                user.identities.push(identity._id);
-
-            identity.user = user._id;
-
-            await user.save();
-            await identity.save();
-
-            accessToken.user = user;
-            accessToken.scope = [].concat(provider.scope);
-            await accessToken.save();
-
-            if (refreshToken) {
-                refreshToken.user = user;
-                refreshToken.scope = [].concat(provider.scope);
-                await refreshToken.save();
-                ApplicationContext.logs.silly({
-                    method: `AuthMiddleware.auth.${req.params.provider}.authorize.saveRefreshToken`,
-                    params: [
-                        { refreshToken: refreshToken.toObject() }
-                    ]
-                });
-            } else {
-                ApplicationContext.logs.silly({
-                    method: `AuthMiddleware.auth.${req.params.provider}.authorize.saveRefreshToken`,
-                    params: [
-                        { refreshToken: null }
-                    ]
-                });
-            }
-
-            req.user = user;
-            existingState.user = user._id;
-
-            let authCode = nanoid();
-            stateKey = `auth.token.${authCode}`;
-            let pipeline = redis.pipeline();
-
-            for (let k in existingState) {
-                pipeline.hset(stateKey, k, (existingState as any)[k].toString());
-            }
-
-            pipeline.pexpire(stateKey, config.authorizeGracePeriod);
-            await pipeline.exec();
-
-            let finalUri = URL.parse(client.redirectUri, true);
-            finalUri.query = {
-                ...(finalUri.query || {}),
-                code: authCode,
-                state: existingState.originalState
-            }
-
-            let finalUriFormatted = URL.format(finalUri);
-
-            res.redirect(finalUriFormatted);
-        }
-    } else {
-
-        if (req.query.atticAccessToken)
-            req.session.atticAccessToken = req.query.atticAccessToken;
+      if (!existingState) {
         if (req.query.response_type !== 'code') {
-            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidResponseTypeError') as any)();
+          throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidResponseTypeError') as any)();
+        } else {
+          throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateStateError') as any)();
+        }
+      } else {
+        await redis.del(stateKey);
+        let [client, provider]: [IClient & Document, IClient & Document] = await Promise.all([
+          Client.findById(existingState.client).exec(),
+          Client.findById(existingState.provider).exec()
+        ]);
+
+        if (!client || !provider) {
+          throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
+          return;
         }
 
-        let provider = await Client.findOne({
-            name: req.params.provider,
-            role: { $in: [ 'provider'] }
-        }).exec();
-
-        if (!provider) {
-            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
+        let q = {
+          grant_type: 'authorization_code',
+          code: req.query.code,
+          redirect_uri: existingState.redirectUri,
+          client_id: provider.clientId,
+          client_secret: provider.clientSecret
         }
 
-        let client = await Client.findOne({
-            clientId: req.query.client_id,
-            redirectUri: req.query.redirect_uri,
-            role: { $in: [ 'consumer' ] }
-        }).exec();
+        q = provider.applyUriSubstitutions(q);
 
-        if (!client) {
-            throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
-        }
+        let tokenUri: any = URL.parse(provider.tokenUri, true);
+        // tokenUri.query = q;
+        tokenUri = URL.format(tokenUri);
 
-        let pipeline = redis.pipeline();
+        const params = new URL.URLSearchParams();
 
-        let scopes = checkScopePermission((req.query.scope || '').split(' '), client, req.user);
+        for (let k in q) params.append(k, (q as any)[k]);
 
-        let providerScopes: string[] = [];
-        let unauthorizedProviderScopes: string[] = [];
-
-        for (let scope of scopes) {
-            let providerScopeMatch = scope.match(new RegExp(`^${scope}\.(.*)`));
-            if (providerScopeMatch) {
-                let providerScope = providerScopeMatch[1];
-                if (!provider.scope.includes(providerScope))
-                    unauthorizedProviderScopes.push(providerScope);
-                else
-                    providerScopes.push(providerScope);
-            }
-        }
-
-        if (unauthorizedProviderScopes.length) {
-            throw new NotAuthorizedToUseScopesError(unauthorizedProviderScopes);
-        }
-
-        if (!providerScopes.length)
-            providerScopes = provider.scope;
-
-        let newState = {
-            client: client.id,
-            provider: provider.id,
-            user: req.user.id,
-            originalState: originalState,
-            redirectUri: '',
-            username: req.user.username,
-            scope: scopes.join(' ')
+        let fetchOpts: any = {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-urlencoded'}
         };
-
-
-        if (req.query.atticAccessToken)
-            req.session.atticAccessToken = req.query.atticAccessToken;
-
-        let redirectUri = URL.parse(provider.redirectUri || config.siteUri, true);
-        redirectUri.path = `/auth/${provider.name}/authorize`;
-        if (provider.sendStateWithRedirectUri) redirectUri.query.state = state;
-
-        newState.redirectUri =  URL.format(redirectUri);
-
-        await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.newState`, {
+        let hookResp: any = await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.token`, {
+          params,
           req,
           provider,
+          fetchOpts,
           state,
-          newState
+          tokenUri
         });
 
-        for (let k in newState) {
-            const v = (newState as any)[k];
-            if (typeof(v) === 'undefined')
-              continue;
-            pipeline.hset(stateKey, k, v);
+        const tokenUriCloned = typeof (hookResp) === 'string' ? hookResp : hookResp?.tokenUri;
+        const newOpts = hookResp?.fetchOpts;
+
+        if (newOpts)
+          fetchOpts = newOpts;
+        else
+          fetchOpts.body = params;
+
+        // let qq: any = {};
+        // for (let [k,v] of params.entries()) qq[k] = v;
+        //
+        // fetchOpts.body =  require('qs').stringify(qq);
+
+        let tokenResp = await fetch(tokenUriCloned || tokenUri, fetchOpts);
+
+        if (tokenResp.status !== 200) {
+          const resp = await tokenResp.json();
+          ApplicationContext.logs.error({
+            method: `AuthMiddleware.auth.${req.params.provider}.authorize.token`,
+            params: [
+              {resp}
+            ]
+          });
+          throw new ErrorGettingTokenFromProviderError(resp);
+        }
+
+        let formalToken: IFormalAccessToken = await tokenResp.json();
+        let {accessToken, refreshToken} = await fromFormalToken(formalToken, null, provider, IClientRole.provider);
+        let identity = await getIdentityEntityByAccessToken(accessToken);
+
+        if (!identity) {
+          throw new ((global as any).ApplicationContext.errors.getErrorByName('CouldNotLocateIdentityError') as any)();
+        } else if (identity.user) {
+          await identity.populate('user').execPopulate();
+        }
+
+        let user: IUser & Document;
+
+        let ignoreIdentityUser = (client.preferExistingUser && existingState.user);
+
+        if (ignoreIdentityUser) {
+          let tmpValue = await ApplicationContext.triggerHookSingle<boolean>(`AuthMiddleware.auth.${provider.name}.authorize.ignoreIdentityUser`, {
+            identity,
+            provider,
+            client,
+            user,
+            accessToken,
+            refreshToken,
+            existingState
+          });
+          if (typeof (tmpValue) !== 'undefined')
+            ignoreIdentityUser = tmpValue;
+        }
+        if (!ignoreIdentityUser) {
+          if (identity.user)
+            await identity.populate('user').execPopulate();
+        }
+        if (!ignoreIdentityUser && identity.user && (identity.user as IUser & Document).username !== UNAUTHROIZED_USERNAME) {
+          user = identity.user as IUser & Document;
+        } else if (existingState.username === UNAUTHROIZED_USERNAME || _.isEmpty(existingState.username)) {
+          if (provider.role.includes(IClientRole.registration)) {
+            user = new User({
+              username: identity.email || generateUsername(),
+              scope: [
+                ...config.get('unauthorizedScopes').slice(0)
+              ],
+            });
+          } else {
+            throw new ((global as any).ApplicationContext.errors.getErrorByName('ProviderDoesNotAllowRegistrationError') as any)();
+          }
+        } else {
+          user = await User.findById(existingState.user).exec();
+        }
+
+        user.identities = user.identities || [];
+        if (!user.identities.map(x => x.toString()).includes(identity._id))
+          user.identities.push(identity._id);
+
+        identity.user = user._id;
+
+        await user.save();
+        await identity.save();
+
+        accessToken.user = user;
+        accessToken.scope = [].concat(provider.scope);
+        await accessToken.save();
+
+        if (refreshToken) {
+          refreshToken.user = user;
+          refreshToken.scope = [].concat(provider.scope);
+          await refreshToken.save();
+          ApplicationContext.logs.silly({
+            method: `AuthMiddleware.auth.${req.params.provider}.authorize.saveRefreshToken`,
+            params: [
+              {refreshToken: refreshToken.toObject()}
+            ]
+          });
+        } else {
+          ApplicationContext.logs.silly({
+            method: `AuthMiddleware.auth.${req.params.provider}.authorize.saveRefreshToken`,
+            params: [
+              {refreshToken: null}
+            ]
+          });
+        }
+
+        req.user = user;
+        existingState.user = user._id;
+
+        let authCode = nanoid();
+        stateKey = `auth.token.${authCode}`;
+        let pipeline = redis.pipeline();
+
+        for (let k in existingState) {
+          pipeline.hset(stateKey, k, (existingState as any)[k].toString());
         }
 
         pipeline.pexpire(stateKey, config.authorizeGracePeriod);
         await pipeline.exec();
 
-        ApplicationContext.logs.silly({
-            method: `AuthMiddleware.auth.${req.params.provider}.authorize.newState`,
-            params: [
-                { stateKey, newState }
-            ]
-        });
-
-        const delta = {
-          stateKey,
-          newState,
-          provider,
-          client,
-          req,
-          res,
-          scopes,
-          state,
-          context: req.context
-        };
-
-        let authorizeEvent = `Web.AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`;
-        let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(`AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`, delta);
-        if (!authorizeUri)
-          authorizeUri = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, delta);
-
-        let finalFormatted: any = authorizeUri;
-        if (!finalFormatted) {
-            let finalUri: any = URL.parse(provider.authorizeUri, true);
-            let outboundScope: string[] = [];
-
-            finalUri.query = {
-                ...(finalUri.query || {}),
-                client_id: provider.clientId,
-                // client_secret: provider.clientSecret,
-                redirect_uri: newState.redirectUri,
-                state: state,
-                scope: [].concat(providerScopes).join(provider.scopeJoin || config.defaultScopeJoin),
-                response_type: 'code'
-            };
-
-            finalUri.query = provider.applyUriSubstitutions(finalUri.query);
-            delete finalUri.search;
-            finalUri.path = finalUri.path.split('?').shift();
-
-            finalFormatted = URL.format(finalUri);
+        let finalUri = URL.parse(client.redirectUri, true);
+        finalUri.query = {
+          ...(finalUri.query || {}),
+          code: authCode,
+          state: existingState.originalState
         }
 
+        let finalUriFormatted = URL.format(finalUri);
 
-        ApplicationContext.logs.silly({
-            method: `AuthMiddleware.auth.${req.params.provider}.authorize.redirect`,
-            params: [
-                { redirectUri: finalFormatted }
-            ]
-        });
+        res.redirect(finalUriFormatted);
+      }
+    } else {
 
-        res.redirect(finalFormatted);
+      if (req.query.atticAccessToken)
+        req.session.atticAccessToken = req.query.atticAccessToken;
+      if (req.query.response_type !== 'code') {
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidResponseTypeError') as any)();
+      }
+
+      let provider = await Client.findOne({
+        name: req.params.provider,
+        role: {$in: ['provider']}
+      }).exec();
+
+      if (!provider) {
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
+      }
+
+      let client = await Client.findOne({
+        clientId: req.query.client_id,
+        redirectUri: req.query.redirect_uri,
+        role: {$in: ['consumer']}
+      }).exec();
+
+      if (!client) {
+        throw new ((global as any).ApplicationContext.errors.getErrorByName('InvalidClientOrProviderError') as any)();
+      }
+
+      let pipeline = redis.pipeline();
+
+      let scopes = checkScopePermission((req.query.scope || '').split(' '), client, req.user);
+
+      let providerScopes: string[] = [];
+      let unauthorizedProviderScopes: string[] = [];
+
+      for (let scope of scopes) {
+        let providerScopeMatch = scope.match(new RegExp(`^${scope}\.(.*)`));
+        if (providerScopeMatch) {
+          let providerScope = providerScopeMatch[1];
+          if (!provider.scope.includes(providerScope))
+            unauthorizedProviderScopes.push(providerScope);
+          else
+            providerScopes.push(providerScope);
+        }
+      }
+
+      if (unauthorizedProviderScopes.length) {
+        throw new NotAuthorizedToUseScopesError(unauthorizedProviderScopes);
+      }
+
+      if (!providerScopes.length)
+        providerScopes = provider.scope;
+
+      let newState = {
+        client: client.id,
+        provider: provider.id,
+        user: req.user.id,
+        originalState: originalState,
+        redirectUri: '',
+        username: req.user.username,
+        scope: scopes.join(' ')
+      };
+
+
+      if (req.query.atticAccessToken)
+        req.session.atticAccessToken = req.query.atticAccessToken;
+
+      let redirectUri = URL.parse(provider.redirectUri || config.siteUri, true);
+      redirectUri.path = `/auth/${provider.name}/authorize`;
+      if (provider.sendStateWithRedirectUri) redirectUri.query.state = state;
+
+      newState.redirectUri = URL.format(redirectUri);
+
+      await ApplicationContext.triggerHookSingle(`AuthMiddleware.auth.${provider.name}.authorize.newState`, {
+        req,
+        provider,
+        state,
+        newState
+      });
+
+      for (let k in newState) {
+        const v = (newState as any)[k];
+        if (typeof (v) === 'undefined')
+          continue;
+        pipeline.hset(stateKey, k, v);
+      }
+
+      pipeline.pexpire(stateKey, config.authorizeGracePeriod);
+      await pipeline.exec();
+
+      ApplicationContext.logs.silly({
+        method: `AuthMiddleware.auth.${req.params.provider}.authorize.newState`,
+        params: [
+          {stateKey, newState}
+        ]
+      });
+
+      const delta = {
+        stateKey,
+        newState,
+        provider,
+        client,
+        req,
+        res,
+        scopes,
+        state,
+        context: req.context
+      };
+
+      let authorizeEvent = `Web.AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`;
+      let authorizeUri: string = await ApplicationContext.triggerHookSingle<string>(`AuthMiddleware.auth.${req.params.provider}.authorize.getAuthorizeRedirectUri`, delta);
+      if (!authorizeUri)
+        authorizeUri = await ApplicationContext.triggerHookSingle<string>(authorizeEvent, delta);
+
+      let finalFormatted: any = authorizeUri;
+      if (!finalFormatted) {
+        let finalUri: any = URL.parse(provider.authorizeUri, true);
+        let outboundScope: string[] = [];
+
+        finalUri.query = {
+          ...(finalUri.query || {}),
+          client_id: provider.clientId,
+          // client_secret: provider.clientSecret,
+          redirect_uri: newState.redirectUri,
+          state: state,
+          scope: [].concat(providerScopes).join(provider.scopeJoin || config.defaultScopeJoin),
+          response_type: 'code'
+        };
+
+        finalUri.query = provider.applyUriSubstitutions(finalUri.query);
+        delete finalUri.search;
+        finalUri.path = finalUri.path.split('?').shift();
+
+        finalFormatted = URL.format(finalUri);
+      }
+
+
+      ApplicationContext.logs.silly({
+        method: `AuthMiddleware.auth.${req.params.provider}.authorize.redirect`,
+        params: [
+          {redirectUri: finalFormatted}
+        ]
+      });
+
+      res.redirect(finalFormatted);
     }
     ApplicationContext.logs.silly({
-        method: `AuthMiddleware.auth.${req.params.provider}.authorize.complete`,
-        params: [
-            req.query
-        ]
+      method: `AuthMiddleware.auth.${req.params.provider}.authorize.complete`,
+      params: [
+        req.query
+      ]
     });
+  } catch (err) {
+    const doNotThrow = await ApplicationContext.triggerHookSingle<boolean|undefined>('AuthMiddleware.auth.authorize.error', {
+      req, res, err
+    });
+    if (!doNotThrow)
+      throw err;
+  }
 }));
 
 
