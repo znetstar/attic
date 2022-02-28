@@ -12,7 +12,7 @@ import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import * as ws from 'ws';
 import * as _ from 'lodash';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
-import * as cors from 'cors';
+const cors = require('cors');
 import {makeBinaryEncoders, ToPojo} from '@thirdact/to-pojo/lib/toPojo';
 import {
   BinaryEncoding,
