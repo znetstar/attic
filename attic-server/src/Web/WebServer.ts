@@ -207,12 +207,6 @@ export async function loadWebServer() {
 
 // @ts-ignore
     WebExpress = express();
-
-    if (Config.cors) {
-// @ts-ignore
-      WebExpress.use(require('cors')(Config.cors as any));
-    }
-
     WebSocketServer = new ws.Server({ noServer: true });
 
     WebHTTPServer = new HTTPServer(WebExpress);
