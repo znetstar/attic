@@ -12,7 +12,7 @@ import {IError} from "@znetstar/attic-common/lib/Error/IError";
 import * as ws from 'ws';
 import * as _ from 'lodash';
 import {initDocumentSync} from "./DocumentSyncMiddleware";
-import * as cors from 'cors';
+const cors = require('cors');
 import {makeBinaryEncoders, ToPojo} from '@thirdact/to-pojo/lib/toPojo';
 import {
   BinaryEncoding,
@@ -207,12 +207,6 @@ export async function loadWebServer() {
 
 // @ts-ignore
     WebExpress = express();
-
-    if (Config.cors) {
-// @ts-ignore
-      WebExpress.use(cors(Config.cors as any));
-    }
-
     WebSocketServer = new ws.Server({ noServer: true });
 
     WebHTTPServer = new HTTPServer(WebExpress);
